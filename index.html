@@ -277,21 +277,93 @@
       padding: 2px 7px; border-radius: 2px; vertical-align: middle; margin-left: 6px;
     }
 
+    /* ── MOBILE ── */
     @media (max-width: 768px) {
-      nav { padding: 16px 20px; }
+      /* Nav */
+      nav { padding: 14px 20px; }
       .nav-links { display: none; }
-      .hero { grid-template-columns: 1fr; gap: 40px; padding: 60px 20px 48px; }
-      .hero h1 { font-size: 36px; }
+      .nav-btn-login { display: none; }
+      .tagline-nav { display: none; }
+
+      /* Hero */
+      .hero { grid-template-columns: 1fr; gap: 0; padding: 48px 20px 40px; }
+      .hero h1 { font-size: 32px; }
+      .hero p { max-width: 100%; font-size: 15px; margin-bottom: 28px; }
       .hero-card { display: none; }
-      .section { padding: 60px 20px; }
-      .steps { grid-template-columns: 1fr; }
-      .features { grid-template-columns: 1fr; }
-      .pricing { grid-template-columns: 1fr; max-width: 100%; }
+      .hero-actions { flex-direction: column; align-items: stretch; gap: 10px; }
+      .hero-actions .btn { text-align: center; padding: 14px 20px; font-size: 13px; }
+      .hero-note { font-size: 11px; }
+
+      /* Sections */
+      .section { padding: 48px 20px; }
+      .section h2 { font-size: 28px; }
+      .section > p { font-size: 15px; margin-bottom: 32px; }
+
+      /* Steps */
+      .steps { grid-template-columns: 1fr; gap: 16px; }
+      .step { padding: 24px; }
+
+      /* Features */
+      .features { grid-template-columns: 1fr; gap: 16px; }
+      .feature { padding: 20px; gap: 16px; }
+
+      /* Stress grid */
+      .stress-grid { grid-template-columns: repeat(2, 1fr); }
+      .stress-cell { padding: 16px 12px; }
+      .sc-cashflow { font-size: 17px; }
+      .sc-label { font-size: 9px; }
+
+      /* Compare table — horizontal scroll */
+      .compare-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .compare-table { min-width: 520px; }
+
+      /* Pricing */
+      .pricing { grid-template-columns: 1fr; max-width: 100%; gap: 16px; }
+      .plan { padding: 24px; }
+      .plan-price { font-size: 36px; }
+
+      /* Footer */
       footer { flex-direction: column; gap: 16px; text-align: center; padding: 32px 20px; }
-      .mockup-section { padding: 60px 20px; }
+      .footer-links { justify-content: center; flex-wrap: wrap; gap: 12px 20px; }
+
+      /* Mockup section */
+      .mockup-section { padding: 48px 20px; }
+      .mockup-inner h2 { font-size: 28px; }
+      .mockup-content { padding: 16px; }
+      .mockup-bar { padding: 8px 12px; }
+      .mockup-dot { width: 8px; height: 8px; }
+      .mockup-url { font-size: 10px; padding: 4px 10px; }
+
+      /* Mockup app inner */
+      .mc-nav { flex-wrap: wrap; gap: 10px 0; justify-content: space-between; }
+      .mc-nav-profile { display: none; }
+      .mc-toggle-btn { padding: 5px 10px; font-size: 9px; }
       .mc-header { grid-template-columns: 1fr; }
+      .mc-address { font-size: 15px; }
+      .mc-meta { gap: 12px; }
+      .mc-meta-item span { font-size: 12px; }
+      .mc-verdict-pill { flex-wrap: wrap; gap: 6px; }
+      .mc-verdict-reason { display: none; }
       .mc-metrics { grid-template-columns: repeat(2, 1fr); }
-      .input-section { padding: 0 20px 60px; }
+      .mc-metric-val { font-size: 16px; }
+      .mc-tax-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .mc-tax-item span { font-size: 13px; }
+
+      /* Input section */
+      .input-section { padding: 0 20px 48px; }
+      .address-input { font-size: 16px; padding: 14px 16px; } /* 16px prevents iOS auto-zoom */
+      .address-btn { padding: 14px 18px; font-size: 11px; min-width: 88px; }
+
+      /* CTA section */
+      .cta-btn-wrap .btn { padding: 14px 28px; font-size: 13px; width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 400px) {
+      .hero h1 { font-size: 28px; }
+      .stress-grid { grid-template-columns: 1fr 1fr; }
+      .sc-cashflow { font-size: 15px; }
+      .mc-tax-grid { grid-template-columns: 1fr; }
+      .plan-price { font-size: 32px; }
     }
   </style>
 </head>
@@ -310,7 +382,7 @@
     <a href="plan/mockup-results.html">View Full Mockup →</a>
   </div>
   <div style="display:flex;gap:10px">
-    <a href="#" class="btn btn-outline">Log in</a>
+    <a href="#" class="btn btn-outline nav-btn-login">Log in</a>
     <a href="#try" class="btn btn-primary">Try free</a>
   </div>
 </nav>
@@ -437,7 +509,7 @@
             <button class="mc-toggle-btn active">Single Family</button>
             <button class="mc-toggle-btn">Multi-Unit</button>
           </div>
-          <div style="font-size:11px;color:var(--text-muted)">Profile: $280k income · 32% bracket</div>
+          <div class="mc-nav-profile" style="font-size:11px;color:var(--text-muted)">Profile: $280k income · 32% bracket</div>
         </div>
 
         <!-- Property header -->
@@ -624,6 +696,7 @@
 <div class="section" style="padding-top:48px">
   <div class="section-label">Competitive comparison</div>
   <h2>The only tool that knows your taxes.</h2>
+  <div class="compare-scroll">
   <table class="compare-table">
     <thead>
       <tr>
@@ -670,6 +743,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 </div>
 
 <hr class="divider">
@@ -720,7 +794,9 @@
   <div class="section-label" style="text-align:center">Get started</div>
   <h2 style="max-width:520px;margin:0 auto 16px">Stop losing 45 minutes per deal.</h2>
   <p style="max-width:440px;margin:0 auto 36px;color:var(--text-muted)">Enter any address. Get your personalized GO / CAUTION / PASS in under 2 minutes.</p>
-  <a href="#try" class="btn btn-primary" style="font-size:14px;padding:14px 36px">Analyze your first property — free</a>
+  <div class="cta-btn-wrap" style="display:inline-block;width:100%;max-width:360px">
+  <a href="#try" class="btn btn-primary" style="font-size:14px;padding:14px 36px;display:block">Analyze your first property — free</a>
+  </div>
   <p style="margin-top:16px;font-size:12px;color:var(--text-muted)">Estimate only — consult a CPA for tax advice.</p>
 </div>
 
