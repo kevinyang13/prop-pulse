@@ -13,7 +13,10 @@
       --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
       --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
     }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    html { overflow-x: hidden; max-width: 100%; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; max-width: 100%; }
+    /* Scrollable table wrapper */
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     /* NAV */
     nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 100; }
@@ -280,6 +283,10 @@
 
     .actions { display: flex; gap: 12px; }
     .disclaimer { font-size: 11px; color: var(--text-muted); margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); line-height: 1.6; }
+
+    /* ── OVERFLOW SAFETY: grid/flex children must not force wider than parent ── */
+    .inv-item, .metric-card, .nbh-card, .env-card,
+    .city-metric, .project-card, .rec-factor { min-width: 0; }
 
     /* ── RESPONSIVE ─────────────────────────────────────────── */
     @media (max-width: 900px) {
@@ -573,6 +580,7 @@
         <div class="toggle-switch"></div>
       </div>
       <div class="section-label">Unit Breakdown</div>
+      <div class="table-scroll">
       <table class="unit-table">
         <thead><tr><th>Unit</th><th>Type</th><th>Sq Ft</th><th>Current Rent</th><th>Market Rent</th><th>Status</th><th>Notes</th></tr></thead>
         <tbody>
@@ -582,6 +590,7 @@
           <tr><td colspan="3"><strong>Total</strong></td><td id="ut-total"><strong>$6,000</strong></td><td><strong>$6,200</strong></td><td></td><td></td></tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- ===== SFH METRICS ===== -->
@@ -715,6 +724,7 @@
     <div class="section-label">Stress Test</div>
 
     <div class="sfh-only">
+      <div class="table-scroll">
       <table class="stress-table">
         <thead><tr><th>Scenario</th><th>Monthly Cashflow</th><th>COC Return</th><th>Outcome</th></tr></thead>
         <tbody>
@@ -756,9 +766,11 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <div class="mfu-only">
+      <div class="table-scroll">
       <table class="stress-table">
         <thead><tr><th>Scenario</th><th>Monthly Cashflow</th><th>COC Return</th><th>Outcome</th></tr></thead>
         <tbody>
@@ -800,6 +812,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
 
     <!-- NEIGHBORHOOD -->
