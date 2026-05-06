@@ -245,6 +245,88 @@
     .actions { display: flex; gap: 12px; }
     .disclaimer { font-size: 11px; color: var(--text-muted); margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); line-height: 1.6; }
 
+    /* ── RESPONSIVE ─────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .container { padding: 24px 20px 60px; }
+      nav { padding: 16px 20px; }
+      .nav-right a { display: none; }
+
+      /* property header stacks */
+      .property-header { grid-template-columns: 1fr; gap: 20px; }
+
+      /* investment summary: 2-3 cols */
+      .investment-summary.sfh-grid { grid-template-columns: repeat(3, 1fr); gap: 0; }
+      .investment-summary.mfu-grid { grid-template-columns: repeat(3, 1fr); gap: 0; }
+      .inv-item { padding: 0 12px 16px; border-right: none; border-bottom: 1px solid var(--border); }
+      .inv-item:nth-child(3n) { border-right: none; }
+      .inv-value { font-size: 16px; }
+
+      /* assumptions grid: 1 col */
+      .assume-grid { grid-template-columns: 1fr; gap: 16px; }
+
+      /* metrics: 2 col */
+      .metrics-grid.sfh-metrics { grid-template-columns: repeat(2, 1fr); }
+      .metrics-grid.mfu-metrics { grid-template-columns: repeat(3, 1fr); }
+
+      /* cashflow + tax: stack */
+      .two-col { grid-template-columns: 1fr; }
+
+      /* stress: 2 col */
+      .stress-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* neighborhood: 2 col */
+      .neighborhood-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* city metrics: 2-3 col */
+      .city-metrics { grid-template-columns: repeat(3, 1fr); }
+
+      /* projects: 1 col */
+      .projects-grid { grid-template-columns: 1fr; }
+
+      /* details: 1 col */
+      .details-grid { grid-template-columns: 1fr; }
+
+      /* rec factors: 1 col */
+      .rec-factors { grid-template-columns: 1fr; gap: 10px; }
+
+      /* actions wrap */
+      .actions { flex-wrap: wrap; }
+      .actions button { flex: 1 1 calc(50% - 6px); }
+
+      /* unit table: hide less important cols */
+      .unit-table th:nth-child(3),
+      .unit-table td:nth-child(3) { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .metrics-grid.sfh-metrics { grid-template-columns: repeat(2, 1fr); }
+      .metrics-grid.mfu-metrics { grid-template-columns: repeat(2, 1fr); }
+      .city-metrics { grid-template-columns: repeat(2, 1fr); }
+      .investment-summary.sfh-grid,
+      .investment-summary.mfu-grid { grid-template-columns: repeat(2, 1fr); }
+      .stress-grid { grid-template-columns: 1fr 1fr; }
+      .neighborhood-grid { grid-template-columns: repeat(2, 1fr); }
+      .property-address { font-size: 20px; }
+      .metric-card-value { font-size: 22px; }
+
+      /* unit table: only essential cols */
+      .unit-table th:nth-child(4),
+      .unit-table td:nth-child(4),
+      .unit-table th:nth-child(5),
+      .unit-table td:nth-child(5) { display: none; }
+
+      /* type toggle full width */
+      .type-toggle { width: 100%; }
+      .type-toggle button { flex: 1; }
+
+      /* actions: stack */
+      .actions { flex-direction: column; }
+      .actions button { width: 100%; }
+
+      nav .tagline { display: none; }
+      .equity-verdict-bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+    }
+
     /* SHOW/HIDE */
     .sfh-only { display: block; }
     .mfu-only { display: none; }
