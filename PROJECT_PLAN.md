@@ -27,7 +27,7 @@ Casual real estate investors (1–3 properties) waste 30–60 min per deal stitc
 
 ## Core Value Proposition
 
-Personalized W2 + passive activity loss tax math + neighborhood map signals in one view. No existing calculator does all three.
+Personalized W2 + passive activity loss tax math + neighborhood map signals + environmental risk assessment in one view. No existing calculator does all four.
 
 - User A: $180k income, 22% bracket, $100k cash → **CAUTION**
 - User B: $280k income, 32% bracket, $200k cash → **GO**
@@ -59,6 +59,11 @@ Personalized W2 + passive activity loss tax math + neighborhood map signals in o
 | Mortgage rate | FRED API | Free |
 | Map tiles | Leaflet + OpenStreetMap | Free |
 | City infrastructure | Socrata permit APIs | Free (~200 cities) |
+| Flood zone | FEMA National Flood Hazard Layer API | Free |
+| Fire risk score | First Street Foundation Risk Factor API | Free (limited) → $49/mo |
+| Air quality (AQI) | AirNow API (EPA) | Free |
+| Wind / hurricane risk | FEMA Wind Zone data + First Street | Free / bundled |
+| Earthquake hazard | USGS Seismic Hazard API | Free |
 
 **Caching**: Rentcast responses cached in Supabase (TTL 7 days). Walk Score / crime cached 30 days.
 
@@ -96,7 +101,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 
 #### Sprint 3 — Results Page (Weeks 5–6)
 - [ ] GO / CAUTION / PASS verdict with narrative
-- [ ] Stress test grid (6 scenarios, color-coded)
+- [ ] Stress test compact table (6 scenarios, color-coded rows: positive/marginal/negative, sorted best→worst)
 - [ ] Scenario assumptions panel (live recalc on keystroke)
 - [ ] Monthly cashflow breakdown
 - [ ] Key metrics grid (SFH: 4 metrics; Multi-unit: 6 metrics)
@@ -110,7 +115,16 @@ Growth lever: "Invite a friend, get 2 more free analyses."
   - Green dots: transit stops
   - Orange dots: infrastructure projects
   - Red dots: elevated crime zones
+  - Red shading: flood zones (FEMA FIRM)
+  - Orange shading: high fire hazard severity zones
 - [ ] Neighborhood signals cards (Walk Score, Schools, Crime, Infra count)
+- [ ] Environmental Risk section
+  - Fire Risk: First Street / Cal Fire score + severity badge (Low / Moderate / High / Severe)
+  - Flood Zone: FEMA zone label (X / AE / VE) + plain-English description
+  - Air Quality: EPA AirNow AQI score + category (Good / Moderate / Unhealthy)
+  - Wind Risk: FEMA wind zone + category
+  - Earthquake Hazard: USGS PGA value + risk tier (for CA, Pacific NW, New Madrid, etc.)
+  - Insurance impact note: elevated risk triggers estimated insurance premium delta
 - [ ] Equity outlook section (population, migration, job growth, home price trend)
 - [ ] Infrastructure project cards (city-level, manual curation for 8 metros)
 - [ ] Photo/Map tab on property header
@@ -204,12 +218,13 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 
 | Tool | Gap |
 |------|-----|
-| BiggerPockets Calculator | No tax personalization, manual input, no map |
-| DealCheck | No W2 tax math, no neighborhood signals, no map |
+| BiggerPockets Calculator | No tax personalization, manual input, no map, no environmental risk |
+| DealCheck | No W2 tax math, no neighborhood signals, no map, no environmental risk |
 | Roofstock | Buy-side marketplace, not analysis tool |
+| Climate Check / Risk Factor | Environmental risk only, no financial analysis |
 | Excel spreadsheet | User's current solution — fully manual |
 
-**Wedge**: personalized W2 + PAL tax math + map with POI signals in one view.
+**Wedge**: personalized W2 + PAL tax math + map with POI signals + environmental risk in one view. Climate Check shows risk; PropPulse shows risk AND whether the numbers still work.
 
 ---
 
@@ -218,7 +233,9 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 1. **Data gaps**: infrastructure project data sparse outside 8 target metros
 2. **Tax accuracy liability**: PAL rules complex — "estimate only, consult CPA" disclaimer on every screen
 3. **Rentcast coverage**: smaller markets may have thin data; free tier limited to 50 calls/mo
-4. **Competition**: DealCheck covers basic math; moat is tax personalization + map + UX
+4. **Competition**: DealCheck covers basic math; moat is tax personalization + map + environmental risk + UX
+5. **Environmental data accuracy**: First Street risk scores are modeled estimates; FEMA flood maps lag real-world conditions. Display confidence level and link source data
+6. **Insurance cost estimation**: wildfire and flood zone data affects insurability; coverage may be unavailable in highest-risk areas — flag as CAUTION or PASS trigger regardless of cashflow
 
 ## Open Decisions
 

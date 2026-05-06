@@ -152,17 +152,33 @@
     .tax-row .val { font-weight: 600; color: var(--text); }
     .tax-note { font-size: 11px; color: var(--text-muted); margin-top: 12px; line-height: 1.5; font-style: italic; }
 
-    /* STRESS TEST */
-    .stress-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 32px; }
-    .stress-card { background: var(--surface); padding: 20px 16px; text-align: center; }
-    .stress-card.base { background: var(--text); color: var(--bg); }
-    .stress-scenario { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
-    .stress-card.base .stress-scenario { color: rgba(250,250,248,0.5); }
-    .stress-cashflow { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-    .stress-coc { font-size: 11px; color: var(--text-muted); }
-    .stress-card.base .stress-coc { color: rgba(250,250,248,0.5); }
+    /* STRESS TEST — compact table */
+    .stress-table { width: 100%; border-collapse: collapse; border-radius: 4px; overflow: hidden; margin-bottom: 32px; border: 1px solid var(--border); }
+    .stress-table thead tr { background: var(--surface-2); border-bottom: 2px solid var(--text); }
+    .stress-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 10px 16px; text-align: left; white-space: nowrap; }
+    .stress-table th:nth-child(2), .stress-table th:nth-child(3) { text-align: right; }
+    .stress-table th:last-child { text-align: right; }
+    .stress-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .stress-table tr:last-child td { border-bottom: none; }
+    .stress-table td:nth-child(2), .stress-table td:nth-child(3) { text-align: right; }
+    .stress-table td:last-child { text-align: right; }
+    .st-scenario { font-size: 12px; font-weight: 600; color: var(--text); }
+    .st-cf { font-size: 15px; font-weight: 800; }
+    .st-coc { font-size: 12px; font-weight: 600; }
+    .st-badge { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+    .st-ok { background: #D4EDDA; color: #1A5C2E; }
+    .st-warn { background: #FEF3C7; color: #92400E; }
+    .st-neg { background: #FECACA; color: #7F1D1D; }
+    .st-base-badge { background: rgba(255,255,255,0.15); color: rgba(250,250,248,0.85); }
+    .stress-row-base { background: var(--text) !important; }
+    .stress-row-base td { border-bottom: 1px solid rgba(255,255,255,0.08); color: var(--bg); }
+    .stress-row-base .st-scenario { color: rgba(250,250,248,0.6); }
+    .stress-row-base .st-coc { color: rgba(250,250,248,0.5); }
+    .stress-row-positive { background: #F5FBF7; }
+    .stress-row-warn { background: #FEFCE8; }
+    .stress-row-negative { background: #FEF2F2; }
     .stress-green { color: #2D7A4F; }
-    .stress-card.base .stress-green { color: #4ADE80; }
+    .stress-row-base .stress-green { color: #4ADE80; }
     .stress-yellow { color: #B07D2A; }
     .stress-red { color: #B94040; }
 
@@ -174,6 +190,26 @@
     .nbh-sublabel { font-size: 11px; color: var(--text-muted); }
     .score-high { color: #2D7A4F; }
     .score-mid { color: #B07D2A; }
+
+    /* ENVIRONMENTAL RISK */
+    .env-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; background: var(--border); border-radius: 4px 4px 0 0; overflow: hidden; margin-bottom: 0; }
+    .env-card { background: var(--surface); padding: 20px 16px; text-align: center; }
+    .env-icon { font-size: 22px; margin-bottom: 6px; }
+    .env-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .env-score { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+    .env-badge { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; margin-bottom: 4px; }
+    .env-sublabel { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .risk-low { color: #2D7A4F; }
+    .risk-moderate { color: #B07D2A; }
+    .risk-high { color: #C05A1A; }
+    .risk-severe { color: #B94040; }
+    .badge-low { background: #D4EDDA; color: #1A5C2E; }
+    .badge-moderate { background: #FEF3C7; color: #92400E; }
+    .badge-high { background: #FFE4CC; color: #7C3009; }
+    .badge-severe { background: #FECACA; color: #7F1D1D; }
+    .env-alert-bar { background: #FFF7ED; border: 1px solid #FCD9B0; border-top: none; border-radius: 0 0 4px 4px; padding: 12px 20px; margin-bottom: 32px; display: flex; align-items: center; gap: 10px; }
+    .env-alert-icon { font-size: 16px; flex-shrink: 0; }
+    .env-alert-text { font-size: 12px; color: #92400E; line-height: 1.5; }
 
     /* MAP */
     .map-container { border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 32px; }
@@ -271,11 +307,11 @@
       /* cashflow + tax: stack */
       .two-col { grid-template-columns: 1fr; }
 
-      /* stress: 2 col */
-      .stress-grid { grid-template-columns: repeat(2, 1fr); }
-
       /* neighborhood: 2 col */
       .neighborhood-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* env risk: 3 col */
+      .env-grid { grid-template-columns: repeat(3, 1fr); }
 
       /* city metrics: 2-3 col */
       .city-metrics { grid-template-columns: repeat(3, 1fr); }
@@ -304,8 +340,8 @@
       .city-metrics { grid-template-columns: repeat(2, 1fr); }
       .investment-summary.sfh-grid,
       .investment-summary.mfu-grid { grid-template-columns: repeat(2, 1fr); }
-      .stress-grid { grid-template-columns: 1fr 1fr; }
       .neighborhood-grid { grid-template-columns: repeat(2, 1fr); }
+      .env-grid { grid-template-columns: repeat(2, 1fr); }
       .property-address { font-size: 20px; }
       .metric-card-value { font-size: 22px; }
 
@@ -678,22 +714,92 @@
     <!-- ===== STRESS TEST ===== -->
     <div class="section-label">Stress Test</div>
 
-    <div class="stress-grid sfh-only">
-      <div class="stress-card"><div class="stress-scenario">Rent −10%</div><div class="stress-cashflow" id="s-st1-cf">+$112</div><div class="stress-coc" id="s-st1-coc">4.9% COC</div></div>
-      <div class="stress-card base"><div class="stress-scenario">Base Case</div><div class="stress-cashflow stress-green" id="s-st2-cf">+$412</div><div class="stress-coc" id="s-st2-coc">6.8% COC · Current</div></div>
-      <div class="stress-card"><div class="stress-scenario">Rent +10%</div><div class="stress-cashflow stress-green" id="s-st3-cf">+$712</div><div class="stress-coc" id="s-st3-coc">8.2% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">Vacancy 15%</div><div class="stress-cashflow" id="s-st4-cf">+$187</div><div class="stress-coc" id="s-st4-coc">5.2% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">Rate 8.0%</div><div class="stress-cashflow" id="s-st5-cf">−$138</div><div class="stress-coc" id="s-st5-coc">−1.2% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">Both Worst</div><div class="stress-cashflow" id="s-st6-cf">−$488</div><div class="stress-coc" id="s-st6-coc">−4.3% COC</div></div>
+    <div class="sfh-only">
+      <table class="stress-table">
+        <thead><tr><th>Scenario</th><th>Monthly Cashflow</th><th>COC Return</th><th>Outcome</th></tr></thead>
+        <tbody>
+          <tr class="stress-row-positive">
+            <td class="st-scenario">Rent +10%</td>
+            <td class="st-cf stress-green" id="s-st3-cf">+$712</td>
+            <td class="st-coc stress-green" id="s-st3-coc">8.2%</td>
+            <td><span class="st-badge st-ok">Positive</span></td>
+          </tr>
+          <tr class="stress-row-base">
+            <td class="st-scenario">Base Case</td>
+            <td class="st-cf stress-green" id="s-st2-cf">+$412</td>
+            <td class="st-coc" id="s-st2-coc">6.8%</td>
+            <td><span class="st-badge st-base-badge">Current</span></td>
+          </tr>
+          <tr class="stress-row-positive">
+            <td class="st-scenario">Rent −10%</td>
+            <td class="st-cf stress-green" id="s-st1-cf">+$112</td>
+            <td class="st-coc stress-green" id="s-st1-coc">4.9%</td>
+            <td><span class="st-badge st-ok">Positive</span></td>
+          </tr>
+          <tr class="stress-row-warn">
+            <td class="st-scenario">Vacancy 15%</td>
+            <td class="st-cf stress-yellow" id="s-st4-cf">+$187</td>
+            <td class="st-coc stress-yellow" id="s-st4-coc">5.2%</td>
+            <td><span class="st-badge st-warn">Marginal</span></td>
+          </tr>
+          <tr class="stress-row-negative">
+            <td class="st-scenario">Rate 8.0%</td>
+            <td class="st-cf stress-red" id="s-st5-cf">−$138</td>
+            <td class="st-coc stress-red" id="s-st5-coc">−1.2%</td>
+            <td><span class="st-badge st-neg">Negative</span></td>
+          </tr>
+          <tr class="stress-row-negative">
+            <td class="st-scenario">Rate 8% + Vacancy 15%</td>
+            <td class="st-cf stress-red" id="s-st6-cf">−$488</td>
+            <td class="st-coc stress-red" id="s-st6-coc">−4.3%</td>
+            <td><span class="st-badge st-neg">Negative</span></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
-    <div class="stress-grid mfu-only">
-      <div class="stress-card"><div class="stress-scenario">1 Unit Vacant</div><div class="stress-cashflow" id="m-st1-cf">+$504</div><div class="stress-coc" id="m-st1-coc">2.1% COC</div></div>
-      <div class="stress-card base"><div class="stress-scenario">Base Case</div><div class="stress-cashflow stress-green" id="m-st2-cf">+$1,104</div><div class="stress-coc" id="m-st2-coc">4.5% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">All at Market Rent</div><div class="stress-cashflow stress-green" id="m-st3-cf">+$1,304</div><div class="stress-coc" id="m-st3-coc">5.4% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">2 Units Vacant</div><div class="stress-cashflow" id="m-st4-cf">−$96</div><div class="stress-coc" id="m-st4-coc">−0.4% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">Rate 8.0%</div><div class="stress-cashflow" id="m-st5-cf">+$702</div><div class="stress-coc" id="m-st5-coc">2.9% COC</div></div>
-      <div class="stress-card"><div class="stress-scenario">Rate 8% + 1 Vacant</div><div class="stress-cashflow" id="m-st6-cf">−$98</div><div class="stress-coc" id="m-st6-coc">−0.4% COC</div></div>
+    <div class="mfu-only">
+      <table class="stress-table">
+        <thead><tr><th>Scenario</th><th>Monthly Cashflow</th><th>COC Return</th><th>Outcome</th></tr></thead>
+        <tbody>
+          <tr class="stress-row-positive">
+            <td class="st-scenario">All Units at Market Rent</td>
+            <td class="st-cf stress-green" id="m-st3-cf">+$1,304</td>
+            <td class="st-coc stress-green" id="m-st3-coc">5.4%</td>
+            <td><span class="st-badge st-ok">Positive</span></td>
+          </tr>
+          <tr class="stress-row-base">
+            <td class="st-scenario">Base Case</td>
+            <td class="st-cf stress-green" id="m-st2-cf">+$1,104</td>
+            <td class="st-coc" id="m-st2-coc">4.5%</td>
+            <td><span class="st-badge st-base-badge">Current</span></td>
+          </tr>
+          <tr class="stress-row-positive">
+            <td class="st-scenario">1 Unit Vacant</td>
+            <td class="st-cf stress-green" id="m-st1-cf">+$504</td>
+            <td class="st-coc stress-green" id="m-st1-coc">2.1%</td>
+            <td><span class="st-badge st-ok">Positive</span></td>
+          </tr>
+          <tr class="stress-row-positive">
+            <td class="st-scenario">Rate 8.0%</td>
+            <td class="st-cf stress-green" id="m-st5-cf">+$702</td>
+            <td class="st-coc stress-green" id="m-st5-coc">2.9%</td>
+            <td><span class="st-badge st-ok">Positive</span></td>
+          </tr>
+          <tr class="stress-row-negative">
+            <td class="st-scenario">2 Units Vacant</td>
+            <td class="st-cf stress-red" id="m-st4-cf">−$96</td>
+            <td class="st-coc stress-red" id="m-st4-coc">−0.4%</td>
+            <td><span class="st-badge st-neg">Negative</span></td>
+          </tr>
+          <tr class="stress-row-negative">
+            <td class="st-scenario">Rate 8% + 1 Unit Vacant</td>
+            <td class="st-cf stress-red" id="m-st6-cf">−$98</td>
+            <td class="st-coc stress-red" id="m-st6-coc">−0.4%</td>
+            <td><span class="st-badge st-neg">Negative</span></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- NEIGHBORHOOD -->
@@ -703,6 +809,50 @@
       <div class="nbh-card"><div class="nbh-label">School Rating</div><div class="nbh-score score-high">8/10</div><div class="nbh-sublabel">GreatSchools</div></div>
       <div class="nbh-card"><div class="nbh-label">Crime Index</div><div class="nbh-score score-mid">42</div><div class="nbh-sublabel">Below city avg</div></div>
       <div class="nbh-card"><div class="nbh-label">Infra Projects</div><div class="nbh-score score-high">2</div><div class="nbh-sublabel">Nearby (2 mi)</div></div>
+    </div>
+
+    <!-- ENVIRONMENTAL RISK -->
+    <div class="section-label">Environmental Risk</div>
+    <div class="env-grid">
+      <div class="env-card">
+        <div class="env-icon">🔥</div>
+        <div class="env-label">Fire Risk</div>
+        <div class="env-score risk-high">74 / 100</div>
+        <div><span class="env-badge badge-high">High</span></div>
+        <div class="env-sublabel">Cal Fire VHFHSZ zone. Est. +$180/mo insurance impact.</div>
+      </div>
+      <div class="env-card">
+        <div class="env-icon">🌊</div>
+        <div class="env-label">Flood Zone</div>
+        <div class="env-score risk-low">Zone X</div>
+        <div><span class="env-badge badge-low">Minimal</span></div>
+        <div class="env-sublabel">Outside 500-yr floodplain. No flood insurance required.</div>
+      </div>
+      <div class="env-card">
+        <div class="env-icon">💨</div>
+        <div class="env-label">Air Quality</div>
+        <div class="env-score risk-low">42 AQI</div>
+        <div><span class="env-badge badge-low">Good</span></div>
+        <div class="env-sublabel">EPA AirNow annual avg. Seasonal wildfire smoke risk.</div>
+      </div>
+      <div class="env-card">
+        <div class="env-icon">🌬️</div>
+        <div class="env-label">Wind Risk</div>
+        <div class="env-score risk-moderate">Zone II</div>
+        <div><span class="env-badge badge-moderate">Moderate</span></div>
+        <div class="env-sublabel">FEMA 110 mph design wind. Santa Ana conditions possible.</div>
+      </div>
+      <div class="env-card">
+        <div class="env-icon">🌍</div>
+        <div class="env-label">Earthquake</div>
+        <div class="env-score risk-high">0.54g PGA</div>
+        <div><span class="env-badge badge-high">High</span></div>
+        <div class="env-sublabel">USGS seismic hazard. Near Rose Canyon fault. Verify retrofit.</div>
+      </div>
+    </div>
+    <div class="env-alert-bar">
+      <div class="env-alert-icon">⚠️</div>
+      <div class="env-alert-text"><strong>Elevated fire risk detected.</strong> High Fire Hazard Severity Zone designation may affect insurability. Verify current homeowner + fire insurance availability and cost before proceeding — some carriers have withdrawn from this zip code. Factor premium into cashflow assumptions.</div>
     </div>
 
     <!-- MAP -->
@@ -715,6 +865,8 @@
         <div class="legend-item"><div class="legend-dot" style="background:#16A34A"></div>Transit</div>
         <div class="legend-item"><div class="legend-dot" style="background:#D97706"></div>Infrastructure Projects</div>
         <div class="legend-item"><div class="legend-dot" style="background:#DC2626"></div>High Crime Zone</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F97316; opacity:0.7; border-radius:2px;"></div>Fire Hazard Zone</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3B82F6; opacity:0.5; border-radius:2px;"></div>Flood Zone</div>
       </div>
     </div>
 
@@ -854,11 +1006,11 @@
           <div class="rec-badge go" id="s-rec-badge">GO</div>
           <div class="rec-title" id="s-rec-title">Strong investment at your profile.</div>
         </div>
-        <div class="rec-body" id="s-rec-body">This property generates $412/mo positive cashflow and a 6.8% COC return. At your 32% bracket, $18,182 annual depreciation saves $3,720 in taxes, boosting effective return to 9.1%. Main risk: if rates climb to 8%, cashflow turns negative — maintain a 6-month reserve (~$25K).</div>
+        <div class="rec-body" id="s-rec-body">This property generates $412/mo positive cashflow and a 6.8% COC return. At your 32% bracket, $18,182 annual depreciation saves $3,720 in taxes, boosting effective return to 9.1%. Main risks: if rates climb to 8%, cashflow turns negative — maintain a 6-month reserve (~$25K). High fire hazard zone may add ~$180/mo to insurance; verify carrier availability before committing.</div>
         <div class="rec-factors">
           <div class="rec-factor"><div class="rec-factor-label">Cashflow</div><div class="rec-factor-value" id="s-rec-f1">+$412/mo · Positive</div></div>
           <div class="rec-factor"><div class="rec-factor-label">Tax Benefit</div><div class="rec-factor-value" id="s-rec-f2">$3,720/yr at 32%</div></div>
-          <div class="rec-factor"><div class="rec-factor-label">Neighborhood</div><div class="rec-factor-value">Trending up · Schools 8/10</div></div>
+          <div class="rec-factor"><div class="rec-factor-label">Env. Risk</div><div class="rec-factor-value" style="color:#C05A1A">Fire HIGH · Flood LOW</div></div>
         </div>
       </div>
     </div>
