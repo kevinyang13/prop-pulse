@@ -247,11 +247,27 @@
     .rec-badge.caution { background: #FCD34D; color: #1A1A1A; }
     .rec-badge.pass { background: #9CA3AF; color: #1A1A1A; }
     .rec-title { font-size: 22px; font-weight: 800; letter-spacing: -0.01em; }
-    .rec-body { font-size: 14px; line-height: 1.8; color: rgba(250,250,248,0.75); max-width: 700px; }
-    .rec-factors { margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .rec-factor { border: 1px solid rgba(250,250,248,0.15); border-radius: 4px; padding: 16px; }
-    .rec-factor-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.5; margin-bottom: 4px; }
-    .rec-factor-value { font-size: 13px; font-weight: 600; }
+    .rec-body { font-size: 14px; line-height: 1.8; color: rgba(250,250,248,0.75); max-width: 700px; margin-bottom: 28px; }
+    /* dimension scorecard */
+    .rec-scorecard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-bottom: 24px; }
+    .rec-dim { background: rgba(255,255,255,0.04); padding: 16px 18px; }
+    .rec-dim-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .rec-dim-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.5; }
+    .rec-dim-signal { font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+    .sig-pos { background: rgba(74,222,128,0.25); color: #4ADE80; }
+    .sig-warn { background: rgba(252,211,77,0.25); color: #FCD34D; }
+    .sig-neg { background: rgba(252,165,165,0.25); color: #FCA5A5; }
+    .sig-neu { background: rgba(255,255,255,0.1); color: rgba(250,250,248,0.6); }
+    .rec-dim-value { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 3px; }
+    .rec-dim-sub { font-size: 11px; color: rgba(250,250,248,0.45); line-height: 1.4; }
+    /* key flags */
+    .rec-flags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+    .rec-flag { font-size: 11px; padding: 5px 12px; border-radius: 2px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .rec-flag.watch { background: rgba(252,211,77,0.18); color: #FCD34D; border: 1px solid rgba(252,211,77,0.25); }
+    .rec-flag.risk  { background: rgba(252,165,165,0.18); color: #FCA5A5; border: 1px solid rgba(252,165,165,0.25); }
+    .rec-flag.good  { background: rgba(74,222,128,0.15); color: #4ADE80; border: 1px solid rgba(74,222,128,0.2); }
+    /* divider */
+    .rec-divider { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 0 0 20px; }
 
     /* EQUITY OUTLOOK */
     .equity-section { margin-bottom: 32px; }
@@ -340,8 +356,8 @@
       /* details: 1 col */
       .details-grid { grid-template-columns: 1fr; }
 
-      /* rec factors: 1 col */
-      .rec-factors { grid-template-columns: 1fr; gap: 10px; }
+      /* rec scorecard: 2 col */
+      .rec-scorecard { grid-template-columns: repeat(2, 1fr); }
 
       /* actions wrap */
       .actions { flex-wrap: wrap; }
@@ -1072,12 +1088,70 @@
           <div class="rec-badge go" id="s-rec-badge">GO</div>
           <div class="rec-title" id="s-rec-title">Strong investment at your profile.</div>
         </div>
-        <div class="rec-body" id="s-rec-body">This property generates $412/mo positive cashflow and a 6.8% COC return. At your 32% bracket, $18,182 annual depreciation saves $3,720 in taxes, boosting effective return to 9.1%. Main risks: if rates climb to 8%, cashflow turns negative — maintain a 6-month reserve (~$25K). High fire hazard zone may add ~$180/mo to insurance; verify carrier availability before committing.</div>
-        <div class="rec-factors">
-          <div class="rec-factor"><div class="rec-factor-label">Cashflow</div><div class="rec-factor-value" id="s-rec-f1">+$412/mo · Positive</div></div>
-          <div class="rec-factor"><div class="rec-factor-label">Tax Benefit</div><div class="rec-factor-value" id="s-rec-f2">$3,720/yr at 32%</div></div>
-          <div class="rec-factor"><div class="rec-factor-label">Env. Risk</div><div class="rec-factor-value" style="color:#C05A1A">Fire HIGH · Flood LOW</div></div>
+        <div class="rec-body" id="s-rec-body">Numbers work across all six dimensions. Cashflow is positive, tax savings are meaningful at your 32% bracket, and the neighborhood demographics signal durable rental demand. Main watch item: fire hazard zone — verify insurance carrier availability and budget $180/mo before committing.</div>
+
+        <!-- DIMENSION SCORECARD -->
+        <div class="rec-scorecard">
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Cashflow</span>
+              <span class="rec-dim-signal sig-pos">Positive</span>
+            </div>
+            <div class="rec-dim-value">+$412/mo</div>
+            <div class="rec-dim-sub">6.8% COC · 5.4% cap rate · breaks even at 72% occupancy</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Tax Impact</span>
+              <span class="rec-dim-signal sig-pos">Beneficial</span>
+            </div>
+            <div class="rec-dim-value">+$310/mo</div>
+            <div class="rec-dim-sub">$18,182/yr depreciation · $3,720 tax savings at 32% · PAL fully deductible</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Equity Outlook</span>
+              <span class="rec-dim-signal sig-pos">Strong Upside</span>
+            </div>
+            <div class="rec-dim-value">+6.8%/yr</div>
+            <div class="rec-dim-sub">SD median appreciation · +2.1% pop growth · $8B+ infra pipeline</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Environmental Risk</span>
+              <span class="rec-dim-signal sig-warn">Elevated</span>
+            </div>
+            <div class="rec-dim-value">Fire HIGH</div>
+            <div class="rec-dim-sub">Cal Fire VHFHSZ · +$180/mo est. insurance · Flood Zone X (minimal)</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Location Demographics</span>
+              <span class="rec-dim-signal sig-pos">Strong</span>
+            </div>
+            <div class="rec-dim-value">61% renters</div>
+            <div class="rec-dim-sub">Median income $94K · Median age 34 · 3.8% unemployment · P/R 22.4×</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Downside Resilience</span>
+              <span class="rec-dim-signal sig-pos">Resilient</span>
+            </div>
+            <div class="rec-dim-value">4 of 6</div>
+            <div class="rec-dim-sub">Scenarios cash-flow positive · Negative only at rate 8%+ or rent −15%</div>
+          </div>
         </div>
+
+        <!-- KEY FLAGS -->
+        <hr class="rec-divider">
+        <div class="rec-flags">
+          <span class="rec-flag risk">⚠ Fire HIGH — verify carrier availability before offering</span>
+          <span class="rec-flag watch">⚡ Rate sensitivity — cashflow turns negative above 8%</span>
+          <span class="rec-flag good">✓ PAL fully deductible at your AGI (&lt;$100K threshold)</span>
+          <span class="rec-flag good">✓ 61% renter zip — strong rental demand signal</span>
+        </div>
+
+        <div style="font-size:11px;color:rgba(250,250,248,0.35);font-style:italic;">Estimates only — consult a CPA for tax advice. PropPulse is not a tax advisor.</div>
       </div>
     </div>
 
@@ -1089,12 +1163,70 @@
           <div class="rec-badge go" id="m-rec-badge">GO</div>
           <div class="rec-title" id="m-rec-title">Solid multi-unit with immediate upside.</div>
         </div>
-        <div class="rec-body" id="m-rec-body">Triplex generates $1,104/mo cashflow. Price/unit ($366K) below SD avg ($390K). Depreciation of $32,000/yr saves $8,436 in taxes. One unit vacant keeps cashflow positive at +$504/mo — resilient deal.</div>
-        <div class="rec-factors">
-          <div class="rec-factor"><div class="rec-factor-label">Price/Unit</div><div class="rec-factor-value" id="m-rec-f1">$366K vs $390K avg</div></div>
-          <div class="rec-factor"><div class="rec-factor-label">Cashflow</div><div class="rec-factor-value" id="m-rec-f2">+$1,104/mo · Positive</div></div>
-          <div class="rec-factor"><div class="rec-factor-label">Resilience</div><div class="rec-factor-value" id="m-rec-f3">1 unit vacant = +$504/mo</div></div>
+        <div class="rec-body" id="m-rec-body">Triplex pencils across every dimension. Strong demographics confirm durable rental demand in 92103. Price/unit is below San Diego average, depreciation is substantial, and the deal stays cash-flow positive with one unit vacant — well-structured for your tax profile.</div>
+
+        <!-- DIMENSION SCORECARD -->
+        <div class="rec-scorecard">
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Cashflow</span>
+              <span class="rec-dim-signal sig-pos">Positive</span>
+            </div>
+            <div class="rec-dim-value">+$1,104/mo</div>
+            <div class="rec-dim-sub">8.2% COC · 5.9% cap rate · stays positive with 1 unit vacant (+$504)</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Tax Impact</span>
+              <span class="rec-dim-signal sig-pos">Beneficial</span>
+            </div>
+            <div class="rec-dim-value">+$703/mo</div>
+            <div class="rec-dim-sub">$32,000/yr depreciation · $8,436 tax savings at 32% · PAL fully deductible</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Equity Outlook</span>
+              <span class="rec-dim-signal sig-pos">Strong Upside</span>
+            </div>
+            <div class="rec-dim-value">+6.8%/yr</div>
+            <div class="rec-dim-sub">Price/unit $366K vs SD avg $390K · $8B+ active infra investment nearby</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Environmental Risk</span>
+              <span class="rec-dim-signal sig-neu">Moderate</span>
+            </div>
+            <div class="rec-dim-value">Fire MOD</div>
+            <div class="rec-dim-sub">First Street score 48/100 · Flood Zone X · AQI 42 Good · Wind Zone II</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Location Demographics</span>
+              <span class="rec-dim-signal sig-pos">Strong</span>
+            </div>
+            <div class="rec-dim-value">61% renters</div>
+            <div class="rec-dim-sub">Median income $94K · Median age 34 · vacancy 3.1% — tight supply</div>
+          </div>
+          <div class="rec-dim">
+            <div class="rec-dim-header">
+              <span class="rec-dim-label">Downside Resilience</span>
+              <span class="rec-dim-signal sig-pos">Resilient</span>
+            </div>
+            <div class="rec-dim-value">5 of 6</div>
+            <div class="rec-dim-sub">Scenarios cash-flow positive · Only 2-unit vacancy + rate shock turns negative</div>
+          </div>
         </div>
+
+        <!-- KEY FLAGS -->
+        <hr class="rec-divider">
+        <div class="rec-flags">
+          <span class="rec-flag good">✓ Price/unit below SD market average ($366K vs $390K)</span>
+          <span class="rec-flag good">✓ Survives 1-unit vacancy with +$504/mo cashflow</span>
+          <span class="rec-flag good">✓ 61% renter zip — strong, durable rental demand</span>
+          <span class="rec-flag watch">⚡ Unit 2 under market by $350/mo — raise on next lease</span>
+        </div>
+
+        <div style="font-size:11px;color:rgba(250,250,248,0.35);font-style:italic;">Estimates only — consult a CPA for tax advice. PropPulse is not a tax advisor.</div>
       </div>
     </div>
 
