@@ -198,7 +198,7 @@ Near-term addressable: property investors actively evaluating deals — estimate
 | Tier | Price | Limits | Target user |
 |------|-------|--------|-------------|
 | **Free Trial** | $0 | 3 analyses, no expiry, no credit card | New users evaluating fit |
-| **PropPulse Pro** | $7.99/month or $59/year | Unlimited analyses, saved properties, comparison table | Active deal evaluators |
+| **PropPulse Pro** | $7.99/month or $59/year | Unlimited analyses, saved properties, side-by-side comparison (up to 3) | Active deal evaluators |
 
 **Rationale**:
 - 3 free analyses = enough to prove value on a real deal; not enough for ongoing use
@@ -289,6 +289,7 @@ Goal: working analysis tool with personalized tax math, auth, and data pipeline.
 | 2 | Tax Engine | Depreciation, PAL rules, Schedule E, multi-unit support, house hack toggle, stress scenarios |
 | 3 | Results Page | GO/CAUTION/PASS verdict, stress table, cashflow breakdown, key metrics, recommendation panel |
 | 4 | Map + Neighborhood + Demographics + Env Risk | Leaflet map, Walk Score, GreatSchools, Census ACS demographics, FEMA flood, fire risk, AQI, earthquake, equity outlook |
+| 6 (Phase 2) | Property Comparison | Side-by-side up to 3 saved properties across 7 dimensions; best-in-row highlighting; overall verdict with score pips |
 | 5 | Save + Paywall + Share | Saved properties dashboard, 3-analysis free tier, Stripe Pro subscription, PDF export |
 
 ### Phase 2 — Polish + Apple Auth

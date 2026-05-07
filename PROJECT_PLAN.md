@@ -236,7 +236,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Stripe integration: Pro subscription ($7.99/mo + $59/yr)
 - [ ] Stripe webhook → sync `subscriptions` table
 - [ ] Export PDF (html-to-pdf via Puppeteer or React PDF)
-- [ ] Compare up to 5 properties (side-by-side table, Phase 2 full UI)
+- [ ] Compare up to 3 properties side-by-side (Pro feature)
 
 ---
 
@@ -245,7 +245,17 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Apple Sign-In (required before iOS App Store submission)
 - [ ] Custom auth UI (replace Supabase Auth UI with PropPulse-branded components)
 - [ ] Stress test interactive sliders (not static table)
-- [ ] Side-by-side comparison table UI
+
+**Property Comparison (up to 3 properties)**
+- [ ] `/compare` page — Pro-gated; redirect free users to upgrade prompt
+- [ ] Property selector bar: 3 slots; pull from `saved_analyses`; empty slot shows "＋ Add Property" dashed picker
+- [ ] Highlight best-in-dimension per row (green left border + background tint); worst in red
+- [ ] Section headers: Cashflow · Tax Impact · Equity Outlook · Environmental Risk · Location Demographics · Downside Resilience · Neighborhood Signals
+- [ ] Per-section summary bar shows which property wins that dimension
+- [ ] Overall Verdict row: GO/CAUTION/PASS badge + score pip bar (6 pips, colored by dimension outcome) + narrative
+- [ ] Action footer per property: "View Full Analysis" · "Star Property"
+- [ ] Mobile: show max 2 properties; hide 3rd column below 600px
+- [ ] "My Properties" dashboard: "Compare" checkbox on each saved analysis card → opens `/compare?ids=...`
 - [ ] Saved property history with verdict tracking over time
 - [ ] Email alerts for saved search price drops (Resend)
 - [ ] Unit rent history chart (multi-unit)
@@ -387,6 +397,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
 | [BUSINESS_PLAN.md](BUSINESS_PLAN.md) | Business model, GTM, financials, competitive analysis |
 | [plan/mockup-results.html](plan/mockup-results.html) | Interactive results page mockup |
+| [plan/mockup-comparison.html](plan/mockup-comparison.html) | Property comparison page mockup (up to 3 properties, 7 dimensions) |
 
 ---
 

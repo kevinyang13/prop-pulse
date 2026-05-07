@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Compare Properties</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+      --green: #2D7A4F; --green-lt: #D4EDDA; --green-dk: #1A5C2E;
+      --amber: #B07D2A; --amber-lt: #FEF3C7; --amber-dk: #92400E;
+      --red: #B94040; --red-lt: #FECACA; --red-dk: #7F1D1D;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* NAV */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; gap: 24px; align-items: center; font-size: 13px; color: var(--text-muted); }
+    .nav-right a { text-decoration: none; color: inherit; }
+    .btn-primary { background: var(--text); color: var(--bg); border: none; padding: 8px 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 4px; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); padding: 7px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 4px; }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 40px 40px 100px; }
+
+    /* PAGE HEADER */
+    .page-header { margin-bottom: 36px; }
+    .page-title { font-size: 28px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: var(--text-muted); }
+
+    /* PROPERTY SELECTOR BAR */
+    .selector-bar { display: grid; grid-template-columns: 220px repeat(3, 1fr); gap: 0; margin-bottom: 0; border: 1px solid var(--border); border-radius: 4px 4px 0 0; overflow: hidden; background: var(--border); }
+    .selector-label-cell { background: var(--surface-2); padding: 16px 20px; display: flex; align-items: center; }
+    .selector-label-text { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); }
+    .selector-cell { background: var(--surface); padding: 12px 16px; position: relative; }
+    .selector-cell.empty { background: var(--bg); border: 2px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; min-height: 90px; }
+    .selector-cell.empty:hover { border-color: var(--accent); background: var(--surface); }
+    .selector-add-icon { font-size: 22px; color: var(--accent); }
+    .selector-add-text { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+    .selector-prop-address { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
+    .selector-prop-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+    .selector-verdict { display: inline-flex; align-items: center; gap: 6px; }
+    .sv-badge { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+    .sv-go { background: #4ADE80; color: #1A1A1A; }
+    .sv-caution { background: #FCD34D; color: #1A1A1A; }
+    .sv-pass { background: #9CA3AF; color: #1A1A1A; }
+    .selector-remove { position: absolute; top: 10px; right: 12px; font-size: 16px; color: var(--text-muted); cursor: pointer; line-height: 1; background: none; border: none; }
+    .selector-remove:hover { color: var(--red); }
+
+    /* COMPARISON TABLE */
+    .compare-table-wrap { border: 1px solid var(--border); border-top: none; border-radius: 0 0 4px 4px; overflow: hidden; margin-bottom: 40px; }
+
+    /* SECTION DIVIDER */
+    .cmp-section { display: grid; grid-template-columns: 220px repeat(3, 1fr); background: var(--border); gap: 0; }
+    .cmp-section-label { background: var(--text); padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
+    .cmp-section-label-text { font-size: 10px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--bg); }
+    .cmp-section-summary { background: rgba(26,26,26,0.92); padding: 12px 16px; display: flex; align-items: center; }
+    .cmp-winner-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; }
+    .winner-tag-active { background: #4ADE80; color: #1A1A1A; }
+    .winner-tag-dim { background: rgba(255,255,255,0.1); color: rgba(250,250,248,0.45); }
+
+    /* ROW */
+    .cmp-row { display: grid; grid-template-columns: 220px repeat(3, 1fr); background: var(--border); gap: 0; }
+    .cmp-row:last-child .cmp-label-cell,
+    .cmp-row:last-child .cmp-val-cell { border-bottom: none; }
+    .cmp-label-cell { background: var(--surface-2); padding: 14px 20px; display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--border); }
+    .cmp-row-label { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .cmp-row-sub { font-size: 10px; color: var(--text-muted); }
+    .cmp-val-cell { background: var(--bg); padding: 14px 16px; border-bottom: 1px solid var(--border); position: relative; }
+    .cmp-val-cell.winner { background: #F5FBF7; }
+    .cmp-val-cell.loser { background: var(--bg); }
+    .cmp-val-cell.warn { background: #FEFCE8; }
+    .cmp-val-cell.danger { background: #FEF2F2; }
+    .cmp-val { font-size: 15px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 2px; }
+    .cmp-val-pos { color: var(--green); }
+    .cmp-val-neg { color: var(--red); }
+    .cmp-val-warn { color: var(--amber); }
+    .cmp-val-neu { color: var(--text); }
+    .cmp-sub { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+    .best-marker { position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--green); }
+    .warn-marker { position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--amber); }
+    .bad-marker { position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--red); }
+
+    /* SIGNAL BADGE */
+    .sig { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 7px; border-radius: 2px; margin-top: 4px; }
+    .sig-pos { background: var(--green-lt); color: var(--green-dk); }
+    .sig-warn { background: var(--amber-lt); color: var(--amber-dk); }
+    .sig-neg { background: var(--red-lt); color: var(--red-dk); }
+    .sig-neu { background: var(--surface-2); color: var(--text-muted); }
+
+    /* OVERALL VERDICT ROW */
+    .verdict-row { display: grid; grid-template-columns: 220px repeat(3, 1fr); background: var(--border); gap: 0; }
+    .verdict-label-cell { background: var(--text); padding: 24px 20px; display: flex; flex-direction: column; justify-content: center; }
+    .verdict-label-title { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--bg); margin-bottom: 4px; }
+    .verdict-label-sub { font-size: 11px; color: rgba(250,250,248,0.5); }
+    .verdict-val-cell { background: var(--text); padding: 24px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .v-badge { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; padding: 6px 14px; border-radius: 2px; width: fit-content; }
+    .v-go { background: #4ADE80; color: #1A1A1A; }
+    .v-caution { background: #FCD34D; color: #1A1A1A; }
+    .v-pass { background: #9CA3AF; color: #1A1A1A; }
+    .v-narrative { font-size: 12px; color: rgba(250,250,248,0.6); line-height: 1.6; }
+
+    /* SCORE OVERVIEW */
+    .score-bar { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .score-pip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .score-pip.on { background: #4ADE80; }
+    .score-pip.warn { background: #FCD34D; }
+    .score-pip.off { background: rgba(255,255,255,0.15); }
+    .score-label { font-size: 11px; color: rgba(250,250,248,0.5); }
+
+    /* PROP COLUMN HIGHLIGHT (best overall) */
+    .selector-cell.best-prop { border-top: 3px solid #4ADE80; }
+
+    /* EMPTY SLOT PLACEHOLDER ROWS */
+    .cmp-val-cell.empty-slot { background: var(--surface); }
+    .empty-dash { color: var(--border); font-size: 18px; font-weight: 300; }
+
+    /* CTA FOOTER */
+    .cmp-footer { display: grid; grid-template-columns: 220px repeat(3, 1fr); background: var(--border); gap: 0; border-top: 1px solid var(--border); }
+    .cmp-footer-label { background: var(--surface-2); padding: 20px; display: flex; align-items: center; }
+    .cmp-footer-cell { background: var(--bg); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .btn-view { background: var(--text); color: var(--bg); border: none; padding: 10px 16px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; border-radius: 4px; width: 100%; }
+    .btn-save { background: transparent; color: var(--text); border: 1.5px solid var(--border); padding: 8px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 4px; width: 100%; }
+
+    /* LEGEND */
+    .legend { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+    .legend-pip { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .container { padding: 24px 20px 80px; }
+      nav { padding: 16px 20px; }
+      .selector-bar, .cmp-section, .cmp-row, .verdict-row, .cmp-footer {
+        grid-template-columns: 140px repeat(3, 1fr);
+      }
+      .cmp-label-cell, .selector-label-cell, .verdict-label-cell, .cmp-footer-label { padding: 12px 12px; }
+      .cmp-val-cell, .selector-cell, .verdict-val-cell, .cmp-footer-cell { padding: 12px 10px; }
+      .cmp-val { font-size: 13px; }
+    }
+
+    @media (max-width: 600px) {
+      /* On mobile: show max 2 properties */
+      .selector-bar, .cmp-section, .cmp-row, .verdict-row, .cmp-footer {
+        grid-template-columns: 120px repeat(2, 1fr);
+      }
+      /* Hide 3rd property column */
+      .selector-cell:nth-child(4),
+      .cmp-val-cell:nth-child(4),
+      .cmp-section-summary:nth-child(4),
+      .verdict-val-cell:nth-child(4),
+      .cmp-footer-cell:nth-child(4) { display: none; }
+      .page-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div>
+    <div class="logo">Prop<span>Pulse</span></div>
+  </div>
+  <div class="nav-right">
+    <a href="#">My Properties</a>
+    <a href="#">Compare</a>
+    <button class="btn-primary">Analyze Property</button>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-title">Property Comparison</div>
+    <div class="page-sub">Compare up to 3 saved properties side by side across all investment dimensions.</div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-pip" style="background:#2D7A4F"></div> Best in dimension</div>
+    <div class="legend-item"><div class="legend-pip" style="background:#B07D2A"></div> Watch item</div>
+    <div class="legend-item"><div class="legend-pip" style="background:#B94040"></div> Weakest / Risk</div>
+  </div>
+
+  <!-- PROPERTY SELECTOR + COMPARISON TABLE -->
+  <!-- ============================================================ -->
+  <!--   SELECTOR BAR                                               -->
+  <!-- ============================================================ -->
+  <div class="selector-bar">
+    <div class="selector-label-cell">
+      <span class="selector-label-text">Properties</span>
+    </div>
+
+    <!-- PROPERTY 1 — filled -->
+    <div class="selector-cell best-prop">
+      <button class="selector-remove" title="Remove">×</button>
+      <div class="selector-prop-address">4821 Oakwood Dr</div>
+      <div class="selector-prop-meta">San Diego, CA · SFH · $625,000</div>
+      <div class="selector-verdict">
+        <span class="sv-badge sv-go">GO</span>
+        <span style="font-size:11px;color:var(--text-muted)">6.8% COC</span>
+      </div>
+    </div>
+
+    <!-- PROPERTY 2 — filled -->
+    <div class="selector-cell">
+      <button class="selector-remove" title="Remove">×</button>
+      <div class="selector-prop-address">1142 Maple Ave, Unit A–C</div>
+      <div class="selector-prop-meta">San Diego, CA · Triplex · $1,098,000</div>
+      <div class="selector-verdict">
+        <span class="sv-badge sv-go">GO</span>
+        <span style="font-size:11px;color:var(--text-muted)">8.2% COC</span>
+      </div>
+    </div>
+
+    <!-- PROPERTY 3 — filled -->
+    <div class="selector-cell">
+      <button class="selector-remove" title="Remove">×</button>
+      <div class="selector-prop-address">3307 Sunset Blvd</div>
+      <div class="selector-prop-meta">Los Angeles, CA · SFH · $780,000</div>
+      <div class="selector-verdict">
+        <span class="sv-badge sv-caution">CAUTION</span>
+        <span style="font-size:11px;color:var(--text-muted)">3.1% COC</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="compare-table-wrap">
+
+    <!-- ============================================================ -->
+    <!--  SECTION: CASHFLOW                                           -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Cashflow</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Monthly Cashflow</div><div class="cmp-row-sub">After all expenses</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+$412</div><div class="cmp-sub">After 5% vacancy</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+$1,104</div><div class="cmp-sub">3 units · 5% blended vacancy</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">+$94</div><div class="cmp-sub">Thin margin — minimal buffer</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Cash-on-Cash Return</div><div class="cmp-row-sub">Annual net / cash invested</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">6.8%</div><div class="cmp-sub">$125K invested</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">8.2%</div><div class="cmp-sub">$161K invested</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">3.1%</div><div class="cmp-sub">Below 5% threshold</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Cap Rate</div><div class="cmp-row-sub">NOI / purchase price</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">5.4%</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">5.9%</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">3.8%</div><div class="cmp-sub">Below SD avg 5.1%</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Break-Even Occupancy</div><div class="cmp-row-sub">Min occupancy to cover costs</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">72%</div><div class="cmp-sub">28% vacancy buffer</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">78%</div><div class="cmp-sub">22% vacancy buffer</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">94%</div><div class="cmp-sub">Only 6% vacancy buffer</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION: TAX IMPACT                                         -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Tax Impact</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Annual Depreciation</div><div class="cmp-row-sub">27.5-yr straight-line · 80% bldg</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">$18,182</div><div class="cmp-sub">80% of $625K ÷ 27.5</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">$31,927</div><div class="cmp-sub">80% of $1.098M ÷ 27.5</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">$22,691</div><div class="cmp-sub">80% of $780K ÷ 27.5</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Tax Savings / Year</div><div class="cmp-row-sub">At your 32% bracket</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">$3,720</div><div class="cmp-sub">+$310/mo effective</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">$8,344</div><div class="cmp-sub">+$695/mo effective</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">$5,866</div><div class="cmp-sub">+$489/mo effective</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">PAL Status</div><div class="cmp-row-sub">Passive activity loss rules</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">Fully Deductible</div><div class="cmp-sub">AGI below $100K threshold</div><span class="sig sig-pos">Active</span></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">Fully Deductible</div><div class="cmp-sub">AGI below $100K threshold</div><span class="sig sig-pos">Active</span></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">Fully Deductible</div><div class="cmp-sub">AGI below $100K threshold</div><span class="sig sig-pos">Active</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Tax-Adjusted COC</div><div class="cmp-row-sub">Including tax savings</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">9.1%</div><div class="cmp-sub">+2.3% from tax benefit</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">13.4%</div><div class="cmp-sub">+5.2% from tax benefit</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">8.9%</div><div class="cmp-sub">+5.8% from tax benefit</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION: EQUITY OUTLOOK                                     -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Equity Outlook</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">4821 Oakwood ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Home Price Trend</div><div class="cmp-row-sub">Median YoY appreciation</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+6.8%/yr</div><div class="cmp-sub">San Diego metro</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+6.8%/yr</div><div class="cmp-sub">San Diego metro</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">+4.2%/yr</div><div class="cmp-sub">Los Angeles metro</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Population Growth</div><div class="cmp-row-sub">Metro YoY</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+2.1%</div><div class="cmp-sub">Net inflow +18,400 (2024)</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+2.1%</div><div class="cmp-sub">Net inflow +18,400 (2024)</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">−0.3%</div><div class="cmp-sub">Net outflow — population decline</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Job Growth</div><div class="cmp-row-sub">Metro YoY</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+3.2%</div><div class="cmp-sub">Life sci · Defense · Tech</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+3.2%</div><div class="cmp-sub">Life sci · Defense · Tech</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">+1.8%</div><div class="cmp-sub">Entertainment · Finance</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Nearby Infra Projects</div><div class="cmp-row-sub">Within 10 mi · Active / planned</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">6 projects</div><div class="cmp-sub">$8.0B+ investment</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">6 projects</div><div class="cmp-sub">$8.0B+ investment</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">3 projects</div><div class="cmp-sub">$2.1B investment</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION: ENVIRONMENTAL RISK                                 -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Environmental Risk</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">1142 Maple</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">3307 Sunset ★ Best</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Fire Risk</div><div class="cmp-row-sub">Cal Fire / First Street</div></div>
+      <div class="cmp-val-cell danger"><div class="bad-marker"></div><div class="cmp-val cmp-val-neg">HIGH — 74/100</div><div class="cmp-sub">VHFHSZ zone · verify carrier</div><span class="sig sig-neg">High</span></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">MODERATE — 48/100</div><div class="cmp-sub">First Street estimate</div><span class="sig sig-warn">Moderate</span></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">LOW — 12/100</div><span class="sig sig-pos">Low</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Flood Zone</div><div class="cmp-row-sub">FEMA NFHL designation</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">Zone X</div><div class="cmp-sub">Minimal — no insurance req.</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">Zone X</div><div class="cmp-sub">Minimal — no insurance req.</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">Zone X</div><div class="cmp-sub">Minimal — no insurance req.</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Air Quality (AQI)</div><div class="cmp-row-sub">Annual average · EPA AirNow</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">42 — Good</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">42 — Good</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">98 — Moderate</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Earthquake Risk</div><div class="cmp-row-sub">USGS PGA · 2% in 50yr</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">0.54g — High</div><div class="cmp-sub">Near active fault system</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">0.54g — High</div><div class="cmp-sub">Near active fault system</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">0.62g — High</div><div class="cmp-sub">Greater LA fault proximity</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Est. Insurance Impact</div><div class="cmp-row-sub">Monthly premium delta</div></div>
+      <div class="cmp-val-cell danger"><div class="bad-marker"></div><div class="cmp-val cmp-val-neg">+$180/mo</div><div class="cmp-sub">Fire hazard surcharge</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">+$80/mo</div><div class="cmp-sub">Moderate fire zone</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+$20/mo</div><div class="cmp-sub">Standard market rate</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION: LOCATION DEMOGRAPHICS                              -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Location Demographics</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">4821 Oakwood ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Renter Ratio</div><div class="cmp-row-sub">Renter-occ / total units · ZIP</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">61%</div><div class="cmp-sub">ZIP 92103 · Strong renter market</div><span class="sig sig-pos">Strong</span></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">61%</div><div class="cmp-sub">ZIP 92103 · Strong renter market</div><span class="sig sig-pos">Strong</span></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">44%</div><div class="cmp-sub">ZIP 90026 · Mixed market</div><span class="sig sig-warn">Mixed</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Median Household Income</div><div class="cmp-row-sub">ACS 5-Year · ZIP level</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">$94,200</div><div class="cmp-sub">+14% vs SD metro median</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">$94,200</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">$108,400</div><div class="cmp-sub">+12% vs LA metro median</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Unemployment Rate</div><div class="cmp-row-sub">vs national avg 4.1%</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">3.8%</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">3.8%</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">5.2%</div><div class="cmp-sub">Above national avg</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Housing Vacancy Rate</div><div class="cmp-row-sub">Vacant / total units</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">3.1%</div><div class="cmp-sub">Very tight supply</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">3.1%</div><div class="cmp-sub">Very tight supply</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">5.8%</div><div class="cmp-sub">Moderate supply</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Price-to-Rent Ratio</div><div class="cmp-row-sub">Median home / annual rent</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">22.4×</div><div class="cmp-sub">Renting favored — strong demand</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">22.4×</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">28.1×</div><div class="cmp-sub">High — demand may soften</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION: DOWNSIDE RESILIENCE                                -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Downside Resilience</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Stress Scenarios Positive</div><div class="cmp-row-sub">Of 6 stress test scenarios</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">4 of 6</div><div class="cmp-sub">Negative: Rate 8% · Rent −15%</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">5 of 6</div><div class="cmp-sub">Negative: 2 units vacant + rate shock</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">2 of 6</div><div class="cmp-sub">Most scenarios cash-flow negative</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Worst-Case Cashflow</div><div class="cmp-row-sub">Rate 8% + Rent −15%</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-neg">−$318/mo</div><div class="cmp-sub">Manageable with 6-mo reserve</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+$204/mo</div><div class="cmp-sub">Stays positive in worst case</div></div>
+      <div class="cmp-val-cell danger"><div class="bad-marker"></div><div class="cmp-val cmp-val-neg">−$892/mo</div><div class="cmp-sub">Severe — requires capital reserve</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Vacancy Shock (1 unit / 100%)</div><div class="cmp-row-sub">Cashflow with vacancy spike</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-neg">−$188/mo</div><div class="cmp-sub">At 0% occupancy</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">+$504/mo</div><div class="cmp-sub">1 unit vacant · 2 still paying</div></div>
+      <div class="cmp-val-cell danger"><div class="bad-marker"></div><div class="cmp-val cmp-val-neg">−$606/mo</div><div class="cmp-sub">At 0% occupancy</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Recommended Reserve</div><div class="cmp-row-sub">6-month operating buffer</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-neu">~$25K</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">~$28K</div><div class="cmp-sub">Lower relative to income</div></div>
+      <div class="cmp-val-cell danger"><div class="bad-marker"></div><div class="cmp-val cmp-val-neg">~$52K</div><div class="cmp-sub">High reserve requirement</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  SECTION: NEIGHBORHOOD SIGNALS                               -->
+    <!-- ============================================================ -->
+    <div class="cmp-section">
+      <div class="cmp-section-label"><span class="cmp-section-label-text">Neighborhood Signals</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">1142 Maple</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">3307 Sunset ★ Best</span></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Walk Score</div><div class="cmp-row-sub">0–100</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">74</div><div class="cmp-sub">Very Walkable</div></div>
+      <div class="cmp-val-cell"><div class="cmp-val cmp-val-pos">74</div><div class="cmp-sub">Very Walkable</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">91</div><div class="cmp-sub">Walker's Paradise</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">School Rating</div><div class="cmp-row-sub">GreatSchools · nearest rated</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">8.2 / 10</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">8.2 / 10</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">5.4 / 10</div></div>
+    </div>
+
+    <div class="cmp-row">
+      <div class="cmp-label-cell"><div class="cmp-row-label">Crime Grade</div><div class="cmp-row-sub">CrimeGrade.org · A = safest</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">B+</div><div class="cmp-sub">Below city avg crime</div></div>
+      <div class="cmp-val-cell winner"><div class="best-marker"></div><div class="cmp-val cmp-val-pos">B+</div></div>
+      <div class="cmp-val-cell warn"><div class="warn-marker"></div><div class="cmp-val cmp-val-warn">C</div><div class="cmp-sub">Above city avg crime</div></div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  OVERALL VERDICT                                             -->
+    <!-- ============================================================ -->
+    <div class="verdict-row">
+      <div class="verdict-label-cell">
+        <div class="verdict-label-title">Overall Verdict</div>
+        <div class="verdict-label-sub">Across all 6 dimensions · personalized to your tax profile</div>
+      </div>
+
+      <!-- Prop 1 verdict -->
+      <div class="verdict-val-cell">
+        <span class="v-badge v-go">GO</span>
+        <div class="score-bar">
+          <div class="score-pip on"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip warn"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip warn"></div>
+          <span class="score-label">4 strong · 2 watch</span>
+        </div>
+        <div class="v-narrative">Strong cashflow + tax + equity. Watch fire risk and rate sensitivity. Best for tax-efficient buy-and-hold.</div>
+      </div>
+
+      <!-- Prop 2 verdict — winner -->
+      <div class="verdict-val-cell" style="border-left: 3px solid #4ADE80;">
+        <span class="v-badge v-go">GO ★ Best Overall</span>
+        <div class="score-bar">
+          <div class="score-pip on"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip warn"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip on"></div>
+          <span class="score-label">5 strong · 1 watch</span>
+        </div>
+        <div class="v-narrative">Best cashflow, best tax savings, most resilient in stress scenarios. Fire risk moderate — price in $80/mo insurance premium.</div>
+      </div>
+
+      <!-- Prop 3 verdict -->
+      <div class="verdict-val-cell">
+        <span class="v-badge v-caution">CAUTION</span>
+        <div class="score-bar">
+          <div class="score-pip on"></div>
+          <div class="score-pip off"></div>
+          <div class="score-pip warn"></div>
+          <div class="score-pip on"></div>
+          <div class="score-pip off"></div>
+          <div class="score-pip off"></div>
+          <span class="score-label">2 strong · 3 weak · 1 watch</span>
+        </div>
+        <div class="v-narrative">Best walkability and income demographics, but thin cashflow margin, population outflow, and weak downside resilience drag the verdict down.</div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!--  FOOTER CTA                                                  -->
+    <!-- ============================================================ -->
+    <div class="cmp-footer">
+      <div class="cmp-footer-label">
+        <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted)">Actions</span>
+      </div>
+      <div class="cmp-footer-cell">
+        <button class="btn-view">View Full Analysis</button>
+        <button class="btn-save">⭐ Star Property</button>
+      </div>
+      <div class="cmp-footer-cell">
+        <button class="btn-view">View Full Analysis</button>
+        <button class="btn-save">⭐ Star Property</button>
+      </div>
+      <div class="cmp-footer-cell">
+        <button class="btn-view">View Full Analysis</button>
+        <button class="btn-save">⭐ Star Property</button>
+      </div>
+    </div>
+
+  </div><!-- /compare-table-wrap -->
+
+  <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:24px;font-style:italic;">
+    Estimates only — consult a CPA for tax advice. PropPulse is not a tax advisor.
+  </div>
+
+</div><!-- /container -->
+
+</body>
+</html>
