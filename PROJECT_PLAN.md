@@ -395,6 +395,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | [DATA_MODEL.md](DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes, TTL reference |
 | [DATA_SOURCES.md](DATA_SOURCES.md) | Per-API analysis: endpoints, cost tiers, coverage, rate limits, fallbacks, risk register |
 | [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
+| [UX_FLOW.md](UX_FLOW.md) | Full UX flow: 10 pages, user journeys, layouts, empty/error states, nav structure |
 | [BUSINESS_PLAN.md](BUSINESS_PLAN.md) | Business model, GTM, financials, competitive analysis |
 | [plan/mockup-results.html](plan/mockup-results.html) | Interactive results page mockup |
 | [plan/mockup-comparison.html](plan/mockup-comparison.html) | Property comparison page mockup (up to 3 properties, 7 dimensions) |
