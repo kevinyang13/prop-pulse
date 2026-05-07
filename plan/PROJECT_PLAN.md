@@ -60,7 +60,7 @@ Personalized W2 + passive activity loss tax math + neighborhood map signals + en
 Phase 2: Apple Sign-In (required before App Store submission).  
 Phase 3: Facebook (low priority; lower trust signal for finance tool).
 
-→ Full details: [AUTH_STRATEGY.md](plan/AUTH_STRATEGY.md)
+→ Full details: [AUTH_STRATEGY.md](AUTH_STRATEGY.md)
 
 ## Data Sources
 
@@ -83,7 +83,7 @@ Phase 3: Facebook (low priority; lower trust signal for finance tool).
 
 **Caching**: All external API responses cached in Supabase `data_cache` table. TTLs range from 1 day (mortgage rate) to indefinite (geocode, earthquake). Full TTL reference in DATA_SOURCES.md.
 
-→ Full API analysis, rate limits, fallbacks: [DATA_SOURCES.md](plan/DATA_SOURCES.md)
+→ Full API analysis, rate limits, fallbacks: [DATA_SOURCES.md](DATA_SOURCES.md)
 
 ## Data Model
 
@@ -105,7 +105,7 @@ Phase 3: Facebook (low priority; lower trust signal for finance tool).
 
 RLS enabled on all user-scoped tables. Service role key server-side only.
 
-→ Full schema, indexes, RLS policies, jsonb shapes: [DATA_MODEL.md](plan/DATA_MODEL.md)
+→ Full schema, indexes, RLS policies, jsonb shapes: [DATA_MODEL.md](DATA_MODEL.md)
 
 ## Monetization
 
@@ -391,12 +391,12 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 
 | File | Contents |
 |------|---------|
-| [AUTH_STRATEGY.md](plan/AUTH_STRATEGY.md) | OAuth setup, session management, RLS, security rules, onboarding flow |
-| [DATA_MODEL.md](plan/DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes, TTL reference |
-| [DATA_SOURCES.md](plan/DATA_SOURCES.md) | Per-API analysis: endpoints, cost tiers, coverage, rate limits, fallbacks, risk register |
-| [COMPLIANCE.md](plan/COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
-| [UX_FLOW.md](plan/UX_FLOW.md) | Full UX flow: 10 pages, user journeys, layouts, empty/error states, nav structure |
-| [BUSINESS_PLAN.md](plan/BUSINESS_PLAN.md) | Business model, GTM, financials, competitive analysis |
+| [AUTH_STRATEGY.md](AUTH_STRATEGY.md) | OAuth setup, session management, RLS, security rules, onboarding flow |
+| [DATA_MODEL.md](DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes, TTL reference |
+| [DATA_SOURCES.md](DATA_SOURCES.md) | Per-API analysis: endpoints, cost tiers, coverage, rate limits, fallbacks, risk register |
+| [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
+| [UX_FLOW.md](UX_FLOW.md) | Full UX flow: 10 pages, user journeys, layouts, empty/error states, nav structure |
+| [BUSINESS_PLAN.md](BUSINESS_PLAN.md) | Business model, GTM, financials, competitive analysis |
 
 ## Mockups — Source of Truth for UI
 
@@ -404,16 +404,16 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 
 | Mockup | Route | Implements |
 |--------|-------|-----------|
-| [ux/mockup-landing.html](ux/mockup-landing.html) | `/` (pre-auth) | Hero, Google sign-in CTA, Buyer A/B comparison, feature grid, how-it-works, blurred preview |
-| [ux/mockup-login.html](ux/mockup-login.html) | `/login` | Google OAuth button, magic link form + 60s countdown, sent/error states |
-| [ux/mockup-onboarding.html](ux/mockup-onboarding.html) | `/onboarding` | 3-step wizard: income+filing → state → cash+down; bracket auto-display; skip link |
-| [ux/mockup-dashboard.html](ux/mockup-dashboard.html) | `/dashboard` | Property cards with verdict badges + metrics; compare-select mode; free tier banner; sort/search |
-| [ux/mockup-loading.html](ux/mockup-loading.html) | `/analyze` (in-progress) | 8-step animated progress; Rentcast fallback banner trigger; auto-redirect on completion |
-| [ux/mockup-results.html](ux/mockup-results.html) | `/analyze/[id]` | Full analysis: metrics, cashflow, tax, stress table, scenario editor, neighborhood, demographics, env risk, equity, recommendation scorecard |
-| [ux/mockup-comparison.html](ux/mockup-comparison.html) | `/compare` (Pro) | 3-property side-by-side, 7 dimensions, per-row highlight, per-section winner, verdict pip bar |
-| [ux/mockup-manual-entry.html](ux/mockup-manual-entry.html) | `/analyze/manual` | Rentcast fallback form: address, property basics, purchase/financing, income, expenses, house hack toggle |
-| [ux/mockup-settings.html](ux/mockup-settings.html) | `/settings` | Profile, tax profile edit, subscription (free/pro states), notifications, privacy/CCPA, danger zone |
-| [ux/mockup-upgrade.html](ux/mockup-upgrade.html) | `/upgrade` | Pricing cards (monthly/annual toggle), feature comparison table, testimonials, FAQ |
+| [../ux/mockup-landing.html](../ux/mockup-landing.html) | `/` (pre-auth) | Hero, Google sign-in CTA, Buyer A/B comparison, feature grid, how-it-works, blurred preview |
+| [../ux/mockup-login.html](../ux/mockup-login.html) | `/login` | Google OAuth button, magic link form + 60s countdown, sent/error states |
+| [../ux/mockup-onboarding.html](../ux/mockup-onboarding.html) | `/onboarding` | 3-step wizard: income+filing → state → cash+down; bracket auto-display; skip link |
+| [../ux/mockup-dashboard.html](../ux/mockup-dashboard.html) | `/dashboard` | Property cards with verdict badges + metrics; compare-select mode; free tier banner; sort/search |
+| [../ux/mockup-loading.html](../ux/mockup-loading.html) | `/analyze` (in-progress) | 8-step animated progress; Rentcast fallback banner trigger; auto-redirect on completion |
+| [../ux/mockup-results.html](../ux/mockup-results.html) | `/analyze/[id]` | Full analysis: metrics, cashflow, tax, stress table, scenario editor, neighborhood, demographics, env risk, equity, recommendation scorecard |
+| [../ux/mockup-comparison.html](../ux/mockup-comparison.html) | `/compare` (Pro) | 3-property side-by-side, 7 dimensions, per-row highlight, per-section winner, verdict pip bar |
+| [../ux/mockup-manual-entry.html](../ux/mockup-manual-entry.html) | `/analyze/manual` | Rentcast fallback form: address, property basics, purchase/financing, income, expenses, house hack toggle |
+| [../ux/mockup-settings.html](../ux/mockup-settings.html) | `/settings` | Profile, tax profile edit, subscription (free/pro states), notifications, privacy/CCPA, danger zone |
+| [../ux/mockup-upgrade.html](../ux/mockup-upgrade.html) | `/upgrade` | Pricing cards (monthly/annual toggle), feature comparison table, testimonials, FAQ |
 
 ### Design tokens (enforce in Tailwind config / CSS vars)
 
