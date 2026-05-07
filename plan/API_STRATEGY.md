@@ -83,8 +83,8 @@ export async function GET(request: Request) {
 | Method | Route | Description | Auth | Free tier |
 |--------|-------|-------------|------|-----------|
 | `POST` | `/api/analyze` | Trigger full property analysis | Required | Enforced |
-| `GET` | `/api/analyze/[id]` | Fetch saved analysis by ID | Required | — |
-| `DELETE` | `/api/analyze/[id]` | Delete saved analysis | Required | — |
+| `GET` | `/api/analyses/[id]` | Fetch saved analysis by ID | Required | — |
+| `DELETE` | `/api/analyses/[id]` | Delete saved analysis | Required | — |
 
 **`POST /api/analyze`** is the primary endpoint. Orchestrates 8 data sources with cache-first logic.
 
@@ -255,7 +255,7 @@ await supabase
 | Method | Route / Action | Description |
 |--------|----------------|-------------|
 | Server Action | `toggleStar(id)` | Star / unstar saved analysis |
-| `DELETE` | `/api/analyze/[id]` | Delete analysis |
+| `DELETE` | `/api/analyses/[id]` | Delete analysis |
 
 Star is a Server Action (single field update, instant revalidation):
 ```typescript
@@ -481,7 +481,7 @@ export async function requireAuth(request: Request) {
 | Route | Cache strategy |
 |-------|---------------|
 | Server Components (dashboard, results) | `cache: 'no-store'` — user-specific data |
-| `/api/analyze/[id]` (GET) | `cache: 'no-store'` — mutable |
+| `/api/analyses/[id]` (GET) | `cache: 'no-store'` — mutable |
 | `/auth/callback` | `cache: 'no-store'` |
 | `/api/stripe/webhook` | `cache: 'no-store'` |
 | `/api/internal/fetch-mortgage-rate` | Revalidates `mortgage_rates` tag |
@@ -525,30 +525,126 @@ NEXT_PUBLIC_APP_URL=               # https://proppulse.com
 
 ---
 
+## APIs by Data Model Table
+
+Every table in [DATA_MODEL.md](DATA_MODEL.md) mapped to its API surface. Columns: how the data is read, how it's written, what's missing from original route list.
+
+### `user_profiles`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read own profile | Server Component | direct Supabase read | settings page, dashboard header |
+| Read own profile (client refresh) | `GET` | `/api/profile` | returns profile + PAL tier derived from w2_income |
+| Update tax profile | `PUT` | `/api/profile` | income, filing, state, cash, down pct |
+| Soft-delete account | `DELETE` | `/api/profile` | sets `deleted_at`; cron hard-deletes after 30d |
+| Auto-create on signup | DB trigger | `auth.users` insert | no API route needed |
+
+### `properties`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Fetch + cache property | internal | inside `POST /api/analyze` | Rentcast → upsert by `address_key` |
+| Read property detail | Server Component | joined from `saved_analyses` | no standalone property endpoint needed |
+| Manual entry (Rentcast miss) | `POST` | `/api/analyze` with `manual: true` body flag | skips Rentcast, uses user-supplied values |
+
+### `property_units`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read units | Server Component | joined from `saved_analyses` → `properties` | MFU only |
+| Write units | internal | inside `POST /api/analyze` | upserted per unit from Rentcast or manual entry |
+
+### `neighborhood_signals`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read | Server Component | joined from analysis result | |
+| Write | internal | inside `POST /api/analyze` | upserted; Walk Score + GreatSchools + CrimeGrade |
+
+### `environmental_risks`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read | Server Component | joined from analysis result | |
+| Write | internal | inside `POST /api/analyze` | upserted; FEMA + First Street + AirNow + USGS |
+
+### `location_demographics`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read | Server Component | joined from analysis result | |
+| Write | internal | inside `POST /api/analyze` | upserted by zip; Census ACS |
+
+### `saved_analyses`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| List all (dashboard) | `GET` | `/api/analyses` | paginated; filtered by verdict, sorted by date/coc |
+| Read single | `GET` | `/api/analyses/[id]` | full analysis JSON |
+| Create | internal | inside `POST /api/analyze` | auto-saved after pipeline completes |
+| Update (star / notes) | `PATCH` | `/api/analyses/[id]` | body: `{ is_starred?, notes? }` |
+| Delete | `DELETE` | `/api/analyses/[id]` | hard delete (no retention needed) |
+
+### `property_searches`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| List search history | `GET` | `/api/searches` | last 20 searches for "Recent" list in address input |
+| Create | internal | inside `POST /api/analyze` | written at search time, before Rentcast call |
+
+### `subscriptions`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read own subscription | `GET` | `/api/subscription` | returns `{ tier, status, current_period_end, cancel_at_period_end }` |
+| Create / update | internal | `POST /api/stripe/webhook` | Stripe events only; never written by client directly |
+
+### `infrastructure_projects`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Proximity query | internal | inside `POST /api/analyze` | Haversine query; no external API |
+| Admin insert/update | internal | direct Supabase Studio or seed script | manually curated; no public write endpoint |
+
+### `data_cache`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read | internal | `fetchWithCache()` helper | service role only; never client-facing |
+| Write | internal | `fetchWithCache()` helper | upsert on external API miss |
+| Purge expired | `POST` | `/api/internal/purge-cache` | nightly cron |
+
+### `mortgage_rates`
+| Operation | Method | Route / Mechanism | Notes |
+|-----------|--------|-------------------|-------|
+| Read latest rate | `GET` | `/api/mortgage-rate` | pre-fills interest rate in analysis assumptions |
+| Write (FRED sync) | `POST` | `/api/internal/fetch-mortgage-rate` | weekly cron; inserts new row |
+
+---
+
 ## Route Summary
 
 ```
-/auth/callback                    GET   PKCE exchange
-/api/auth/signout                 POST  Sign out
+/auth/callback                    GET    PKCE exchange → redirect to /onboarding or /dashboard
+/api/auth/signout                 POST   Invalidate session, clear cookies
 
-/api/analyze                      POST  Full analysis pipeline
-/api/analyze/[id]                 GET   Fetch saved analysis
-/api/analyze/[id]                 DELETE Delete analysis
+/api/analyze                      POST   Full analysis pipeline (core endpoint)
+/api/analyses                     GET    List saved analyses (paginated, filterable)
+/api/analyses/[id]                GET    Fetch single saved analysis
+/api/analyses/[id]                PATCH  Update star / notes
+/api/analyses/[id]                DELETE Delete saved analysis
 
-/api/profile                      PUT   Update tax profile
-/api/profile                      DELETE Soft-delete account
-/api/export                       GET   CCPA data export
+/api/profile                      GET    Read own user profile + derived PAL tier
+/api/profile                      PUT    Update tax profile (income, state, filing, cash)
+/api/profile                      DELETE Soft-delete account (sets deleted_at)
 
-/api/stripe/checkout              POST  Create checkout session
-/api/stripe/portal                GET   Create billing portal session
-/api/stripe/webhook               POST  Stripe event handler
+/api/searches                     GET    Search history (last 20, for Recent list)
 
-/api/internal/fetch-mortgage-rate POST  Cron: FRED rate sync
-/api/internal/purge-cache         POST  Cron: expired cache cleanup
-/api/internal/purge-deleted-users POST  Cron: CCPA hard-delete
+/api/subscription                 GET    Current subscription tier + status
+
+/api/mortgage-rate                GET    Latest 30yr fixed rate from mortgage_rates table
+
+/api/export                       GET    CCPA: download all user data as JSON
+
+/api/stripe/checkout              POST   Create Stripe Checkout session, return URL
+/api/stripe/portal                GET    Create Stripe billing portal session, return URL
+/api/stripe/webhook               POST   Receive Stripe events, sync subscriptions table
+
+/api/internal/fetch-mortgage-rate POST   Cron: pull FRED rate, insert mortgage_rates row
+/api/internal/purge-cache         POST   Cron: DELETE FROM data_cache WHERE expires_at < now()
+/api/internal/purge-deleted-users POST   Cron: hard-delete auth.users where deleted_at > 30d
 ```
 
-Total: **13 routes**. No GraphQL schema, no resolvers, no codegen.
+Total: **21 routes**. No GraphQL schema, no resolvers, no codegen.
 
 ---
 
