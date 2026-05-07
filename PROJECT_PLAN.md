@@ -27,7 +27,7 @@ Casual real estate investors (1–3 properties) waste 30–60 min per deal stitc
 
 ## Core Value Proposition
 
-Personalized W2 + passive activity loss tax math + neighborhood map signals + environmental risk assessment in one view. No existing calculator does all four.
+Personalized W2 + passive activity loss tax math + neighborhood map signals + environmental risk in one view. No existing calculator does all four.
 
 - User A: $180k income, 22% bracket, $100k cash → **CAUTION**
 - User B: $280k income, 32% bracket, $200k cash → **GO**
@@ -41,31 +41,70 @@ Personalized W2 + passive activity loss tax math + neighborhood map signals + en
 | Frontend | Next.js 15 (React, App Router) |
 | Styling | Tailwind CSS |
 | Backend | Next.js API routes |
-| Database + Auth | Supabase (Postgres + Auth) |
+| Database | Supabase (PostgreSQL 15) |
+| Auth | Supabase Auth — Google OAuth + Magic Link |
 | Property Data | Rentcast API |
-| Maps | Leaflet.js + OpenStreetMap |
+| Geocoding | Mapbox |
+| Maps | Leaflet.js + OpenStreetMap tiles |
+| Payments | Stripe (Pro subscription) |
+| Email (transactional) | Resend |
 | Deployment | Vercel |
 | iPhone (Phase 3) | React Native / Expo |
 
+## Auth Strategy
+
+**Primary**: Google OAuth 2.0 — one-tap, highest conversion for W2 professional audience.  
+**Secondary**: Magic Link (passwordless email) — no password friction, no credential risk.  
+**No username/password** — deliberate; adds friction and support burden with no benefit.
+
+Phase 2: Apple Sign-In (required before App Store submission).  
+Phase 3: Facebook (low priority; lower trust signal for finance tool).
+
+→ Full details: [AUTH_STRATEGY.md](AUTH_STRATEGY.md)
+
 ## Data Sources
 
-| Need | API | Cost |
-|------|-----|------|
-| Property details + rent estimate | Rentcast | $0 (50 calls/mo free) → $50/mo |
-| Walk / transit score | Walk Score API | Free (5K/day) |
-| School ratings | GreatSchools API | Free with approval |
-| Crime index | CrimeGrade.org | Free scrape → NeighborhoodScout post-revenue |
-| Geocoding | Mapbox | Free (50K/mo) |
-| Mortgage rate | FRED API | Free |
-| Map tiles | Leaflet + OpenStreetMap | Free |
-| City infrastructure | Socrata permit APIs | Free (~200 cities) |
-| Flood zone | FEMA National Flood Hazard Layer API | Free |
-| Fire risk score | First Street Foundation Risk Factor API | Free (limited) → $49/mo |
-| Air quality (AQI) | AirNow API (EPA) | Free |
-| Wind / hurricane risk | FEMA Wind Zone data + First Street | Free / bundled |
-| Earthquake hazard | USGS Seismic Hazard API | Free |
+| Need | API | Free Tier | Paid |
+|------|-----|-----------|------|
+| Property details + rent estimate | Rentcast | 50 calls/mo | $50/mo (1K calls) |
+| Walk / transit score | Walk Score API | 5K/day | Free (with attribution) |
+| School ratings | GreatSchools API | Free (approval required) | Free |
+| Crime index | CrimeGrade.org scrape | Free | NeighborhoodScout $99/mo |
+| Geocoding | Mapbox | 50K/mo | $0.50/1K |
+| Mortgage rate | FRED API | Free | Free |
+| Map tiles | Leaflet + OpenStreetMap | Free | Maptiler at scale |
+| City infrastructure | Manual curation (8 metros) | — | Socrata ETL post-MVP |
+| Flood zone | FEMA NFHL ArcGIS API | Free | Free |
+| Fire risk | First Street API (CA: Cal Fire) | 100 calls/mo | $49/mo |
+| Air quality (AQI) | AirNow EPA API | Free | Free |
+| Wind risk | FEMA Wind Zone + First Street | Free / bundled | Bundled |
+| Earthquake hazard | USGS Seismic Hazard API | Free | Free |
 
-**Caching**: Rentcast responses cached in Supabase (TTL 7 days). Walk Score / crime cached 30 days.
+**Caching**: All external API responses cached in Supabase `data_cache` table. TTLs range from 1 day (mortgage rate) to indefinite (geocode, earthquake). Full TTL reference in DATA_SOURCES.md.
+
+→ Full API analysis, rate limits, fallbacks: [DATA_SOURCES.md](DATA_SOURCES.md)
+
+## Data Model
+
+10 core tables in Supabase PostgreSQL:
+
+| Table | Purpose |
+|-------|---------|
+| `user_profiles` | W2 income, tax bracket, filing status, cash, onboarding state |
+| `properties` | Rentcast property cache — beds/baths/sqft/AVM/rent range/tax |
+| `property_units` | Per-unit rows for 2–4 unit properties |
+| `neighborhood_signals` | Walk Score, schools, crime, infra project count |
+| `environmental_risks` | Fire/flood/AQI/wind/earthquake with risk levels + insurance delta |
+| `saved_analyses` | Verdict, assumptions (jsonb), results (jsonb), stress scenarios |
+| `property_searches` | Search history — raw query + resolved property |
+| `infrastructure_projects` | Manually curated projects, geo-queried by Haversine |
+| `subscriptions` | Stripe sync — tier, status, period |
+| `data_cache` | Raw API response cache keyed by `source:address_key` |
+| `mortgage_rates` | Weekly FRED time series |
+
+RLS enabled on all user-scoped tables. Service role key server-side only.
+
+→ Full schema, indexes, RLS policies, jsonb shapes: [DATA_MODEL.md](DATA_MODEL.md)
 
 ## Monetization
 
@@ -73,6 +112,8 @@ Personalized W2 + passive activity loss tax math + neighborhood map signals + en
 |------|-------|---------|
 | Free Trial | $0 | 3 property analyses, no credit card |
 | PropPulse Pro | $7.99/mo or $59/yr | Unlimited analyses, saved properties, comparison |
+
+Free tier counter enforced server-side in `user_profiles.analyses_used`. Never trust client-side checks.
 
 Growth lever: "Invite a friend, get 2 more free analyses."
 
@@ -82,22 +123,56 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 
 ### Phase 1 — Web MVP (current)
 
-**Goal**: Working analysis tool with personalized tax math.
+**Goal**: Working analysis tool with personalized tax math, auth, and data pipeline.
 
-#### Sprint 1 — Foundation (Weeks 1–2)
+#### Sprint 1 — Foundation + Auth (Weeks 1–2)
+
+**Project scaffold**
 - [ ] Next.js 15 + Tailwind project scaffold
-- [ ] Supabase project setup (auth, DB schema)
-- [ ] User profile setup flow (income, bracket, state, cash, down payment %)
-- [ ] Address input + Rentcast auto-fill integration
-- [ ] SFH financial model: cashflow, COC, cap rate, GRM
+- [ ] Vercel project + preview deployments configured
+- [ ] Environment variables structure (`.env.local`, Vercel env)
+
+**Supabase setup**
+- [ ] Supabase project created
+- [ ] All 11 tables created per DATA_MODEL.md schema
+- [ ] RLS policies applied to all user-scoped tables
+- [ ] Postgres trigger: auto-create `user_profiles` + `subscriptions` on auth.users insert
+- [ ] `data_cache` cleanup cron job (nightly delete expired rows)
+
+**Auth**
+- [ ] Google OAuth configured (GCP Console → Supabase Dashboard)
+- [ ] Magic Link (passwordless email) enabled
+- [ ] `/auth/callback` route handler (PKCE code exchange)
+- [ ] Middleware: session refresh on every request
+- [ ] Protected route wrapper (server component session check)
+- [ ] Sign-out
+
+**Onboarding flow** (`/onboarding`)
+- [ ] Step 1: W2 annual income + filing status
+- [ ] Step 2: State of residence (pre-fill state tax rate)
+- [ ] Step 3: Liquid cash + default down payment %
+- [ ] Write to `user_profiles`, set `onboarding_complete = true`
+- [ ] Skip link available — analysis runs with 22% default bracket if skipped
+
+**Address input + property data**
+- [ ] Address autocomplete (Mapbox Geocoding API)
+- [ ] Rentcast property fetch + parse → insert into `properties`
+- [ ] Cache check before Rentcast call (TTL 7 days)
+- [ ] Manual entry fallback if Rentcast returns no data
+
+**SFH financial model**
+- [ ] Monthly cashflow, annual cashflow
+- [ ] Cash-on-cash return, cap rate, GRM, NOI
+- [ ] Break-even occupancy
 
 #### Sprint 2 — Tax Engine (Weeks 3–4)
 - [ ] Depreciation calc (27.5-year straight-line, 80% building value)
 - [ ] PAL rules engine (AGI < $100k / $100k–$150k / > $150k tiers)
 - [ ] Schedule E deductions (mortgage interest, tax, insurance, repairs, PM)
-- [ ] Tax-adjusted COC and break-even occupancy
-- [ ] Multi-unit (2–4) property support
-- [ ] House hack toggle (owner-occupied unit exclusion)
+- [ ] Tax-adjusted COC
+- [ ] Multi-unit (2–4) property support + per-unit rent inputs
+- [ ] House hack toggle (owner-occupied unit exclusion from depreciation + Schedule E)
+- [ ] Stress scenario engine (6 scenarios, cashflow + COC per scenario)
 
 #### Sprint 3 — Results Page (Weeks 5–6)
 - [ ] GO / CAUTION / PASS verdict with narrative
@@ -106,57 +181,84 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Monthly cashflow breakdown
 - [ ] Key metrics grid (SFH: 4 metrics; Multi-unit: 6 metrics)
 - [ ] Property details table
-- [ ] Recommendation panel (black background)
+- [ ] Recommendation panel (black background) with env risk factor chip
 
-#### Sprint 4 — Map & Neighborhood (Weeks 7–8)
+#### Sprint 4 — Map, Neighborhood & Environmental Risk (Weeks 7–8)
+
+**Neighborhood signals**
+- [ ] Walk Score API integration + cache
+- [ ] GreatSchools API integration + cache (apply for key in Week 1)
+- [ ] CrimeGrade.org scrape + cache (graceful null if unavailable)
+- [ ] Neighborhood signals cards (Walk Score, Schools, Crime, Infra count)
+
+**Environmental risk**
+- [ ] FEMA NFHL flood zone lookup + cache (TTL 90 days)
+- [ ] Cal Fire FHSZ layer for CA properties; First Street for non-CA
+- [ ] AirNow annual AQI by zip + cache (TTL 365 days)
+- [ ] FEMA wind zone + cache (TTL 90 days)
+- [ ] USGS earthquake PGA + cache (TTL indefinite)
+- [ ] Environmental Risk section: 5-card grid with risk badges + insurance impact alert bar
+- [ ] Elevated risk (fire HIGH or flood AE/VE) → force CAUTION floor on verdict
+
+**Map**
 - [ ] Leaflet map with property + POI markers
   - Black label pin: subject property
   - Blue dots: nearby schools
   - Green dots: transit stops
   - Orange dots: infrastructure projects
   - Red dots: elevated crime zones
-  - Red shading: flood zones (FEMA FIRM)
   - Orange shading: high fire hazard severity zones
-- [ ] Neighborhood signals cards (Walk Score, Schools, Crime, Infra count)
-- [ ] Environmental Risk section
-  - Fire Risk: First Street / Cal Fire score + severity badge (Low / Moderate / High / Severe)
-  - Flood Zone: FEMA zone label (X / AE / VE) + plain-English description
-  - Air Quality: EPA AirNow AQI score + category (Good / Moderate / Unhealthy)
-  - Wind Risk: FEMA wind zone + category
-  - Earthquake Hazard: USGS PGA value + risk tier (for CA, Pacific NW, New Madrid, etc.)
-  - Insurance impact note: elevated risk triggers estimated insurance premium delta
-- [ ] Equity outlook section (population, migration, job growth, home price trend)
-- [ ] Infrastructure project cards (city-level, manual curation for 8 metros)
+  - Blue shading: FEMA flood zones (AE/VE)
 - [ ] Photo/Map tab on property header
 
-#### Sprint 5 — Save & Share (Weeks 9–10)
-- [ ] Save property to account
-- [ ] Compare up to 5 properties
-- [ ] Export PDF
-- [ ] 3 free analyses enforcement + upgrade prompt
+**Equity outlook**
+- [ ] Infrastructure project cards (manual curation for 8 metros in `infrastructure_projects`)
+- [ ] Haversine proximity query (projects within 2 mi / 10 mi of property)
+- [ ] Equity outlook section (population, migration, job growth, home price trend — static data per metro at MVP)
+
+**Mortgage rate**
+- [ ] FRED API weekly fetch → `mortgage_rates` table
+- [ ] Pre-fill interest rate assumption from latest rate
+
+#### Sprint 5 — Save, Paywall & Share (Weeks 9–10)
+- [ ] Save analysis to `saved_analyses` (assumptions jsonb + results jsonb)
+- [ ] "My Properties" dashboard — list saved analyses with verdict badges
+- [ ] 3 free analyses enforcement — server-side counter, upgrade prompt at limit
+- [ ] Stripe integration: Pro subscription ($7.99/mo + $59/yr)
+- [ ] Stripe webhook → sync `subscriptions` table
+- [ ] Export PDF (html-to-pdf via Puppeteer or React PDF)
+- [ ] Compare up to 5 properties (side-by-side table, Phase 2 full UI)
 
 ---
 
-### Phase 2 — Polish
+### Phase 2 — Polish + Apple Auth
 
-- [ ] Stress test interactive sliders (not static grid)
+- [ ] Apple Sign-In (required before iOS App Store submission)
+- [ ] Custom auth UI (replace Supabase Auth UI with PropPulse-branded components)
+- [ ] Stress test interactive sliders (not static table)
 - [ ] Side-by-side comparison table UI
-- [ ] Saved property history with verdict tracking
-- [ ] Email alerts for saved search price drops
+- [ ] Saved property history with verdict tracking over time
+- [ ] Email alerts for saved search price drops (Resend)
 - [ ] Unit rent history chart (multi-unit)
+- [ ] GreatSchools → Niche.com fallback if API unavailable
+- [ ] CrimeGrade → NeighborhoodScout API migration
+- [ ] Maptiler tile CDN (replace raw OSM for reliability)
 
 ### Phase 3 — iPhone App
 
-- [ ] Same analysis, mobile-optimized (React Native / Expo)
+- [ ] React Native / Expo scaffold
+- [ ] Same analysis engine (shared API routes)
 - [ ] Quick-check mode at open houses
 - [ ] Native map view
+- [ ] Apple Sign-In active (already shipped in Phase 2)
 
 ### Phase 4 — Advanced
 
-- [ ] Plaid integration for financial verification
-- [ ] LLM-generated narrative recommendation
+- [ ] LLM-generated narrative recommendation (replace static verdict text)
 - [ ] Short-term rental (Airbnb) model toggle
 - [ ] Cost segregation / bonus depreciation calculator
+- [ ] Plaid integration for financial verification
+- [ ] Facebook Sign-In (if demand signals warrant it)
 
 ---
 
@@ -207,6 +309,8 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | PASS badge | `#E8E4E0` fill, `#6B6560` text |
 | Positive cashflow | `#2D7A4F` green |
 | Negative cashflow | `#B94040` red |
+| Risk: High | `#C05A1A` orange-red |
+| Risk: Severe | `#B94040` red |
 | Font | Inter 300–900, wide tracking |
 | Border radius | 4px — sharp, not bubbly |
 
@@ -224,35 +328,54 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | Climate Check / Risk Factor | Environmental risk only, no financial analysis |
 | Excel spreadsheet | User's current solution — fully manual |
 
-**Wedge**: personalized W2 + PAL tax math + map with POI signals + environmental risk in one view. Climate Check shows risk; PropPulse shows risk AND whether the numbers still work.
+**Wedge**: personalized W2 + PAL tax math + map + environmental risk in one view. Climate Check shows risk; PropPulse shows risk AND whether the numbers still work.
 
 ---
 
 ## Key Risks
 
-1. **Data gaps**: infrastructure project data sparse outside 8 target metros
+1. **Data gaps**: infrastructure project data sparse outside 8 target metros — manual curation required
 2. **Tax accuracy liability**: PAL rules complex — "estimate only, consult CPA" disclaimer on every screen
-3. **Rentcast coverage**: smaller markets may have thin data; free tier limited to 50 calls/mo
-4. **Competition**: DealCheck covers basic math; moat is tax personalization + map + environmental risk + UX
-5. **Environmental data accuracy**: First Street risk scores are modeled estimates; FEMA flood maps lag real-world conditions. Display confidence level and link source data
-6. **Insurance cost estimation**: wildfire and flood zone data affects insurability; coverage may be unavailable in highest-risk areas — flag as CAUTION or PASS trigger regardless of cashflow
+3. **Rentcast coverage**: smaller markets have thin data; free tier burns at ~16 new users/mo
+4. **CrimeGrade scrape fragility**: site changes break scraper silently — graceful null, migrate to NeighborhoodScout early
+5. **Environmental data accuracy**: First Street scores are modeled estimates; FEMA flood maps lag real conditions — display source + date
+6. **Insurance unavailability**: high fire/flood zones may have no carrier — flag as CAUTION floor regardless of cashflow numbers
+7. **Auth surface area**: OAuth misconfiguration (open redirects, missing PKCE) — follow AUTH_STRATEGY.md exactly; restrict redirect URI allowlist to explicit paths only
+8. **GreatSchools API approval**: apply Week 1 — approval takes 1–3 days; build fallback to Niche scrape
+
+---
 
 ## Open Decisions
 
 - [x] App name: **PropPulse** — "Know before you buy."
-- [x] Tech stack: Next.js 15 + Tailwind + Supabase + Rentcast + Leaflet + Vercel
-- [x] Monetization: free trial (3 analyses) → $7.99/mo or $59/yr Pro
+- [x] Tech stack: Next.js 15 + Tailwind + Supabase + Rentcast + Mapbox + Leaflet + Vercel
+- [x] Auth: Google OAuth (primary) + Magic Link (secondary). No passwords. Apple in Phase 2.
+- [x] Monetization: free trial (3 analyses) → $7.99/mo or $59/yr Pro via Stripe
+- [x] DB schema: defined in DATA_MODEL.md
+- [x] Data sources + caching TTLs: defined in DATA_SOURCES.md
 - [ ] Tax disclaimer strategy: "estimate only" footer vs CPA partnership / review
-- [ ] Rentcast API tier selection (free vs paid based on usage)
-- [ ] Geographic launch scope: Full coverage SD, LA, SF, NYC, Chicago, Seattle, Denver, Austin; partial elsewhere
+- [ ] Rentcast API tier: upgrade to $50/mo Starter at first paying user
+- [ ] Geographic launch scope: full coverage 8 metros; partial (property + rent only) everywhere else
+- [ ] Email provider: Resend vs SendGrid for magic links + transactional
 
 ---
 
 ## Geographic Launch Scope (Phase 1)
 
-**Full data coverage** (all signals + infrastructure): San Diego, Los Angeles, San Francisco, New York, Chicago, Seattle, Denver, Austin.
+**Full data coverage** (all signals + env risk + infrastructure): San Diego, Los Angeles, San Francisco, New York, Chicago, Seattle, Denver, Austin.
 
-**Partial coverage** (property + rent only): all other US cities.
+**Partial coverage** (property + rent + env risk only, no infra projects): all other US cities.
+
+---
+
+## Supporting Docs
+
+| File | Contents |
+|------|---------|
+| [AUTH_STRATEGY.md](AUTH_STRATEGY.md) | OAuth setup, session management, RLS, security rules, onboarding flow |
+| [DATA_MODEL.md](DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes, TTL reference |
+| [DATA_SOURCES.md](DATA_SOURCES.md) | Per-API analysis: endpoints, cost tiers, coverage, rate limits, fallbacks, risk register |
+| [plan/mockup-results.html](plan/mockup-results.html) | Interactive results page mockup |
 
 ---
 

@@ -153,7 +153,8 @@
     .tax-note { font-size: 11px; color: var(--text-muted); margin-top: 12px; line-height: 1.5; font-style: italic; }
 
     /* STRESS TEST — compact table */
-    .stress-table { width: 100%; border-collapse: collapse; border-radius: 4px; overflow: hidden; margin-bottom: 32px; border: 1px solid var(--border); }
+    .stress-table-wrap { border-radius: 4px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 32px; }
+    .stress-table { width: 100%; border-collapse: collapse; }
     .stress-table thead tr { background: var(--surface-2); border-bottom: 2px solid var(--text); }
     .stress-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding: 10px 16px; text-align: left; white-space: nowrap; }
     .stress-table th:nth-child(2), .stress-table th:nth-child(3) { text-align: right; }
@@ -715,7 +716,7 @@
     <div class="section-label">Stress Test</div>
 
     <div class="sfh-only">
-      <table class="stress-table">
+      <div class="stress-table-wrap"><table class="stress-table">
         <thead><tr><th>Scenario</th><th>Monthly Cashflow</th><th>COC Return</th><th>Outcome</th></tr></thead>
         <tbody>
           <tr class="stress-row-positive">
@@ -755,11 +756,11 @@
             <td><span class="st-badge st-neg">Negative</span></td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
 
     <div class="mfu-only">
-      <table class="stress-table">
+      <div class="stress-table-wrap"><table class="stress-table">
         <thead><tr><th>Scenario</th><th>Monthly Cashflow</th><th>COC Return</th><th>Outcome</th></tr></thead>
         <tbody>
           <tr class="stress-row-positive">
@@ -799,7 +800,7 @@
             <td><span class="st-badge st-neg">Negative</span></td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
 
     <!-- NEIGHBORHOOD -->
