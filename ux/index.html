@@ -414,11 +414,11 @@
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#pricing">Pricing</a>
-      <a href="plan/mockup-results.html">Full Demo →</a>
+      <a href="mockup-results.html">Full Demo →</a>
     </div>
     <div class="nav-btns">
-      <a href="#" class="btn btn-light nav-login">Log in</a>
-      <a href="#try" class="btn btn-dark">Try free</a>
+      <a href="mockup-login.html" class="btn btn-light nav-login">Log in</a>
+      <a href="mockup-login.html" class="btn btn-dark">Try free</a>
     </div>
   </div>
 </nav>
@@ -431,8 +431,8 @@
       <h1>Investment analysis, <em>personalized</em> to your taxes.</h1>
       <p class="hero-desc">Same property. Completely different ROI depending on your W2 income, tax bracket, and passive loss rules. PropPulse runs the real math in under 2 minutes.</p>
       <div class="hero-btns">
-        <a href="#try" class="btn btn-dark">Analyze a property — free</a>
-        <a href="plan/mockup-results.html" class="btn btn-light">See sample report</a>
+        <a href="mockup-login.html" class="btn btn-dark">Analyze a property — free</a>
+        <a href="mockup-results.html" class="btn btn-light">See sample report</a>
       </div>
       <p class="hero-fine">Free trial includes 3 full analyses. No credit card required.</p>
     </div>
@@ -477,7 +477,7 @@
     <p class="input-hint">Auto-fills price, tax &amp; rent via Rentcast · No account needed for first 3 analyses</p>
     <div id="demo-msg">
       ✓ Address captured! In production this opens the full analysis →
-      <a href="plan/mockup-results.html">See the full mockup here</a>
+      <a href="mockup-results.html">See the full mockup here</a>
     </div>
   </div>
 </div>
@@ -581,7 +581,7 @@
       </div>
     </div>
     <div class="mockup-link">
-      <a href="plan/mockup-results.html">View full interactive mockup — stress test, map, equity outlook →</a>
+      <a href="mockup-results.html">View full interactive mockup — stress test, map, equity outlook →</a>
     </div>
   </div>
 </div>
@@ -767,8 +767,8 @@
       <div class="foot-note" style="margin-top:4px">Know before you buy.</div>
     </div>
     <div class="foot-links">
-      <a href="PROJECT_PLAN.md">Project Plan</a>
-      <a href="plan/mockup-results.html">Full Mockup</a>
+      <a href="../plan/PROJECT_PLAN.md">Project Plan</a>
+      <a href="mockup-results.html">Full Mockup</a>
       <a href="#">Privacy</a>
       <a href="#">Terms</a>
     </div>
@@ -781,10 +781,8 @@
 <script>
   function handleAnalyze() {
     var input = document.getElementById('addressInput');
-    var msg   = document.getElementById('demo-msg');
     if (input.value.trim()) {
-      msg.style.display = 'block';
-      msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      window.location.href = 'mockup-loading.html';
     } else {
       input.focus();
       input.placeholder = 'Enter an address first...';
