@@ -570,13 +570,44 @@ Every table in [DATA_MODEL.md](DATA_MODEL.md) mapped to its API surface. Columns
 | Write | internal | inside `POST /api/analyze` | upserted by zip; Census ACS |
 
 ### `saved_analyses`
+
+Comparison slots reference `saved_analysis.id` — not `property_id`. Multiple analyses per property are allowed and expected (different down %, rate, rent, house hack).
+
 | Operation | Method | Route / Mechanism | Notes |
 |-----------|--------|-------------------|-------|
-| List all (dashboard) | `GET` | `/api/analyses` | paginated; filtered by verdict, sorted by date/coc |
+| List all (dashboard) | `GET` | `/api/analyses` | flat list; sorted by created_at DESC; includes `scenario_name` + property address |
 | Read single | `GET` | `/api/analyses/[id]` | full analysis JSON |
-| Create | internal | inside `POST /api/analyze` | auto-saved after pipeline completes |
-| Update (star / notes) | `PATCH` | `/api/analyses/[id]` | body: `{ is_starred?, notes? }` |
+| Create | internal | inside `POST /api/analyze` | auto-saves with auto-generated `scenario_name` if not supplied |
+| Fork as new scenario | `POST` | `/api/analyze` | same address, new assumptions in body; creates sibling analysis row |
+| Update (star / notes / rename scenario) | `PATCH` | `/api/analyses/[id]` | body: `{ is_starred?, notes?, scenario_name? }` |
 | Delete | `DELETE` | `/api/analyses/[id]` | hard delete (no retention needed) |
+
+**`POST /api/analyze` body — scenario fields**:
+```json
+{
+  "address": "1842 Maple Ave, Austin, TX 78704",
+  "scenario_name": "House Hack",        // optional; auto-generated if omitted
+  "assumptions": { ... }
+}
+```
+
+**`GET /api/analyses` response shape** (flat list, Option A):
+```json
+{
+  "analyses": [
+    {
+      "id": "uuid",
+      "scenario_name": "20% down · 6.87% · $2,100/mo",
+      "property": { "full_address": "1842 Maple Ave", "city": "Austin", "state": "TX" },
+      "verdict": "GO",
+      "created_at": "2026-05-05T...",
+      "is_starred": false,
+      "results": { "monthly_cashflow": 312, "cash_on_cash_return": 6.8, "tax_adjusted_coc": 9.2 }
+    }
+  ],
+  "total": 5
+}
+```
 
 ### `property_searches`
 | Operation | Method | Route / Mechanism | Notes |

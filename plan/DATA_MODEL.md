@@ -253,6 +253,7 @@ User's saved property analysis runs. Stores both inputs and outputs.
 | `user_id` | `uuid` | NOT NULL FK → `auth.users.id` ON DELETE CASCADE | |
 | `property_id` | `uuid` | NOT NULL FK → `properties.id` | |
 | `property_type` | `text` | NOT NULL CHECK IN ('sfh','mfu') | Mode at time of analysis |
+| `scenario_name` | `text` | | User-supplied or auto-generated; e.g. `"20% · 6.87% · $2,100/mo"` or `"House Hack"` |
 | `verdict` | `text` | NOT NULL CHECK IN ('GO','CAUTION','PASS') | |
 | `verdict_reason` | `text` | | Short narrative, 1–2 sentences |
 | `assumptions` | `jsonb` | NOT NULL | See assumptions schema below |
@@ -262,12 +263,26 @@ User's saved property analysis runs. Stores both inputs and outputs.
 | `created_at` | `timestamptz` | NOT NULL DEFAULT now() | |
 | `updated_at` | `timestamptz` | NOT NULL DEFAULT now() | |
 
+**No unique constraint on `(user_id, property_id)`** — multiple analyses per property are intentional. Comparison slots reference `saved_analysis.id`, not `property_id`.
+
+**Auto-generated `scenario_name`** (API layer, when user omits it):
+```typescript
+function autoScenarioName(a: Assumptions): string {
+  const parts = [`${a.down_payment_pct}% down`, `${a.interest_rate}%`, `$${a.monthly_rent}/mo`]
+  if (a.house_hack) parts.unshift('House Hack')
+  return parts.join(' · ')
+  // → "20% down · 6.87% · $2,100/mo"
+  // → "House Hack · 20% down · 6.87% · $2,100/mo"
+}
+```
+
 **Indexes**:
 ```sql
 CREATE INDEX ON saved_analyses (user_id);
 CREATE INDEX ON saved_analyses (property_id);
 CREATE INDEX ON saved_analyses (user_id, created_at DESC);
 CREATE INDEX ON saved_analyses (user_id) WHERE is_starred = true;
+CREATE INDEX ON saved_analyses (user_id, property_id);  -- grouping same-property analyses
 ```
 
 **`assumptions` jsonb schema** (SFH example):

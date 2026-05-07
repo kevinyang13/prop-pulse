@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PropPulse — Compare Properties</title>
+  <title>PropPulse — Compare Analyses</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -42,7 +42,8 @@
     .selector-add-icon { font-size: 22px; color: var(--accent); }
     .selector-add-text { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
     .selector-prop-address { font-size: 13px; font-weight: 700; line-height: 1.3; margin-bottom: 4px; }
-    .selector-prop-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 10px; }
+    .selector-prop-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .selector-scenario { font-size: 10px; font-weight: 600; color: var(--accent); background: var(--surface-2); padding: 2px 7px; border-radius: 3px; display: inline-block; margin-bottom: 8px; }
     .selector-verdict { display: inline-flex; align-items: center; gap: 6px; }
     .sv-badge { font-size: 9px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
     .sv-go { background: #4ADE80; color: #1A1A1A; }
@@ -175,8 +176,8 @@
 
   <!-- PAGE HEADER -->
   <div class="page-header">
-    <div class="page-title">Property Comparison</div>
-    <div class="page-sub">Compare up to 3 saved properties side by side across all investment dimensions.</div>
+    <div class="page-title">Analysis Comparison</div>
+    <div class="page-sub">Compare up to 3 saved analyses side by side — mix different properties or the same property under different scenarios.</div>
   </div>
 
   <!-- LEGEND -->
@@ -195,33 +196,36 @@
       <span class="selector-label-text">Properties</span>
     </div>
 
-    <!-- PROPERTY 1 — filled -->
+    <!-- ANALYSIS 1 — filled -->
     <div class="selector-cell best-prop">
       <button class="selector-remove" title="Remove">×</button>
       <div class="selector-prop-address">4821 Oakwood Dr</div>
       <div class="selector-prop-meta">San Diego, CA · SFH · $625,000</div>
+      <div class="selector-scenario">20% down · 6.87% · $2,800/mo</div>
       <div class="selector-verdict">
         <span class="sv-badge sv-go">GO</span>
         <span style="font-size:11px;color:var(--text-muted)">6.8% COC</span>
       </div>
     </div>
 
-    <!-- PROPERTY 2 — filled -->
+    <!-- ANALYSIS 2 — filled (same property, different scenario) -->
     <div class="selector-cell">
       <button class="selector-remove" title="Remove">×</button>
-      <div class="selector-prop-address">1142 Maple Ave, Unit A–C</div>
-      <div class="selector-prop-meta">San Diego, CA · Triplex · $1,098,000</div>
+      <div class="selector-prop-address">4821 Oakwood Dr</div>
+      <div class="selector-prop-meta">San Diego, CA · SFH · $625,000</div>
+      <div class="selector-scenario">House Hack · 10% down · 6.87%</div>
       <div class="selector-verdict">
         <span class="sv-badge sv-go">GO</span>
         <span style="font-size:11px;color:var(--text-muted)">8.2% COC</span>
       </div>
     </div>
 
-    <!-- PROPERTY 3 — filled -->
+    <!-- ANALYSIS 3 — filled (different property) -->
     <div class="selector-cell">
       <button class="selector-remove" title="Remove">×</button>
       <div class="selector-prop-address">3307 Sunset Blvd</div>
       <div class="selector-prop-meta">Los Angeles, CA · SFH · $780,000</div>
+      <div class="selector-scenario">20% down · 7.12% · $3,200/mo</div>
       <div class="selector-verdict">
         <span class="sv-badge sv-caution">CAUTION</span>
         <span style="font-size:11px;color:var(--text-muted)">3.1% COC</span>
@@ -237,7 +241,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Cashflow</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">House Hack ★ Best</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
     </div>
 
@@ -275,7 +279,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Tax Impact</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">House Hack ★ Best</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
     </div>
 
@@ -313,7 +317,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Equity Outlook</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">4821 Oakwood ★ Best</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">House Hack ★ Best</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
     </div>
 
@@ -351,7 +355,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Environmental Risk</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">1142 Maple</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">House Hack</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">3307 Sunset ★ Best</span></div>
     </div>
 
@@ -396,7 +400,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Location Demographics</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">4821 Oakwood ★ Best</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">House Hack ★ Best</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
     </div>
 
@@ -441,7 +445,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Downside Resilience</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">1142 Maple ★ Best</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">House Hack ★ Best</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">3307 Sunset</span></div>
     </div>
 
@@ -479,7 +483,7 @@
     <div class="cmp-section">
       <div class="cmp-section-label"><span class="cmp-section-label-text">Neighborhood Signals</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">4821 Oakwood</span></div>
-      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">1142 Maple</span></div>
+      <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-dim">House Hack</span></div>
       <div class="cmp-section-summary"><span class="cmp-winner-tag winner-tag-active">3307 Sunset ★ Best</span></div>
     </div>
 
