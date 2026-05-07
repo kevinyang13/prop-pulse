@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Analyzing Property</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 60px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 24px; }
+    .nav-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text); cursor: pointer; text-decoration: none; }
+
+    .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 24px; }
+    .loading-card { width: 100%; max-width: 520px; }
+
+    /* Address header */
+    .prop-header { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 18px 22px; margin-bottom: 40px; }
+    .prop-label { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .prop-address { font-size: 17px; font-weight: 800; }
+    .prop-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Title */
+    .loading-title { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .loading-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; }
+
+    /* Progress bar */
+    .prog-track { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 36px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--text); border-radius: 2px; transition: width 0.6s ease; }
+
+    /* Steps list */
+    .steps-list { display: flex; flex-direction: column; gap: 0; }
+    .step-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .step-row:last-child { border-bottom: none; }
+    .step-icon { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+    .step-icon.done { background: var(--text); color: var(--bg); }
+    .step-icon.active { background: transparent; border: 2px solid var(--text); color: var(--text); }
+    .step-icon.waiting { background: var(--border); color: var(--text-muted); }
+    .step-icon.spin { background: transparent; border: 2px solid var(--border); border-top-color: var(--text); color: transparent; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .step-text { flex: 1; }
+    .step-name { font-size: 14px; font-weight: 600; }
+    .step-detail { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .step-badge { font-size: 11px; font-weight: 600; }
+    .badge-done { color: #2D7A4F; }
+    .badge-active { color: var(--text); }
+    .badge-wait { color: var(--text-muted); }
+
+    /* Manual entry fallback */
+    .fallback-banner { background: #FEF9F0; border: 1px solid #F0D9A8; border-radius: 4px; padding: 14px 18px; margin-top: 32px; display: none; }
+    .fallback-banner.show { display: flex; align-items: flex-start; gap: 14px; }
+    .fallback-icon { font-size: 20px; flex-shrink: 0; }
+    .fallback-text { font-size: 13px; line-height: 1.5; }
+    .fallback-text strong { font-weight: 700; display: block; margin-bottom: 4px; }
+    .fallback-link { color: var(--text); font-weight: 600; text-decoration: underline; }
+
+    /* Cancel */
+    .cancel-row { margin-top: 28px; text-align: center; }
+    .cancel-link { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+    .cancel-link:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      .page { padding: 40px 20px; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <div class="nav-right">
+    <a href="mockup-dashboard.html" class="nav-link">My Properties</a>
+    <a href="mockup-settings.html" class="nav-avatar">KY</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="loading-card">
+
+    <div class="prop-header">
+      <div class="prop-label">Analyzing</div>
+      <div class="prop-address">1842 Maple Ave</div>
+      <div class="prop-sub">Austin, TX 78704 · $415,000 · 3 bed / 2 bath</div>
+    </div>
+
+    <div class="loading-title">Building your analysis…</div>
+    <p class="loading-sub">Fetching 8 data sources. Usually takes 15–30 seconds.</p>
+
+    <div class="prog-track">
+      <div class="prog-fill" id="prog-fill" style="width: 62%"></div>
+    </div>
+
+    <div class="steps-list">
+      <div class="step-row">
+        <div class="step-icon done">✓</div>
+        <div class="step-text">
+          <div class="step-name">Property data</div>
+          <div class="step-detail">Rentcast · 3bd/2ba · AVM $418K · Rent est. $2,100/mo</div>
+        </div>
+        <span class="step-badge badge-done">Done</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon done">✓</div>
+        <div class="step-text">
+          <div class="step-name">Tax engine</div>
+          <div class="step-detail">Depreciation, PAL rules, Schedule E — 32% bracket</div>
+        </div>
+        <span class="step-badge badge-done">Done</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon done">✓</div>
+        <div class="step-text">
+          <div class="step-name">Mortgage rate</div>
+          <div class="step-detail">FRED API · 30-yr fixed 6.87%</div>
+        </div>
+        <span class="step-badge badge-done">Done</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon spin" id="icon-env"></div>
+        <div class="step-text">
+          <div class="step-name">Environmental risk</div>
+          <div class="step-detail">FEMA flood zone, fire risk, AQI, earthquake…</div>
+        </div>
+        <span class="step-badge badge-active" id="badge-env">Loading…</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon waiting" id="icon-nbhd">⋯</div>
+        <div class="step-text">
+          <div class="step-name">Neighborhood signals</div>
+          <div class="step-detail">Walk Score, schools, crime, transit</div>
+        </div>
+        <span class="step-badge badge-wait" id="badge-nbhd">Queued</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon waiting" id="icon-demo">⋯</div>
+        <div class="step-text">
+          <div class="step-name">Location demographics</div>
+          <div class="step-detail">Census ACS · income, renter ratio, vacancy</div>
+        </div>
+        <span class="step-badge badge-wait" id="badge-demo">Queued</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon waiting" id="icon-infra">⋯</div>
+        <div class="step-text">
+          <div class="step-name">Equity outlook</div>
+          <div class="step-detail">Infrastructure projects, population trends</div>
+        </div>
+        <span class="step-badge badge-wait" id="badge-infra">Queued</span>
+      </div>
+      <div class="step-row">
+        <div class="step-icon waiting" id="icon-verdict">⋯</div>
+        <div class="step-text">
+          <div class="step-name">Verdict &amp; scoring</div>
+          <div class="step-detail">GO / CAUTION / PASS with 6-dimension scorecard</div>
+        </div>
+        <span class="step-badge badge-wait" id="badge-verdict">Queued</span>
+      </div>
+    </div>
+
+    <!-- Fallback banner (shown if Rentcast returns no data) -->
+    <div class="fallback-banner" id="fallback-banner">
+      <div class="fallback-icon">⚠️</div>
+      <div class="fallback-text">
+        <strong>Property not found in our database.</strong>
+        Rentcast doesn't have data for this address yet. You can
+        <a href="mockup-manual-entry.html" class="fallback-link">enter property details manually</a>
+        to continue with the analysis.
+      </div>
+    </div>
+
+    <div class="cancel-row">
+      <a href="mockup-dashboard.html" class="cancel-link">← Cancel and go back</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Simulate loading progress
+  const steps = [
+    { icon: 'icon-env',    badge: 'badge-env',    delay: 1800, name: 'Environmental risk',    detail: 'Flood zone X · Fire moderate · AQI 42 · EQ low' },
+    { icon: 'icon-nbhd',   badge: 'badge-nbhd',   delay: 2800, name: 'Neighborhood signals',  detail: 'Walk 72 · Schools 8/10 · Crime B+' },
+    { icon: 'icon-demo',   badge: 'badge-demo',   delay: 3600, name: 'Location demographics', detail: 'Median income $94K · Renter ratio 38%' },
+    { icon: 'icon-infra',  badge: 'badge-infra',  delay: 4400, name: 'Equity outlook',        detail: '3 projects within 1 mi · 2.1% annual appreciation' },
+    { icon: 'icon-verdict',badge: 'badge-verdict', delay: 5200, name: 'Verdict',               detail: 'Scoring complete' },
+  ];
+
+  const widths = [62, 72, 82, 90, 96, 100];
+  let wi = 0;
+
+  steps.forEach((s, i) => {
+    // activate next step spinner
+    setTimeout(() => {
+      const icon = document.getElementById(s.icon);
+      icon.className = 'step-icon spin';
+      icon.textContent = '';
+      document.getElementById(s.badge).textContent = 'Loading…';
+      document.getElementById(s.badge).className = 'step-badge badge-active';
+      if (wi < widths.length) {
+        document.getElementById('prog-fill').style.width = widths[wi++] + '%';
+      }
+      // activate next step waiting indicator
+      if (i + 1 < steps.length) {
+        const next = steps[i + 1];
+        document.getElementById(next.icon).className = 'step-icon waiting';
+        document.getElementById(next.icon).textContent = '⋯';
+      }
+    }, i === 0 ? 0 : steps[i-1].delay);
+
+    // mark done
+    setTimeout(() => {
+      const icon = document.getElementById(s.icon);
+      icon.className = 'step-icon done';
+      icon.textContent = '✓';
+      document.getElementById(s.badge).textContent = 'Done';
+      document.getElementById(s.badge).className = 'step-badge badge-done';
+      const row = icon.closest('.step-row');
+      row.querySelector('.step-detail').textContent = s.detail;
+      document.getElementById('prog-fill').style.width = widths[wi++] + '%';
+    }, s.delay);
+  });
+
+  // Navigate to results after all done
+  setTimeout(() => {
+    window.location.href = 'mockup-results.html';
+  }, 6200);
+</script>
+</body>
+</html>

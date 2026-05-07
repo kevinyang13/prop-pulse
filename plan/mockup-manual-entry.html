@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Manual Property Entry</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 60px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-back { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .nav-back:hover { color: var(--text); }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text); text-decoration: none; }
+
+    .page { flex: 1; padding: 60px 24px; display: flex; justify-content: center; }
+    .form-card { width: 100%; max-width: 640px; }
+
+    /* Banner */
+    .notice-banner { background: #FEF9F0; border: 1px solid #F0D9A8; border-radius: 4px; padding: 14px 18px; margin-bottom: 36px; display: flex; gap: 12px; align-items: flex-start; }
+    .notice-icon { font-size: 18px; flex-shrink: 0; }
+    .notice-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+    .notice-text strong { color: var(--text); font-weight: 700; display: block; margin-bottom: 2px; }
+
+    .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 40px; line-height: 1.5; }
+
+    /* Section */
+    .section { margin-bottom: 36px; }
+    .section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .form-row.one { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 7px; }
+    .form-hint { font-size: 11px; color: var(--text-muted); margin-top: 5px; }
+    .form-input { border: 1.5px solid var(--border); border-radius: 4px; padding: 11px 14px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; }
+    .form-input:focus { border-color: var(--text); }
+    .form-select { border: 1.5px solid var(--border); border-radius: 4px; padding: 11px 14px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%236B6560' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; cursor: pointer; }
+    .input-wrap { position: relative; }
+    .input-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-muted); }
+    .input-suffix { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-muted); }
+    .input-wrap .form-input { padding-left: 26px; }
+    .input-wrap.suffix .form-input { padding-right: 36px; }
+
+    /* Toggle */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .toggle-row:first-child { border-top: 1px solid var(--border); }
+    .toggle-label { font-size: 14px; font-weight: 600; }
+    .toggle-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .toggle { width: 40px; height: 22px; border-radius: 11px; background: var(--border); cursor: pointer; position: relative; flex-shrink: 0; transition: background 0.2s; }
+    .toggle.on { background: var(--text); }
+    .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: white; top: 3px; left: 3px; transition: transform 0.2s; }
+    .toggle.on::after { transform: translateX(18px); }
+
+    /* Submit */
+    .form-actions { display: flex; gap: 12px; margin-top: 8px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .btn-submit { flex: 1; background: var(--text); color: var(--bg); border: none; border-radius: 4px; padding: 14px 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
+    .btn-submit:hover { opacity: 0.88; }
+    .btn-cancel { padding: 14px 20px; background: transparent; border: 1.5px solid var(--border); border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    .disclaimer { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 20px; line-height: 1.6; }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 20px; }
+      .page { padding: 32px 20px; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-row.three { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <a href="mockup-dashboard.html" class="nav-back">← My Properties</a>
+  <a href="mockup-settings.html" class="nav-avatar">KY</a>
+</nav>
+
+<div class="page">
+  <div class="form-card">
+
+    <div class="notice-banner">
+      <div class="notice-icon">ℹ️</div>
+      <div class="notice-text">
+        <strong>Property not found in Rentcast.</strong>
+        Enter the details below to run your analysis. Financial model and tax math will be fully personalized — only neighborhood data may be limited.
+      </div>
+    </div>
+
+    <h1 class="page-title">Enter property details</h1>
+    <p class="page-sub">Fill in what you know. You can adjust all assumptions on the results page.</p>
+
+    <!-- Address -->
+    <div class="section">
+      <div class="section-title">Address</div>
+      <div class="form-row one">
+        <div class="form-group">
+          <label class="form-label">Street address</label>
+          <input class="form-input" type="text" placeholder="1842 Maple Ave" value="1842 Maple Ave" />
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input class="form-input" type="text" placeholder="Austin" value="Austin" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">State</label>
+          <select class="form-select">
+            <option>TX</option><option>CA</option><option>FL</option><option>CO</option><option>NY</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ZIP Code</label>
+          <input class="form-input" type="text" placeholder="78704" value="78704" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Property basics -->
+    <div class="section">
+      <div class="section-title">Property basics</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Property type</label>
+          <select class="form-select">
+            <option>Single Family Home</option>
+            <option>Condo / Townhouse</option>
+            <option>Duplex (2-unit)</option>
+            <option>Triplex (3-unit)</option>
+            <option>Quadplex (4-unit)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Year built</label>
+          <input class="form-input" type="text" placeholder="1998" />
+        </div>
+      </div>
+      <div class="form-row three">
+        <div class="form-group">
+          <label class="form-label">Bedrooms</label>
+          <select class="form-select">
+            <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bathrooms</label>
+          <select class="form-select">
+            <option>1</option><option>1.5</option><option selected>2</option><option>2.5</option><option>3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sq ft</label>
+          <input class="form-input" type="text" placeholder="1,450" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Financials -->
+    <div class="section">
+      <div class="section-title">Purchase &amp; financing</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Purchase price</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="415,000" value="415,000" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Down payment</label>
+          <div class="input-wrap suffix">
+            <input class="form-input" type="text" placeholder="20" value="20" />
+            <span class="input-suffix">%</span>
+          </div>
+          <span class="form-hint">= $83,000 cash</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Interest rate</label>
+          <div class="input-wrap suffix">
+            <input class="form-input" type="text" placeholder="6.87" value="6.87" />
+            <span class="input-suffix">%</span>
+          </div>
+          <span class="form-hint">Pre-filled from FRED (30-yr avg)</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loan term</label>
+          <select class="form-select">
+            <option selected>30 years</option>
+            <option>15 years</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Income -->
+    <div class="section">
+      <div class="section-title">Rental income</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Expected monthly rent</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="2,100" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vacancy rate</label>
+          <div class="input-wrap suffix">
+            <input class="form-input" type="text" placeholder="5" value="5" />
+            <span class="input-suffix">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expenses -->
+    <div class="section">
+      <div class="section-title">Annual expenses</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Property tax / yr</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="5,200" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Insurance / yr</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="1,800" />
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">HOA / mo (if any)</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="0" value="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Maintenance / yr</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="2,400" />
+          </div>
+          <span class="form-hint">Rule of thumb: 1% of value</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Property mgmt</label>
+          <div class="input-wrap suffix">
+            <input class="form-input" type="text" placeholder="0" value="0" />
+            <span class="input-suffix">%</span>
+          </div>
+          <span class="form-hint">Of gross rent (typically 8–10%)</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CapEx reserve / yr</label>
+          <div class="input-wrap">
+            <span class="input-prefix">$</span>
+            <input class="form-input" type="text" placeholder="1,200" />
+          </div>
+        </div>
+      </div>
+
+      <!-- House hack toggle -->
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">House hack (owner-occupied unit)</div>
+          <div class="toggle-sub">Excludes one unit from depreciation and Schedule E</div>
+        </div>
+        <div class="toggle" id="hack-toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a href="mockup-dashboard.html" class="btn-cancel">Cancel</a>
+      <button class="btn-submit" onclick="window.location.href='mockup-loading.html'">Run Analysis →</button>
+    </div>
+    <p class="disclaimer">Estimates only — consult a CPA for tax advice. PropPulse is not a financial advisor.</p>
+
+  </div>
+</div>
+
+</body>
+</html>

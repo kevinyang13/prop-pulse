@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Know before you buy.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+      --green: #2D7A4F; --amber: #B07D2A; --red: #B94040;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+    /* NAV */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 60px; border-bottom: 1px solid var(--border); background: var(--bg); position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; gap: 32px; align-items: center; font-size: 13px; }
+    .nav-link { text-decoration: none; color: var(--text-muted); font-weight: 500; }
+    .nav-link:hover { color: var(--text); }
+    .btn-primary { background: var(--text); color: var(--bg); border: none; padding: 10px 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 4px; text-decoration: none; display: inline-block; }
+    .btn-primary:hover { opacity: 0.88; }
+
+    /* HERO */
+    .hero { min-height: calc(100vh - 65px); display: flex; align-items: center; padding: 80px 60px; background: var(--bg); }
+    .hero-inner { max-width: 1100px; margin: 0 auto; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; }
+    .hero-title { font-size: 58px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 24px; }
+    .hero-title span { color: var(--accent); }
+    .hero-sub { font-size: 17px; color: var(--text-muted); line-height: 1.7; max-width: 480px; margin-bottom: 40px; }
+    .hero-cta { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+    .btn-google { display: flex; align-items: center; gap: 12px; background: var(--text); color: var(--bg); border: none; padding: 14px 28px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 4px; text-decoration: none; width: fit-content; }
+    .btn-google:hover { opacity: 0.88; }
+    .google-icon { width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: #4285F4; flex-shrink: 0; }
+    .magic-link-form { display: flex; gap: 0; border: 1.5px solid var(--border); border-radius: 4px; overflow: hidden; }
+    .magic-link-form input { border: none; outline: none; padding: 11px 16px; font-size: 13px; background: var(--bg); color: var(--text); font-family: inherit; width: 240px; }
+    .magic-link-form button { background: var(--surface-2); border: none; border-left: 1.5px solid var(--border); padding: 11px 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; color: var(--text); font-family: inherit; white-space: nowrap; }
+    .magic-link-form button:hover { background: var(--accent); }
+    .hero-trust { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .trust-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+
+    /* BUYER COMPARISON */
+    .buyer-section { background: var(--surface); padding: 80px 60px; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    .section-title { font-size: 36px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 12px; }
+    .section-sub { font-size: 15px; color: var(--text-muted); margin-bottom: 48px; max-width: 560px; }
+    .buyer-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; align-items: center; }
+    .buyer-card { background: var(--bg); border-radius: 4px; padding: 32px; border: 1px solid var(--border); }
+    .buyer-card.go-card { border-top: 3px solid #4ADE80; }
+    .buyer-card.caution-card { border-top: 3px solid #FCD34D; }
+    .buyer-label { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; }
+    .buyer-profile { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .buyer-row { display: flex; justify-content: space-between; font-size: 13px; }
+    .buyer-key { color: var(--text-muted); }
+    .buyer-val { font-weight: 600; }
+    .buyer-verdict { display: flex; align-items: center; gap: 12px; }
+    .verdict-badge { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 18px; border-radius: 2px; }
+    .verdict-go { background: #4ADE80; color: #1A1A1A; }
+    .verdict-caution { background: #FCD34D; color: #1A1A1A; }
+    .verdict-detail { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .vs-divider { padding: 0 40px; text-align: center; }
+    .vs-circle { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 0.1em; color: var(--text-muted); }
+    .property-tag { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; font-style: italic; }
+
+    /* FEATURES */
+    .features-section { padding: 80px 60px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--border); border-radius: 4px; overflow: hidden; margin-top: 48px; }
+    .feature-card { background: var(--bg); padding: 36px 32px; }
+    .feature-icon { font-size: 28px; margin-bottom: 16px; }
+    .feature-title { font-size: 16px; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.01em; }
+    .feature-desc { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+    /* HOW IT WORKS */
+    .how-section { background: var(--surface); padding: 80px 60px; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 48px; position: relative; }
+    .steps::before { content: ''; position: absolute; top: 28px; left: calc(16.66% + 20px); right: calc(16.66% + 20px); height: 1px; background: var(--border); }
+    .step { text-align: center; }
+    .step-num { width: 56px; height: 56px; border-radius: 50%; background: var(--text); color: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; margin: 0 auto 20px; position: relative; z-index: 1; }
+    .step-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+    /* PREVIEW TEASE */
+    .preview-section { padding: 80px 60px; }
+    .preview-wrap { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; position: relative; max-width: 860px; margin: 48px auto 0; }
+    .preview-blur { width: 100%; background: linear-gradient(to bottom, transparent 0%, var(--bg) 75%); position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 60px; z-index: 2; }
+    .preview-blur-cta { text-align: center; }
+    .preview-blur-cta p { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .preview-img { width: 100%; height: 420px; background: var(--surface); display: flex; align-items: flex-start; justify-content: center; padding: 24px; gap: 12px; }
+    .preview-mini-card { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 16px; flex: 1; max-width: 200px; opacity: 0.4; filter: blur(2px); }
+    .pmc-label { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .pmc-val { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+    .pmc-sub { font-size: 10px; color: var(--text-muted); }
+
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 32px 60px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .footer-logo { font-size: 14px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+    .footer-logo span { color: var(--accent); }
+    .footer-links { display: flex; gap: 24px; font-size: 12px; color: var(--text-muted); }
+    .footer-links a { text-decoration: none; color: inherit; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-disc { font-size: 11px; color: var(--text-muted); font-style: italic; }
+
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      .hero { padding: 60px 24px; min-height: auto; }
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-title { font-size: 40px; }
+      .buyer-section, .features-section, .how-section, .preview-section { padding: 60px 24px; }
+      .buyer-grid { grid-template-columns: 1fr; gap: 24px; }
+      .vs-divider { padding: 16px 0; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      footer { padding: 24px; flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <div class="nav-right">
+    <a href="#how" class="nav-link">How it works</a>
+    <a href="#features" class="nav-link">Features</a>
+    <a href="mockup-login.html" class="btn-primary">Sign In</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">For W2 real estate investors</div>
+      <h1 class="hero-title">Know before<br>you <span>buy.</span></h1>
+      <p class="hero-sub">Personalized property analysis that factors in your W2 income, tax bracket, and passive activity loss rules. Same $400K property — different verdict for different buyers.</p>
+      <div class="hero-cta">
+        <a href="mockup-login.html" class="btn-google">
+          <div class="google-icon">G</div>
+          Sign in with Google
+        </a>
+        <div class="magic-link-form">
+          <input type="email" placeholder="Or enter your email..." />
+          <button onclick="window.location='mockup-login.html'">Send link</button>
+        </div>
+        <div class="hero-trust">
+          <span>Free — 3 analyses</span>
+          <div class="trust-dot"></div>
+          <span>No credit card</span>
+          <div class="trust-dot"></div>
+          <span>Under 2 minutes per deal</span>
+        </div>
+      </div>
+    </div>
+    <!-- right side: preview card -->
+    <div>
+      <div style="background:var(--surface);border-radius:4px;border:1px solid var(--border);padding:28px;max-width:400px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">Live example · 4821 Oakwood Dr, San Diego</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px;">
+          <div style="background:var(--text);color:var(--bg);padding:20px 16px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;opacity:0.5;margin-bottom:8px;">Monthly Cashflow</div>
+            <div style="font-size:26px;font-weight:900;letter-spacing:-0.02em;color:#4ADE80;">+$412</div>
+          </div>
+          <div style="background:var(--surface);padding:20px 16px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;">Tax-Adj. COC</div>
+            <div style="font-size:26px;font-weight:900;letter-spacing:-0.02em;color:var(--green);">9.1%</div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:4px;padding:16px 18px;margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">Depreciation saves you</div>
+          <div style="font-size:20px;font-weight:800;">$3,720/yr</div>
+          <div style="font-size:11px;color:var(--text-muted);">at your 32% bracket · PAL fully deductible</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;background:var(--text);color:var(--bg);border-radius:4px;padding:14px 18px;">
+          <div style="font-size:16px;font-weight:900;letter-spacing:0.05em;">GO</div>
+          <div style="font-size:12px;opacity:0.7;line-height:1.4;">Strong investment at your profile. 4 of 6 stress scenarios remain positive.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BUYER COMPARISON -->
+<section class="buyer-section" id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow">The PropPulse difference</div>
+    <h2 class="section-title">Same property. Different buyer.<br>Different verdict.</h2>
+    <p class="section-sub">Generic calculators ignore your tax situation. PropPulse personalizes every number to your income, bracket, and passive activity loss eligibility.</p>
+    <div class="buyer-grid">
+      <div class="buyer-card caution-card">
+        <div class="buyer-label">Buyer A</div>
+        <div class="buyer-profile">
+          <div class="buyer-row"><span class="buyer-key">W2 Income</span><span class="buyer-val">$180,000</span></div>
+          <div class="buyer-row"><span class="buyer-key">Tax Bracket</span><span class="buyer-val">22%</span></div>
+          <div class="buyer-row"><span class="buyer-key">Cash Available</span><span class="buyer-val">$100,000</span></div>
+          <div class="buyer-row"><span class="buyer-key">PAL Status</span><span class="buyer-val">Phase-out</span></div>
+        </div>
+        <div class="buyer-verdict">
+          <span class="verdict-badge verdict-caution">CAUTION</span>
+          <div class="verdict-detail">Thin cashflow at 22% bracket. PAL phase-out limits tax benefit. Reserve insufficient for rate shock.</div>
+        </div>
+      </div>
+      <div class="vs-divider">
+        <div class="vs-circle">VS</div>
+        <div class="property-tag">$400K SFH<br>San Diego, CA</div>
+      </div>
+      <div class="buyer-card go-card">
+        <div class="buyer-label">Buyer B</div>
+        <div class="buyer-profile">
+          <div class="buyer-row"><span class="buyer-key">W2 Income</span><span class="buyer-val">$280,000</span></div>
+          <div class="buyer-row"><span class="buyer-key">Tax Bracket</span><span class="buyer-val">32%</span></div>
+          <div class="buyer-row"><span class="buyer-key">Cash Available</span><span class="buyer-val">$200,000</span></div>
+          <div class="buyer-row"><span class="buyer-key">PAL Status</span><span class="buyer-val">Fully deductible</span></div>
+        </div>
+        <div class="buyer-verdict">
+          <span class="verdict-badge verdict-go">GO</span>
+          <div class="verdict-detail">$3,200/yr depreciation benefit at 32% bracket. Strong reserve. 5 of 6 stress scenarios positive.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">What PropPulse analyzes</div>
+    <h2 class="section-title">Everything in one view.</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <div class="feature-title">Personalized Tax Math</div>
+        <div class="feature-desc">Depreciation, passive activity loss rules, Schedule E deductions — computed for your exact W2 income and filing status. No other tool does this.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Cashflow + Stress Test</div>
+        <div class="feature-desc">Monthly cashflow breakdown and 6-scenario stress test. See what happens when rates rise, rent drops, or vacancy spikes before you offer.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏘️</div>
+        <div class="feature-title">Neighborhood Signals</div>
+        <div class="feature-desc">Walk Score, school ratings, crime index, and planned infrastructure projects within 2 miles — mapped and summarized.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-title">Location Demographics</div>
+        <div class="feature-desc">Renter ratio, median income, vacancy rate, price-to-rent ratio from US Census ACS data. Know if the zip code supports strong rental demand.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <div class="feature-title">Environmental Risk</div>
+        <div class="feature-desc">Fire, flood, air quality, wind, and earthquake risk — with estimated insurance cost impact factored into your cashflow model.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <div class="feature-title">Equity Outlook</div>
+        <div class="feature-desc">Population growth, job growth, home price trends, and major infrastructure projects. Know where the neighborhood is heading, not just where it is.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-inner">
+    <div class="section-eyebrow">How it works</div>
+    <h2 class="section-title">Setup once. Analyze in under 2 minutes.</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Set up your profile</div>
+        <div class="step-desc">Enter your W2 income, filing status, state, and available cash. Takes 3 minutes. Never enter it again.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Enter any address</div>
+        <div class="step-desc">Type a property address. PropPulse fetches all the data automatically — no manual spreadsheet entry.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Get your answer</div>
+        <div class="step-desc">GO, CAUTION, or PASS — with personalized numbers across every dimension that matters for your decision.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREVIEW TEASE -->
+<section class="preview-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">See it in action</div>
+    <h2 class="section-title">Your numbers, your verdict.</h2>
+    <div class="preview-wrap">
+      <div class="preview-img">
+        <div class="preview-mini-card"><div class="pmc-label">Cashflow</div><div class="pmc-val" style="color:#2D7A4F">+$412</div><div class="pmc-sub">Monthly net</div></div>
+        <div class="preview-mini-card"><div class="pmc-label">COC Return</div><div class="pmc-val">6.8%</div><div class="pmc-sub">Cash-on-cash</div></div>
+        <div class="preview-mini-card"><div class="pmc-label">Tax Savings</div><div class="pmc-val">$3,720</div><div class="pmc-sub">Per year</div></div>
+        <div class="preview-mini-card"><div class="pmc-label">Verdict</div><div class="pmc-val" style="font-size:18px">GO</div><div class="pmc-sub">4/6 scenarios positive</div></div>
+      </div>
+      <div class="preview-blur">
+        <div class="preview-blur-cta">
+          <p>Sign in to see your numbers</p>
+          <a href="mockup-login.html" class="btn-primary">Get started free →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Prop<span>Pulse</span></div>
+  <div class="footer-links">
+    <a href="#">Privacy Policy</a>
+    <a href="#">Terms of Service</a>
+    <a href="#">Do Not Sell My Info</a>
+    <a href="#">Contact</a>
+  </div>
+  <div class="footer-disc">Estimates only — consult a CPA for tax advice.</div>
+</footer>
+
+</body>
+</html>

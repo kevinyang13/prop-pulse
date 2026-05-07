@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — My Properties</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+      --green: #2D7A4F; --red: #B94040; --orange: #C05A1A;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Nav */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 60px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg); z-index: 100; }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 24px; }
+    .nav-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .nav-link.active { color: var(--text); font-weight: 600; }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text); cursor: pointer; text-decoration: none; }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 0 auto; padding: 48px 60px; flex: 1; width: 100%; }
+
+    /* Header row */
+    .dash-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; gap: 20px; flex-wrap: wrap; }
+    .dash-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .dash-sub { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+    .header-actions { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+    .btn-compare { padding: 10px 18px; border: 1.5px solid var(--border); border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; background: var(--bg); color: var(--text-muted); display: none; }
+    .btn-compare.show { display: block; }
+    .btn-compare:hover { border-color: var(--text); color: var(--text); }
+    .btn-new { padding: 11px 20px; background: var(--text); color: var(--bg); border: none; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block; }
+    .btn-new:hover { opacity: 0.88; }
+
+    /* Search */
+    .search-row { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+    .search-input-wrap { flex: 1; position: relative; min-width: 200px; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+    .search-input { width: 100%; border: 1.5px solid var(--border); border-radius: 4px; padding: 10px 16px 10px 38px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; }
+    .search-input:focus { border-color: var(--text); }
+    .sort-select { border: 1.5px solid var(--border); border-radius: 4px; padding: 10px 14px; font-size: 13px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; cursor: pointer; }
+
+    /* Free tier banner */
+    .free-banner { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 16px 20px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .free-left { display: flex; align-items: center; gap: 14px; }
+    .free-pips { display: flex; gap: 6px; }
+    .pip { width: 10px; height: 10px; border-radius: 50%; background: var(--text); }
+    .pip.empty { background: var(--border); }
+    .free-text { font-size: 13px; }
+    .free-text strong { font-weight: 700; }
+    .free-text span { color: var(--text-muted); }
+    .btn-upgrade { padding: 9px 16px; background: var(--text); color: var(--bg); border: none; border-radius: 4px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; display: inline-block; white-space: nowrap; }
+
+    /* Property cards */
+    .properties-grid { display: flex; flex-direction: column; gap: 16px; }
+    .prop-card { background: var(--bg); border: 1.5px solid var(--border); border-radius: 4px; padding: 20px 24px; display: flex; align-items: flex-start; gap: 20px; cursor: pointer; text-decoration: none; color: var(--text); transition: border-color 0.15s; position: relative; }
+    .prop-card:hover { border-color: var(--accent); }
+    .prop-card.selected { border-color: var(--text); background: var(--surface); }
+
+    .prop-checkbox { width: 20px; height: 20px; border: 1.5px solid var(--border); border-radius: 3px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; background: var(--bg); cursor: pointer; font-size: 12px; }
+    .prop-card.selected .prop-checkbox { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+    .prop-main { flex: 1; min-width: 0; }
+    .prop-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .prop-address { font-size: 15px; font-weight: 700; }
+    .prop-city { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .verdict-badge { padding: 4px 10px; border-radius: 3px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; }
+    .verdict-go { background: var(--text); color: var(--bg); }
+    .verdict-caution { background: var(--accent); color: var(--text); }
+    .verdict-pass { background: #E8E4E0; color: var(--text-muted); }
+
+    .prop-metrics { display: flex; gap: 28px; flex-wrap: wrap; }
+    .prop-metric { }
+    .metric-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+    .metric-value { font-size: 14px; font-weight: 700; margin-top: 2px; }
+    .metric-value.pos { color: var(--green); }
+    .metric-value.neg { color: var(--red); }
+    .metric-value.warn { color: var(--orange); }
+
+    .prop-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .prop-date { font-size: 11px; color: var(--text-muted); }
+    .prop-actions { display: flex; gap: 12px; }
+    .prop-action { font-size: 12px; color: var(--text-muted); text-decoration: none; cursor: pointer; }
+    .prop-action:hover { color: var(--text); }
+
+    /* Empty state */
+    .empty-state { text-align: center; padding: 80px 24px; }
+    .empty-icon { font-size: 40px; margin-bottom: 20px; }
+    .empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .empty-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; max-width: 340px; margin-left: auto; margin-right: auto; }
+
+    /* Compare mode hint */
+    .compare-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 20px; padding: 12px 16px; background: var(--surface); border-radius: 4px; display: none; }
+    .compare-hint.show { display: block; }
+
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .container { padding: 32px 20px; }
+      .dash-header { flex-direction: column; }
+      .prop-metrics { gap: 16px; }
+      .prop-metric { min-width: 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <div class="nav-right">
+    <a href="mockup-dashboard.html" class="nav-link active">My Properties</a>
+    <a href="mockup-settings.html" class="nav-link">Settings</a>
+    <a href="mockup-settings.html" class="nav-avatar">KY</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="dash-header">
+    <div>
+      <h1 class="dash-title">My Properties</h1>
+      <p class="dash-sub">3 analyses saved · Free tier (2 of 3 used)</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-compare" id="compare-btn" onclick="goCompare()">Compare Selected (2)</button>
+      <a href="mockup-loading.html" class="btn-new">+ Analyze Property</a>
+    </div>
+  </div>
+
+  <!-- Free tier banner -->
+  <div class="free-banner">
+    <div class="free-left">
+      <div class="free-pips">
+        <div class="pip"></div>
+        <div class="pip"></div>
+        <div class="pip empty"></div>
+      </div>
+      <div class="free-text">
+        <strong>2 of 3 free analyses used.</strong> <span>Upgrade for unlimited analyses, comparisons, and PDF export.</span>
+      </div>
+    </div>
+    <a href="mockup-upgrade.html" class="btn-upgrade">Upgrade to Pro →</a>
+  </div>
+
+  <!-- Search + sort -->
+  <div class="search-row">
+    <div class="search-input-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" type="text" placeholder="Search by address or city…" />
+    </div>
+    <select class="sort-select">
+      <option>Newest first</option>
+      <option>Highest cashflow</option>
+      <option>Best COC return</option>
+      <option>Verdict: GO first</option>
+    </select>
+  </div>
+
+  <!-- Compare mode hint -->
+  <div class="compare-hint" id="compare-hint">
+    Select up to 3 properties to compare side-by-side. Click the checkbox on each card.
+  </div>
+
+  <!-- Property cards -->
+  <div class="properties-grid">
+
+    <!-- Card 1 — GO -->
+    <a class="prop-card" href="mockup-results.html" id="card-1">
+      <div class="prop-checkbox" id="cb-1" onclick="toggleSelect(event, 'card-1', 'cb-1')"></div>
+      <div class="prop-main">
+        <div class="prop-top">
+          <div>
+            <div class="prop-address">1842 Maple Ave</div>
+            <div class="prop-city">Austin, TX 78704 · SFH · 3bd/2ba</div>
+          </div>
+          <span class="verdict-badge verdict-go">GO</span>
+        </div>
+        <div class="prop-metrics">
+          <div class="prop-metric">
+            <div class="metric-label">Monthly Cashflow</div>
+            <div class="metric-value pos">+$312</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Cash-on-Cash</div>
+            <div class="metric-value">6.8%</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Tax-Adj. COC</div>
+            <div class="metric-value pos">9.2%</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Purchase Price</div>
+            <div class="metric-value">$415,000</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Env Risk</div>
+            <div class="metric-value warn">Moderate</div>
+          </div>
+        </div>
+        <div class="prop-footer">
+          <span class="prop-date">Analyzed May 5, 2026</span>
+          <div class="prop-actions">
+            <span class="prop-action" onclick="event.preventDefault(); toggleSelect(event, 'card-1', 'cb-1')">Select</span>
+            <span class="prop-action" onclick="event.preventDefault()">Share</span>
+            <span class="prop-action" onclick="event.preventDefault()">Delete</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 2 — CAUTION -->
+    <a class="prop-card selected" href="mockup-results.html" id="card-2">
+      <div class="prop-checkbox selected" id="cb-2" onclick="toggleSelect(event, 'card-2', 'cb-2')">✓</div>
+      <div class="prop-main">
+        <div class="prop-top">
+          <div>
+            <div class="prop-address">5511 Crenshaw Blvd, Unit 4B</div>
+            <div class="prop-city">Los Angeles, CA 90043 · Condo · 2bd/1ba</div>
+          </div>
+          <span class="verdict-badge verdict-caution">CAUTION</span>
+        </div>
+        <div class="prop-metrics">
+          <div class="prop-metric">
+            <div class="metric-label">Monthly Cashflow</div>
+            <div class="metric-value neg">−$148</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Cash-on-Cash</div>
+            <div class="metric-value neg">−1.2%</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Tax-Adj. COC</div>
+            <div class="metric-value">3.4%</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Purchase Price</div>
+            <div class="metric-value">$580,000</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Env Risk</div>
+            <div class="metric-value neg">High (Fire)</div>
+          </div>
+        </div>
+        <div class="prop-footer">
+          <span class="prop-date">Analyzed May 3, 2026</span>
+          <div class="prop-actions">
+            <span class="prop-action" onclick="event.preventDefault(); toggleSelect(event, 'card-2', 'cb-2')">Deselect</span>
+            <span class="prop-action" onclick="event.preventDefault()">Share</span>
+            <span class="prop-action" onclick="event.preventDefault()">Delete</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+    <!-- Card 3 — GO, selected -->
+    <a class="prop-card selected" href="mockup-results.html" id="card-3">
+      <div class="prop-checkbox selected" id="cb-3" onclick="toggleSelect(event, 'card-3', 'cb-3')">✓</div>
+      <div class="prop-main">
+        <div class="prop-top">
+          <div>
+            <div class="prop-address">2208 Rivera St</div>
+            <div class="prop-city">Denver, CO 80211 · SFH · 4bd/2ba</div>
+          </div>
+          <span class="verdict-badge verdict-go">GO</span>
+        </div>
+        <div class="prop-metrics">
+          <div class="prop-metric">
+            <div class="metric-label">Monthly Cashflow</div>
+            <div class="metric-value pos">+$218</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Cash-on-Cash</div>
+            <div class="metric-value">5.9%</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Tax-Adj. COC</div>
+            <div class="metric-value pos">8.1%</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Purchase Price</div>
+            <div class="metric-value">$489,000</div>
+          </div>
+          <div class="prop-metric">
+            <div class="metric-label">Env Risk</div>
+            <div class="metric-value">Low</div>
+          </div>
+        </div>
+        <div class="prop-footer">
+          <span class="prop-date">Analyzed Apr 28, 2026</span>
+          <div class="prop-actions">
+            <span class="prop-action" onclick="event.preventDefault(); toggleSelect(event, 'card-3', 'cb-3')">Deselect</span>
+            <span class="prop-action" onclick="event.preventDefault()">Share</span>
+            <span class="prop-action" onclick="event.preventDefault()">Delete</span>
+          </div>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- Pro gate notice for compare -->
+  <div style="margin-top: 32px; padding: 20px; background: var(--surface); border-radius: 4px; text-align: center; display: none;" id="compare-gate">
+    <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Side-by-side comparison is a Pro feature</div>
+    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Upgrade to compare up to 3 properties across 7 dimensions.</div>
+    <a href="mockup-upgrade.html" class="btn-new" style="display: inline-block;">View Pro Plans</a>
+  </div>
+
+</div>
+
+<script>
+  let selected = ['card-2', 'card-3'];
+
+  function toggleSelect(e, cardId, cbId) {
+    e.preventDefault();
+    e.stopPropagation();
+    const card = document.getElementById(cardId);
+    const cb = document.getElementById(cbId);
+    const idx = selected.indexOf(cardId);
+    if (idx > -1) {
+      selected.splice(idx, 1);
+      card.classList.remove('selected');
+      cb.classList.remove('selected');
+      cb.textContent = '';
+    } else {
+      if (selected.length >= 3) { alert('Max 3 properties can be compared.'); return; }
+      selected.push(cardId);
+      card.classList.add('selected');
+      cb.classList.add('selected');
+      cb.textContent = '✓';
+    }
+    updateCompareUI();
+  }
+
+  function updateCompareUI() {
+    const btn = document.getElementById('compare-btn');
+    const hint = document.getElementById('compare-hint');
+    if (selected.length >= 2) {
+      btn.classList.add('show');
+      btn.textContent = 'Compare Selected (' + selected.length + ')';
+      hint.classList.add('show');
+    } else {
+      btn.classList.remove('show');
+      hint.classList.remove('show');
+    }
+  }
+
+  function goCompare() { window.location.href = 'mockup-comparison.html'; }
+
+  updateCompareUI();
+</script>
+</body>
+</html>
