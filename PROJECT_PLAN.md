@@ -397,8 +397,51 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
 | [UX_FLOW.md](UX_FLOW.md) | Full UX flow: 10 pages, user journeys, layouts, empty/error states, nav structure |
 | [BUSINESS_PLAN.md](BUSINESS_PLAN.md) | Business model, GTM, financials, competitive analysis |
-| [plan/mockup-results.html](plan/mockup-results.html) | Interactive results page mockup |
-| [plan/mockup-comparison.html](plan/mockup-comparison.html) | Property comparison page mockup (up to 3 properties, 7 dimensions) |
+
+## Mockups — Source of Truth for UI
+
+**All UI implementation must match these mockups exactly.** Pixel-for-pixel fidelity to layout, spacing, color tokens, typography, and interaction states. Any deviation requires explicit product decision.
+
+| Mockup | Route | Implements |
+|--------|-------|-----------|
+| [plan/mockup-landing.html](plan/mockup-landing.html) | `/` (pre-auth) | Hero, Google sign-in CTA, Buyer A/B comparison, feature grid, how-it-works, blurred preview |
+| [plan/mockup-login.html](plan/mockup-login.html) | `/login` | Google OAuth button, magic link form + 60s countdown, sent/error states |
+| [plan/mockup-onboarding.html](plan/mockup-onboarding.html) | `/onboarding` | 3-step wizard: income+filing → state → cash+down; bracket auto-display; skip link |
+| [plan/mockup-dashboard.html](plan/mockup-dashboard.html) | `/dashboard` | Property cards with verdict badges + metrics; compare-select mode; free tier banner; sort/search |
+| [plan/mockup-loading.html](plan/mockup-loading.html) | `/analyze` (in-progress) | 8-step animated progress; Rentcast fallback banner trigger; auto-redirect on completion |
+| [plan/mockup-results.html](plan/mockup-results.html) | `/analyze/[id]` | Full analysis: metrics, cashflow, tax, stress table, scenario editor, neighborhood, demographics, env risk, equity, recommendation scorecard |
+| [plan/mockup-comparison.html](plan/mockup-comparison.html) | `/compare` (Pro) | 3-property side-by-side, 7 dimensions, per-row highlight, per-section winner, verdict pip bar |
+| [plan/mockup-manual-entry.html](plan/mockup-manual-entry.html) | `/analyze/manual` | Rentcast fallback form: address, property basics, purchase/financing, income, expenses, house hack toggle |
+| [plan/mockup-settings.html](plan/mockup-settings.html) | `/settings` | Profile, tax profile edit, subscription (free/pro states), notifications, privacy/CCPA, danger zone |
+| [plan/mockup-upgrade.html](plan/mockup-upgrade.html) | `/upgrade` | Pricing cards (monthly/annual toggle), feature comparison table, testimonials, FAQ |
+
+### Design tokens (enforce in Tailwind config / CSS vars)
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--bg` | `#FAFAF8` | Page background |
+| `--surface` | `#F2EDE8` | Cards, surface elements |
+| `--surface-2` | `#EAE3DC` | Hover states, secondary surfaces |
+| `--text` | `#1A1A1A` | Primary text, filled buttons |
+| `--text-muted` | `#6B6560` | Secondary text, labels |
+| `--accent` | `#C4B5A5` | Logo span, CAUTION badge, decorative |
+| `--border` | `#E0D8D0` | All borders |
+| `--green` | `#2D7A4F` | Positive cashflow, COC |
+| `--red` | `#B94040` | Negative cashflow, PASS verdict text |
+| `--orange` | `#C05A1A` | Risk: High, moderate warnings |
+| Font | Inter 300–900 | All text — import from Google Fonts |
+| Border radius | `4px` | All elements — sharp, never bubbly |
+
+### Per-sprint mockup reference
+
+| Sprint | Primary mockup(s) |
+|--------|------------------|
+| Sprint 1 — Auth + Onboarding | mockup-login.html · mockup-onboarding.html |
+| Sprint 2 — Tax engine | mockup-results.html (stress table, tax section) |
+| Sprint 3 — Results page | mockup-results.html (full page) |
+| Sprint 4 — Map + Neighborhood + Env | mockup-results.html (map, neighborhood, env, equity sections) · mockup-loading.html |
+| Sprint 5 — Dashboard + Paywall | mockup-dashboard.html · mockup-upgrade.html · mockup-settings.html |
+| Ongoing — Fallback + Edge states | mockup-manual-entry.html · mockup-loading.html (fallback banner) |
 
 ---
 
