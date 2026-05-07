@@ -112,6 +112,66 @@ Out of scope in Phase 1: commercial, 5+ units, short-term rental (Airbnb), mobil
 | Location | US, any market |
 | Age | 30–50 |
 
+### Target User Demographics
+
+**Age**
+- Core: 32–48 years old
+- Peak buying years for rental property accumulation
+- Old enough to have W2 income + savings; young enough to build a portfolio pre-retirement
+
+**Income & Employment**
+- W2 income: $120K–$350K household
+- Employed full-time; rental property is side income, not primary livelihood
+- Common occupations: software engineer, product manager, finance professional, physician, attorney, executive
+- Dual-income households common (married filing jointly = larger PAL phase-out window)
+
+**Financial Profile**
+- Liquid assets: $50K–$300K available for investment
+- Typical down payment: 20–25% on properties $200K–$700K
+- Tax bracket: 22%–32% federal; most benefit meaningfully from depreciation deductions
+- Existing debt: primary mortgage; may have 1–2 rental mortgages already
+- Credit: 720+ (needed for investment property financing)
+
+**Education**
+- Bachelor's degree minimum; majority post-graduate (master's, JD, MD, MBA)
+- Analytically literate — comfortable reading a spreadsheet but not building one from scratch
+- High research orientation — reads forums, listens to RE podcasts before acting
+
+**Geography**
+- Concentrated in high cost-of-living metros (SF Bay Area, NYC, LA, Seattle, Boston, Chicago, Denver, Austin)
+- Often buying in adjacent or Sun Belt markets (San Diego, Phoenix, Nashville, Tampa, Dallas) where numbers pencil better
+- Remote-work enabled: geographic flexibility in where they invest vs. where they live
+
+**Psychographic Profile**
+- **Mindset**: "I want my money working for me" — views real estate as wealth-building, not gambling
+- **Risk tolerance**: moderate; wants downside scenarios before committing, not after
+- **Time scarcity**: busy career + family = values tools that compress research time dramatically
+- **Tool skepticism**: has been burned by oversimplified calculators before; wants to see the math
+- **Tax awareness**: knows depreciation exists; doesn't fully understand PAL rules; wants to learn via results, not docs
+- **Status signal**: property ownership = financial sophistication; takes pride in doing the math right
+
+**Media & Community Habits**
+- Reads: BiggerPockets (forums + podcast), On the Market podcast, Bigger News newsletter
+- Follows: r/realestateinvesting, r/financialindependence, r/personalfinance
+- YouTube: Graham Stephan, Meet Kevin (early audience), Andrei Jikh
+- Social: LinkedIn for professional identity; Facebook RE investor groups for local markets
+- Attends: local REIA meetups, BiggerPockets events, occasional RE conferences
+- Trusts: peer recommendations + data over marketing; skeptical of "get rich quick" framing
+
+**Buying Behavior**
+- Evaluates 10–20 deals before purchasing 1
+- Research phase: 1–6 months before pulling trigger on a market/property
+- Decision triggers: interest rate environment, life event (bonus, liquidity event), spouse alignment
+- Primary research tool today: spreadsheet + 3–4 browser tabs simultaneously
+- Pain point: 30–60 min per deal; loses deals when analysis takes too long
+- Purchase decision: data-driven; needs numbers + gut check alignment before offering
+
+**Device & Platform**
+- Primary: desktop/laptop during work hours (analysis = focused task, not mobile-first)
+- Secondary: mobile at open houses or during casual browsing
+- Browser: Chrome/Safari
+- Comfortable with SaaS subscriptions; already pays for Zillow Premier, Redfin, Notion, etc.
+
 ### Out of Scope
 
 - First-time investors (no property yet; different product)
