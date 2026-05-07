@@ -392,6 +392,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | File | Contents |
 |------|---------|
 | [AUTH_STRATEGY.md](AUTH_STRATEGY.md) | OAuth setup, session management, RLS, security rules, onboarding flow |
+| [API_STRATEGY.md](API_STRATEGY.md) | REST vs GraphQL decision, all 13 routes, analysis pipeline, error handling, security |
 | [DATA_MODEL.md](DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes, TTL reference |
 | [DATA_SOURCES.md](DATA_SOURCES.md) | Per-API analysis: endpoints, cost tiers, coverage, rate limits, fallbacks, risk register |
 | [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
