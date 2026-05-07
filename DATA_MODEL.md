@@ -48,6 +48,12 @@ Extends `auth.users`. Created on first sign-in via trigger.
 | `default_down_pct` | `numeric(4,1)` | DEFAULT 20.0 | Default down payment % shown in assumptions |
 | `analyses_used` | `integer` | NOT NULL DEFAULT 0 | Free tier counter (max 3) |
 | `onboarding_complete` | `boolean` | NOT NULL DEFAULT false | |
+| `tos_accepted_at` | `timestamptz` | | Timestamp of ToS acceptance at signup |
+| `tos_version` | `text` | DEFAULT '1.0' | Version of ToS accepted |
+| `marketing_emails_opt_in` | `boolean` | NOT NULL DEFAULT true | CAN-SPAM unsubscribe flag |
+| `analytics_consent_at` | `timestamptz` | | Null = no analytics consent given |
+| `deleted_at` | `timestamptz` | | Soft delete timestamp; purge after 30 days |
+| `last_active_at` | `timestamptz` | | Updated on each login; used for retention purge |
 | `created_at` | `timestamptz` | NOT NULL DEFAULT now() | |
 | `updated_at` | `timestamptz` | NOT NULL DEFAULT now() | |
 
@@ -56,6 +62,8 @@ Extends `auth.users`. Created on first sign-in via trigger.
 **Notes**:
 - PAL rule tier derived at query time from `w2_income`: <$100K = full deduction, $100K–$150K = phase-out, >$150K = suspended.
 - `state_tax_rate` is user-supplied or pre-filled from state lookup table. Not a full bracket table — single marginal rate is sufficient for Schedule E estimate.
+- `deleted_at` set on account deletion request; all API routes check `deleted_at IS NULL` to deny access; Supabase cron job hard-deletes auth.users row after 30 days.
+- `marketing_emails_opt_in = false` must be checked before sending any commercial email (not required for transactional / magic links).
 
 ---
 
