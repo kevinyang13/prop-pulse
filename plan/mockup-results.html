@@ -192,6 +192,20 @@
     .score-high { color: #2D7A4F; }
     .score-mid { color: #B07D2A; }
 
+    /* LOCATION DEMOGRAPHICS */
+    .demo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+    .demo-card { background: var(--surface); padding: 18px 16px; }
+    .demo-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .demo-value { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-bottom: 3px; }
+    .demo-sub { font-size: 11px; color: var(--text-muted); }
+    .demo-badge-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    .demo-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.10em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; }
+    .demo-badge.strong { background: #D1FAE5; color: #065F46; }
+    .demo-badge.mixed { background: #FEF3C7; color: #92400E; }
+    .demo-badge.owner { background: #E8E4E0; color: #6B6560; }
+    .demo-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .demo-bar { height: 4px; border-radius: 2px; background: var(--text); }
+
     /* ENVIRONMENTAL RISK */
     .env-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; background: var(--border); border-radius: 4px 4px 0 0; overflow: hidden; margin-bottom: 0; }
     .env-card { background: var(--surface); padding: 20px 16px; text-align: center; }
@@ -311,6 +325,9 @@
       /* neighborhood: 2 col */
       .neighborhood-grid { grid-template-columns: repeat(2, 1fr); }
 
+      /* demographics: 2 col */
+      .demo-grid { grid-template-columns: repeat(2, 1fr); }
+
       /* env risk: 3 col */
       .env-grid { grid-template-columns: repeat(3, 1fr); }
 
@@ -343,6 +360,7 @@
       .investment-summary.mfu-grid { grid-template-columns: repeat(2, 1fr); }
       .neighborhood-grid { grid-template-columns: repeat(2, 1fr); }
       .env-grid { grid-template-columns: repeat(2, 1fr); }
+      .demo-grid { grid-template-columns: repeat(2, 1fr); }
       .property-address { font-size: 20px; }
       .metric-card-value { font-size: 22px; }
 
@@ -810,6 +828,53 @@
       <div class="nbh-card"><div class="nbh-label">School Rating</div><div class="nbh-score score-high">8/10</div><div class="nbh-sublabel">GreatSchools</div></div>
       <div class="nbh-card"><div class="nbh-label">Crime Index</div><div class="nbh-score score-mid">42</div><div class="nbh-sublabel">Below city avg</div></div>
       <div class="nbh-card"><div class="nbh-label">Infra Projects</div><div class="nbh-score score-high">2</div><div class="nbh-sublabel">Nearby (2 mi)</div></div>
+    </div>
+
+    <!-- LOCATION DEMOGRAPHICS -->
+    <div class="section-label">Location Demographics <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--text-muted);">92103 · US Census ACS 5-Year (2023)</span></div>
+    <div class="demo-grid">
+      <div class="demo-card">
+        <div class="demo-label">Median Household Income</div>
+        <div class="demo-value">$94,200</div>
+        <div class="demo-sub">ZIP vs. San Diego median $82,400</div>
+        <div class="demo-bar-wrap"><div class="demo-bar" style="width:72%"></div></div>
+      </div>
+      <div class="demo-card">
+        <div class="demo-label">Renter Ratio</div>
+        <div class="demo-value">61%</div>
+        <div class="demo-sub">Renter-occupied of all units</div>
+        <div class="demo-badge-row"><span class="demo-badge strong">Strong Renter Market</span></div>
+      </div>
+      <div class="demo-card">
+        <div class="demo-label">Population</div>
+        <div class="demo-value">42,180</div>
+        <div class="demo-sub">ZIP 92103 · Median age 34</div>
+        <div class="demo-bar-wrap"><div class="demo-bar" style="width:55%"></div></div>
+      </div>
+      <div class="demo-card">
+        <div class="demo-label">Unemployment Rate</div>
+        <div class="demo-value">3.8%</div>
+        <div class="demo-sub">vs. 4.1% national avg</div>
+        <div class="demo-bar-wrap"><div class="demo-bar" style="width:38%"></div></div>
+      </div>
+      <div class="demo-card">
+        <div class="demo-label">College Educated</div>
+        <div class="demo-value">68%</div>
+        <div class="demo-sub">Bachelor's degree or higher (25+)</div>
+        <div class="demo-bar-wrap"><div class="demo-bar" style="width:68%"></div></div>
+      </div>
+      <div class="demo-card">
+        <div class="demo-label">Price-to-Rent Ratio</div>
+        <div class="demo-value">22.4×</div>
+        <div class="demo-sub">Median home $620K · Median rent $2,300/mo</div>
+        <div class="demo-badge-row"><span class="demo-badge mixed">Renting Favored</span></div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border-radius:4px;padding:12px 16px;margin-bottom:32px;font-size:12px;color:var(--text-muted);display:flex;gap:24px;flex-wrap:wrap;">
+      <span>Housing vacancy: <strong style="color:var(--text)">3.1%</strong> — tight supply</span>
+      <span>Median gross rent: <strong style="color:var(--text)">$2,300/mo</strong></span>
+      <span>Owner-occ units: <strong style="color:var(--text)">9,820</strong></span>
+      <span>Renter-occ units: <strong style="color:var(--text)">15,440</strong></span>
     </div>
 
     <!-- ENVIRONMENTAL RISK -->

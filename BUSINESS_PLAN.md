@@ -10,9 +10,9 @@
 
 PropPulse is a web app that gives W2 professionals a personalized go/no-go decision on residential investment properties in under 2 minutes. Where generic calculators output the same cap rate for every user, PropPulse factors in the buyer's W2 income, tax bracket, filing status, and passive activity loss (PAL) eligibility to compute true after-tax cashflow. Combined with forward-looking neighborhood signals and environmental risk, PropPulse surfaces the analysis a buyer used to need a CPA, a spreadsheet, and three browser tabs to produce.
 
-**Problem**: Casual real estate investors spend 30–60 minutes per deal stitching together Zillow, BiggerPockets, Rentometer, and a spreadsheet — then still lack tax-personalized numbers.
+**Problem**: Casual real estate investors spend 30–60 minutes per deal stitching together Zillow, BiggerPockets, Rentometer, and a spreadsheet — then still lack tax-personalized numbers or neighborhood-level demographic data.
 
-**Solution**: One screen. Setup once. Analyze any property in under 2 minutes, with numbers personalized to the buyer's tax situation.
+**Solution**: One screen. Setup once. Analyze any property in under 2 minutes, with numbers personalized to the buyer's tax situation and demographic context (renter demand, income profile, vacancy rate) sourced from US Census ACS data.
 
 **Business model**: Freemium → $7.99/month Pro subscription.
 
@@ -45,9 +45,10 @@ No existing tool makes this distinction. BiggerPockets, DealCheck, and Roofstock
 ### Root Causes
 
 1. **No tax personalization**: tools don't ask for W2 income, so they can't compute depreciation benefit, PAL eligibility, or Schedule E impact
-2. **No neighborhood forward signals**: walk score alone doesn't show planned transit lines or infrastructure investments
-3. **No environmental risk in the financial model**: fire/flood risk affects insurance costs and insurability — none of this flows into cashflow projections
-4. **Fragmented workflow**: no single tool combines property data + rent estimates + tax math + map + risk
+2. **No demographic context**: renter ratio, median income, vacancy rate, and price-to-rent ratio directly affect rental demand and long-term viability — none surfaced in existing tools
+3. **No neighborhood forward signals**: walk score alone doesn't show planned transit lines or infrastructure investments
+4. **No environmental risk in the financial model**: fire/flood risk affects insurance costs and insurability — none of this flows into cashflow projections
+5. **Fragmented workflow**: no single tool combines property data + rent estimates + tax math + demographics + map + risk
 
 ---
 
@@ -69,6 +70,7 @@ PropPulse is a one-screen investment analysis tool. The user enters a property a
 | Tax panel | Depreciation benefit, PAL status, Schedule E deductions |
 | Stress test | 6 scenarios (vacancy, rate shock, rent drop) in compact table |
 | Neighborhood signals | Walk Score, school rating, crime index, infrastructure project count |
+| Location demographics | Median income, renter ratio, population, unemployment, college %, price-to-rent ratio (Census ACS) |
 | Environmental risk | Fire, flood, AQI, wind, earthquake — each with insurance impact |
 | Map | Property + POIs, fire hazard zones, flood zones |
 | Equity outlook | Population, migration, job growth, home price trend, major projects |
@@ -286,7 +288,7 @@ Goal: working analysis tool with personalized tax math, auth, and data pipeline.
 | 1 | Foundation + Auth | Next.js scaffold, Supabase setup, Google OAuth + Magic Link, onboarding, Rentcast integration |
 | 2 | Tax Engine | Depreciation, PAL rules, Schedule E, multi-unit support, house hack toggle, stress scenarios |
 | 3 | Results Page | GO/CAUTION/PASS verdict, stress table, cashflow breakdown, key metrics, recommendation panel |
-| 4 | Map + Neighborhood + Env Risk | Leaflet map, Walk Score, GreatSchools, FEMA flood, fire risk, AQI, earthquake, equity outlook |
+| 4 | Map + Neighborhood + Demographics + Env Risk | Leaflet map, Walk Score, GreatSchools, Census ACS demographics, FEMA flood, fire risk, AQI, earthquake, equity outlook |
 | 5 | Save + Paywall + Share | Saved properties dashboard, 3-analysis free tier, Stripe Pro subscription, PDF export |
 
 ### Phase 2 — Polish + Apple Auth

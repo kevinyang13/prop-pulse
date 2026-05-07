@@ -21,6 +21,7 @@
 | First Street | Fire + wind risk | Free (limited) | $49/mo | 90 days | Medium |
 | AirNow (EPA) | Air quality | Free | Free | 1 day | Low |
 | USGS | Earthquake | Free | Free | 90 days | Low |
+| US Census / ACS | Location demographics | Free | Free | 180 days | Low |
 
 ---
 
@@ -378,6 +379,62 @@ Assumptions: 3 API calls per analysis (property, rent, neighborhood bundle), 30%
 | 5K+ | $200–custom | $199 | ~$50 | ~$450+ |
 
 At $7.99/mo with ~200 paying users, API costs are <10% of revenue. Primary cost risk is Rentcast at high volume.
+
+---
+
+## 13. US Census Bureau / American Community Survey (ACS)
+
+**What it provides**: Zip-code and census-tract level demographic data — population, income, age distribution, renter ratio, unemployment, educational attainment, housing vacancy, and more.
+
+**Endpoint**:
+```
+GET https://api.census.gov/data/2023/acs/acs5
+    ?get=B19013_001E,B01003_001E,B25003_002E,B25003_003E,B23025_005E,B15003_022E,B25002_003E,B01002_001E
+    &for=zip+code+tabulation+area:{zip}
+    &key={CENSUS_API_KEY}
+```
+
+**Key variables (ACS 5-Year Estimates)**:
+
+| Variable | Description | Investment relevance |
+|----------|-------------|---------------------|
+| `B19013_001E` | Median household income | Rent affordability ceiling |
+| `B01003_001E` | Total population | Market size |
+| `B25003_002E` | Owner-occupied units | |
+| `B25003_003E` | Renter-occupied units | Renter ratio = demand signal |
+| `B23025_005E` | Unemployed civilians | Local economic health |
+| `B15003_022E` | Bachelor's degree holders | Workforce quality signal |
+| `B25002_003E` | Vacant housing units | Supply slack |
+| `B01002_001E` | Median age | Renter age band proximity |
+| `B25064_001E` | Median gross rent | Rent comp benchmark |
+| `B25077_001E` | Median home value | Price-to-rent ratio signal |
+
+**Auth**: Free API key at api.census.gov/data/key_signup.html. No approval required.
+
+**Cost**: Free. No rate limits documented; reasonable use (<1K calls/day) is unrestricted.
+
+**Coverage**: All US zip codes and census tracts. 5-year ACS data = reliable for all geographies including small markets. 1-year ACS available for larger areas but has gaps.
+
+**Data vintage**: ACS 5-year estimates released annually (December). Current: 2023 ACS (2019–2023 survey period). Use `2023/acs/acs5` — update annually when new release drops.
+
+**Caching strategy**: Cache by zip code. TTL 180 days. Data updates once per year — aggressive caching is safe.
+
+**Computed signals (derived at API layer)**:
+- `renter_ratio` = `B25003_003E / (B25003_002E + B25003_003E)` — high renter ratio = stronger rental demand
+- `unemployment_rate` = `B23025_005E / B23025_003E` — unemployed / labor force
+- `college_educated_pct` = `B15003_022E / B15003_001E` — bachelor's + as % of 25+ population
+- `vacancy_rate` = `B25002_003E / B25002_001E` — vacant / total housing units
+- `price_to_rent_ratio` = `B25077_001E / (B25064_001E × 12)` — Shiller P/R ratio by zip
+
+**Renter demand signal**: zip codes with renter_ratio > 40% and median age 28–45 = high rental demand. Display as "Strong Renter Market" / "Mixed" / "Owner-Dominated" badge.
+
+**Limitations**:
+- 5-year estimates lag real-time conditions; fast-moving markets can shift significantly mid-cycle
+- Zip code boundaries ≠ neighborhood boundaries — may aggregate different neighborhoods into one zip
+- Income data is pre-tax household; does not adjust for local cost of living
+- Some small zip codes suppressed when sample size too small (Census returns null) — fall back to county-level estimate
+
+**Alternative geography**: census tract (smaller, more precise) available at same endpoint — swap `zip+code+tabulation+area` for `tract`. Requires tract FIPS code lookup from lat/lng (Census geocoder API).
 
 ---
 

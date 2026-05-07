@@ -79,6 +79,7 @@ Phase 3: Facebook (low priority; lower trust signal for finance tool).
 | Air quality (AQI) | AirNow EPA API | Free | Free |
 | Wind risk | FEMA Wind Zone + First Street | Free / bundled | Bundled |
 | Earthquake hazard | USGS Seismic Hazard API | Free | Free |
+| Location demographics | US Census / ACS 5-Year API | Free | Free |
 
 **Caching**: All external API responses cached in Supabase `data_cache` table. TTLs range from 1 day (mortgage rate) to indefinite (geocode, earthquake). Full TTL reference in DATA_SOURCES.md.
 
@@ -190,6 +191,14 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] GreatSchools API integration + cache (apply for key in Week 1)
 - [ ] CrimeGrade.org scrape + cache (graceful null if unavailable)
 - [ ] Neighborhood signals cards (Walk Score, Schools, Crime, Infra count)
+
+**Location demographics**
+- [ ] Census API key (api.census.gov/data/key_signup.html — instant, no approval)
+- [ ] ACS 5-year fetch by zip code (B19013, B01003, B25003, B23025, B15003, B25002, B25064, B25077, B01002)
+- [ ] Compute derived signals: renter_ratio, vacancy_rate, unemployment_rate, college_educated_pct, price_to_rent_ratio, renter_demand_signal
+- [ ] Insert into `location_demographics` table; cache in `data_cache` TTL 180 days
+- [ ] Fall back to county-level ACS if zip suppressed
+- [ ] Demographics section: 6-card grid (income, renter ratio, population/age, unemployment, college %, P/R ratio) + stat bar (vacancy, raw unit counts)
 
 **Environmental risk**
 - [ ] FEMA NFHL flood zone lookup + cache (TTL 90 days)

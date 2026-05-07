@@ -18,6 +18,7 @@ properties
     └── property_units         (1:many, MFU only)
     └── neighborhood_signals   (1:1)
     └── environmental_risks    (1:1)
+    └── location_demographics  (1:1)
     └── saved_analyses         (1:many)
 
 infrastructure_projects        (standalone, geo-queried by distance)
@@ -188,6 +189,49 @@ One row per property. All environmental hazard data.
 | `fetched_at` | `timestamptz` | NOT NULL DEFAULT now() | |
 
 **Indexes**: `CREATE UNIQUE INDEX ON environmental_risks (property_id);`
+
+---
+
+### `location_demographics`
+
+One row per property (keyed by zip code). Census / ACS 5-year demographic data for the property's zip code.
+
+| Column | Type | Constraints | Notes |
+|--------|------|-------------|-------|
+| `id` | `uuid` | PK DEFAULT gen_random_uuid() | |
+| `property_id` | `uuid` | UNIQUE NOT NULL FK → `properties.id` ON DELETE CASCADE | |
+| `zip_code` | `char(5)` | NOT NULL | ZCTA used for Census lookup |
+| `census_vintage` | `smallint` | NOT NULL | e.g. `2023` — ACS 5-year release year |
+| `population_total` | `int` | | B01003_001E |
+| `median_household_income` | `int` | | B19013_001E — dollars |
+| `median_age` | `numeric(4,1)` | | B01002_001E |
+| `owner_occupied_units` | `int` | | B25003_002E |
+| `renter_occupied_units` | `int` | | B25003_003E |
+| `renter_ratio` | `numeric(5,4)` | | GENERATED: renter / (owner + renter) |
+| `vacant_units` | `int` | | B25002_003E |
+| `vacancy_rate` | `numeric(5,4)` | | GENERATED: vacant / total housing |
+| `unemployed_count` | `int` | | B23025_005E |
+| `labor_force_count` | `int` | | B23025_003E |
+| `unemployment_rate` | `numeric(5,4)` | | GENERATED: unemployed / labor force |
+| `college_educated_count` | `int` | | B15003_022E — bachelor's degree+ |
+| `college_educated_pct` | `numeric(5,4)` | | GENERATED: college / pop 25+ |
+| `median_gross_rent` | `int` | | B25064_001E — dollars/month |
+| `median_home_value` | `int` | | B25077_001E — dollars |
+| `price_to_rent_ratio` | `numeric(6,2)` | | GENERATED: home value / (gross rent × 12) |
+| `renter_demand_signal` | `text` | CHECK IN ('strong','mixed','owner_dominated') | Derived from renter_ratio + median_age |
+| `fetched_at` | `timestamptz` | NOT NULL DEFAULT now() | |
+
+**Notes**:
+- GENERATED columns computed at API layer before insert (not Postgres GENERATED — Census math done in application code)
+- `renter_demand_signal` = 'strong' if renter_ratio > 0.40 and median_age BETWEEN 26 AND 46; 'owner_dominated' if renter_ratio < 0.25; else 'mixed'
+- Cache by zip code in `data_cache` with TTL 180 days; insert/update `location_demographics` row on cache miss
+- Fall back to county-level Census data if zip code is suppressed (small sample size)
+
+**Indexes**:
+```sql
+CREATE UNIQUE INDEX ON location_demographics (property_id);
+CREATE INDEX ON location_demographics (zip_code);
+```
 
 ---
 
