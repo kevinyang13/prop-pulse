@@ -10,12 +10,14 @@ export interface AnalysisCard {
   scenario_name: string | null
   verdict: string
   verdict_reason: string | null
+  property_type: string | null
   created_at: string
   assumptions: {
     down_payment_pct?: number
     interest_rate?: number
     purchase_price?: number
     loan_term_years?: number
+    property_type?: string
   } | null
   results: {
     monthly_cashflow?: number
@@ -35,6 +37,11 @@ interface Props {
   analyses: AnalysisCard[]
   analysesUsed: number
   hasIncompleteProfile: boolean
+}
+
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  sfh: 'Single Family', condo: 'Condo', townhouse: 'Townhouse', mfu: 'Multi Family',
+  duplex: 'Multi Family', triplex: 'Multi Family', fourplex: 'Multi Family',
 }
 
 export default function DashboardClient({ analyses, analysesUsed, hasIncompleteProfile }: Props) {
@@ -202,8 +209,14 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
                       {[a.property?.city, a.property?.state].filter(Boolean).join(', ')}
-                      {a.property?.property_type && ` · ${a.property.property_type.toUpperCase()}`}
-                      {a.property?.list_price && ` · $${(a.property.list_price / 1000).toFixed(0)}K`}
+                      {(a.property_type || a.property?.property_type)
+                        ? ` · ${PROPERTY_TYPE_LABELS[a.property_type ?? a.property?.property_type ?? ''] ?? (a.property_type ?? '').toUpperCase()}`
+                        : ''}
+                      {a.assumptions?.purchase_price
+                        ? ` · $${(a.assumptions.purchase_price / 1000).toFixed(0)}K`
+                        : a.property?.list_price
+                          ? ` · $${(a.property.list_price / 1000).toFixed(0)}K`
+                          : ''}
                     </div>
                     {a.assumptions && (
                       <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 3, display: 'inline-block' }}>

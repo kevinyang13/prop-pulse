@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const { data: rows } = await supabase
     .from('saved_analyses')
     .select(`
-      id, scenario_name, verdict, verdict_reason, created_at, is_starred, notes,
+      id, scenario_name, verdict, verdict_reason, property_type, created_at, is_starred, notes,
       results, assumptions,
       properties ( full_address, city, state, property_type, list_price )
     `)
@@ -30,6 +30,7 @@ export default async function DashboardPage() {
     scenario_name: r.scenario_name,
     verdict: r.verdict,
     verdict_reason: r.verdict_reason,
+    property_type: r.property_type,
     created_at: r.created_at,
     assumptions: r.assumptions as AnalysisCard['assumptions'],
     results: r.results as AnalysisCard['results'],
@@ -53,6 +54,7 @@ interface RawRow {
   scenario_name: string | null
   verdict: string
   verdict_reason: string | null
+  property_type: string | null
   created_at: string
   is_starred: boolean
   notes: string | null
