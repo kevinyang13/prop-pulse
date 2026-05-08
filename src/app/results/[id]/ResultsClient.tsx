@@ -45,6 +45,25 @@ interface EnvironmentalData {
   insurance_total_impact_monthly: number | null
 }
 
+interface InfraProject {
+  id: string
+  name: string
+  description: string | null
+  investment_usd: number | null
+  impact_level: 'high' | 'medium' | 'low'
+  status: 'planned' | 'under_construction' | 'completed'
+  est_completion: string | null
+}
+
+interface EquityData {
+  metro: string
+  is_national: boolean
+  fred_series: string
+  appreciation_1yr: number | null
+  appreciation_5yr: number | null
+  infra_projects: InfraProject[]
+}
+
 interface DemographicsData {
   zip_code: string | null
   census_vintage: number | null
@@ -119,22 +138,27 @@ export default function ResultsClient({
   const [neighborhood, setNeighborhood] = useState<NeighborhoodData | null>(null)
   const [envData, setEnvData] = useState<EnvironmentalData | null>(null)
   const [demographics, setDemographics] = useState<DemographicsData | null>(null)
+  const [equityData, setEquityData] = useState<EquityData | null>(null)
   const [loadingNbh, setLoadingNbh] = useState(true)
   const [loadingEnv, setLoadingEnv] = useState(true)
   const [loadingDemo, setLoadingDemo] = useState(true)
+  const [loadingEquity, setLoadingEquity] = useState(true)
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/properties/${propertyId}/neighborhood`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`/api/properties/${propertyId}/environmental`).then(r => r.ok ? r.json() : null).catch(() => null),
       fetch(`/api/properties/${propertyId}/demographics`).then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([nbh, env, demo]) => {
+      fetch(`/api/properties/${propertyId}/equity`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([nbh, env, demo, equity]) => {
       setNeighborhood(nbh)
       setEnvData(env)
       setDemographics(demo)
+      setEquityData(equity)
       setLoadingNbh(false)
       setLoadingEnv(false)
       setLoadingDemo(false)
+      setLoadingEquity(false)
     })
   }, [propertyId])
 
@@ -682,8 +706,11 @@ export default function ResultsClient({
       {/* Environmental Risk */}
       <EnvironmentalRiskSection data={envData} loading={loadingEnv} style={{ marginTop: 16 }} />
 
+      {/* Equity Outlook */}
+      <EquitySection data={equityData} loading={loadingEquity} style={{ marginTop: 16 }} />
+
       {/* PropPulse Verdict — Recommendation Panel */}
-      <RecommendationPanel results={results} taxProfile={taxProfile} envData={envData} demographics={demographics} style={{ marginTop: 16 }} />
+      <RecommendationPanel results={results} taxProfile={taxProfile} envData={envData} demographics={demographics} equityData={equityData} style={{ marginTop: 16 }} />
 
       {/* Property details */}
       <Section title="Property Details" style={{ marginTop: 16 }}>
@@ -787,7 +814,7 @@ function VerdictBadge({ verdict }: { verdict: string }) {
   )
 }
 
-function RecommendationPanel({ results, taxProfile, envData, demographics, style }: { results: Results; taxProfile: TaxProfile; envData: EnvironmentalData | null; demographics: DemographicsData | null; style?: React.CSSProperties }) {
+function RecommendationPanel({ results, taxProfile, envData, demographics, equityData, style }: { results: Results; taxProfile: TaxProfile; envData: EnvironmentalData | null; demographics: DemographicsData | null; equityData: EquityData | null; style?: React.CSSProperties }) {
   const cf = results.monthly_cashflow
   const coc = results.cash_on_cash_return
   const taxSavings = results.tax_savings_annual ?? 0
@@ -921,12 +948,36 @@ function RecommendationPanel({ results, taxProfile, envData, demographics, style
           </div>
         </div>
 
-        {/* Equity Outlook — coming later */}
-        <div style={dimStyle}>
-          <DimHeader label="Equity Outlook" sigCls="sig-neu" sigLabel="Pending" />
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
-          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Metro appreciation data coming soon</div>
-        </div>
+        {/* Equity Outlook */}
+        {(() => {
+          const apr1 = equityData?.appreciation_1yr
+          const apr5 = equityData?.appreciation_5yr
+          const equitySigCls = !equityData ? 'sig-neu'
+            : apr1 == null ? 'sig-neu'
+            : apr1 >= 5 ? 'sig-pos'
+            : apr1 >= 0 ? 'sig-warn'
+            : 'sig-neg'
+          const equitySigLabel = !equityData ? 'Loading'
+            : apr1 == null ? 'No data'
+            : apr1 >= 5 ? 'Appreciating'
+            : apr1 >= 0 ? 'Flat'
+            : 'Declining'
+          const apr1Str = apr1 != null ? `${apr1 >= 0 ? '+' : ''}${apr1.toFixed(1)}%` : '—'
+          const equitySub = equityData
+            ? [
+                apr5 != null ? `5yr: ${apr5 >= 0 ? '+' : ''}${apr5.toFixed(1)}%` : null,
+                equityData.is_national ? 'National (Case-Shiller)' : `${equityData.metro} metro`,
+                equityData.infra_projects.length > 0 ? `${equityData.infra_projects.length} infra projects nearby` : null,
+              ].filter(Boolean).join(' · ')
+            : 'Loading appreciation data…'
+          return (
+            <div style={dimStyle}>
+              <DimHeader label="Equity Outlook" sigCls={equitySigCls} sigLabel={equitySigLabel} />
+              <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: equityData ? 1 : 0.35 }}>{apr1Str} <span style={{ fontSize: 12, fontWeight: 500, opacity: 0.6 }}>1yr</span></div>
+              <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.45)', lineHeight: 1.4 }}>{equitySub}</div>
+            </div>
+          )
+        })()}
 
         {/* Environmental Risk */}
         {(() => {
@@ -1411,6 +1462,96 @@ function EnvironmentalRiskSection({ data, loading, style }: { data: Environmenta
             )}
           </>
         )}
+    </div>
+  )
+}
+
+function EquitySection({ data, loading, style }: { data: EquityData | null; loading: boolean; style?: React.CSSProperties }) {
+  const statusLabel: Record<string, string> = {
+    planned: 'Planned',
+    under_construction: 'Under Construction',
+    completed: 'Completed',
+  }
+  const impactColor: Record<string, string> = {
+    high: '#2D7A4F',
+    medium: '#B87333',
+    low: 'var(--text-muted)',
+  }
+
+  const formatInvestment = (n: number | null) => {
+    if (!n) return null
+    if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(1)}B`
+    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(0)}M`
+    return `$${n.toLocaleString()}`
+  }
+
+  return (
+    <div style={style}>
+      <SectionHeader
+        title="Equity Outlook"
+        sub={data ? (data.is_national ? 'National Case-Shiller · FRED' : `${data.metro} metro · FRED Case-Shiller`) : undefined}
+      />
+      {loading && !data
+        ? <LoadingSkeleton height={160} />
+        : !data
+          ? <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, background: 'var(--surface)', borderRadius: 4 }}>Appreciation data unavailable.</div>
+          : (
+            <>
+              {/* Appreciation cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, background: 'var(--border)', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+                {[
+                  { label: '1-Year Appreciation', value: data.appreciation_1yr, periods: '12 months' },
+                  { label: '5-Year Appreciation', value: data.appreciation_5yr, periods: '60 months' },
+                ].map(({ label, value, periods }) => {
+                  const color = value == null ? 'var(--text-muted)' : value >= 5 ? 'var(--green)' : value >= 0 ? 'var(--text)' : 'var(--red)'
+                  return (
+                    <div key={label} style={{ background: 'var(--surface)', padding: '24px' }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>{label}</div>
+                      <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.02em', color, marginBottom: 4 }}>
+                        {value != null ? `${value >= 0 ? '+' : ''}${value.toFixed(1)}%` : '—'}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{periods} · {data.is_national ? 'National avg' : `${data.metro}`}</div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Infrastructure projects */}
+              {data.infra_projects.length > 0 && (
+                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: '16px 20px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 14 }}>
+                    Nearby Infrastructure Projects
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {data.infra_projects.map((p) => (
+                      <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600 }}>{p.name}</span>
+                            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 6px', borderRadius: 2, letterSpacing: '0.1em', textTransform: 'uppercase', background: `${impactColor[p.impact_level]}22`, color: impactColor[p.impact_level] }}>
+                              {p.impact_level}
+                            </span>
+                          </div>
+                          {p.description && <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>{p.description}</div>}
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          {formatInvestment(p.investment_usd) && (
+                            <div style={{ fontSize: 13, fontWeight: 700 }}>{formatInvestment(p.investment_usd)}</div>
+                          )}
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{statusLabel[p.status] ?? p.status}</div>
+                          {p.est_completion && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.est_completion}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {data.infra_projects.length === 0 && (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', padding: '10px 0' }}>No infrastructure projects in database within 5 miles.</div>
+              )}
+            </>
+          )}
     </div>
   )
 }
