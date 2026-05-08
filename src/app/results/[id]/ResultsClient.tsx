@@ -217,7 +217,7 @@ export default function ResultsClient({
       const res = await fetch(`/api/analyses/${analysisId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assumptions }),
+        body: JSON.stringify({ assumptions, property_type: propertyType }),
       })
       if (!res.ok) throw new Error('save failed')
       setSaveStatus('saved')

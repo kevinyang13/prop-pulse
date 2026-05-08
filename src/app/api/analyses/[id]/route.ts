@@ -19,14 +19,14 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const { user, supabase } = auth
 
-  let body: { assumptions: Assumptions; scenario_name?: string }
+  let body: { assumptions: Assumptions; property_type?: string; scenario_name?: string }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 })
   }
 
-  const { assumptions, scenario_name } = body
+  const { assumptions, property_type, scenario_name } = body
 
   // Verify ownership
   const { data: existing } = await supabase
@@ -63,6 +63,7 @@ export async function PATCH(request: Request, { params }: Params) {
       results,
       verdict: results.verdict,
       verdict_reason: verdictReason,
+      ...(property_type != null ? { property_type } : {}),
       ...(scenario_name != null ? { scenario_name } : {}),
     })
     .eq('id', id)
