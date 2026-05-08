@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Set Up Your Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+      --green: #2D7A4F; --red: #B94040;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 60px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-skip { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .nav-skip:hover { color: var(--text); }
+
+    .page { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 60px 24px; }
+    .wizard { width: 100%; max-width: 520px; }
+
+    /* Progress */
+    .progress-bar { display: flex; align-items: center; gap: 0; margin-bottom: 48px; }
+    .progress-step { display: flex; flex-direction: column; align-items: center; flex: 1; position: relative; }
+    .progress-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 14px; left: 50%; width: 100%; height: 2px;
+      background: var(--border); z-index: 0;
+    }
+    .progress-step.done:not(:last-child)::after { background: var(--text); }
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border);
+      background: var(--bg); display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--text-muted); z-index: 1; position: relative;
+    }
+    .progress-step.done .step-dot { background: var(--text); border-color: var(--text); color: var(--bg); }
+    .progress-step.active .step-dot { background: var(--bg); border-color: var(--text); color: var(--text); }
+    .step-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-top: 8px; }
+    .progress-step.active .step-label, .progress-step.done .step-label { color: var(--text); }
+
+    /* Steps */
+    .step { display: none; }
+    .step.active { display: block; }
+
+    .step-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .step-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; line-height: 1.5; }
+
+    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
+    .form-hint { font-size: 12px; color: var(--text-muted); margin-top: -4px; margin-bottom: 16px; }
+    .form-input { width: 100%; border: 1.5px solid var(--border); border-radius: 4px; padding: 12px 16px; font-size: 15px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; }
+    .form-input:focus { border-color: var(--text); }
+    .form-input.mb { margin-bottom: 20px; }
+    .form-select { width: 100%; border: 1.5px solid var(--border); border-radius: 4px; padding: 12px 16px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%236B6560' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; cursor: pointer; }
+    .form-select:focus { border-color: var(--text); }
+    .form-group { margin-bottom: 20px; }
+
+    /* Radio group */
+    .radio-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .radio-option { border: 1.5px solid var(--border); border-radius: 4px; padding: 14px 16px; cursor: pointer; transition: border-color 0.15s; }
+    .radio-option:hover { border-color: var(--accent); }
+    .radio-option.selected { border-color: var(--text); background: var(--surface); }
+    .radio-option input { display: none; }
+    .radio-label { font-size: 14px; font-weight: 600; display: block; }
+    .radio-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* Bracket display */
+    .bracket-display { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 14px 18px; margin-top: 12px; display: none; }
+    .bracket-display.show { display: flex; align-items: center; justify-content: space-between; }
+    .bracket-label { font-size: 12px; color: var(--text-muted); }
+    .bracket-value { font-size: 14px; font-weight: 700; color: var(--text); }
+    .bracket-note { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* Input with prefix */
+    .input-wrap { position: relative; }
+    .input-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--text-muted); }
+    .input-wrap .form-input { padding-left: 28px; }
+    .input-suffix { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-muted); }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 12px; margin-top: 32px; }
+    .btn-back { flex: 0 0 auto; background: transparent; border: 1.5px solid var(--border); border-radius: 4px; padding: 13px 20px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--text-muted); }
+    .btn-back:hover { border-color: var(--text); color: var(--text); }
+    .btn-continue { flex: 1; background: var(--text); color: var(--bg); border: none; border-radius: 4px; padding: 14px 24px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; letter-spacing: 0.04em; }
+    .btn-continue:hover { opacity: 0.88; }
+    .btn-continue:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-skip { display: block; text-align: center; margin-top: 16px; font-size: 12px; color: var(--text-muted); text-decoration: none; }
+    .btn-skip:hover { color: var(--text); }
+
+    /* State cards for step 2 */
+    .state-search { position: relative; margin-bottom: 12px; }
+    .state-results { border: 1.5px solid var(--text); border-radius: 4px; background: var(--bg); overflow: hidden; display: none; }
+    .state-results.show { display: block; }
+    .state-item { padding: 12px 16px; font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .state-item:last-child { border-bottom: none; }
+    .state-item:hover { background: var(--surface); }
+    .state-item-rate { font-size: 12px; color: var(--text-muted); }
+    .selected-state { background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 14px 18px; display: none; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .selected-state.show { display: flex; }
+    .selected-state-name { font-size: 14px; font-weight: 600; }
+    .selected-state-rate { font-size: 13px; color: var(--text-muted); }
+    .state-change { font-size: 12px; color: var(--text-muted); text-decoration: underline; cursor: pointer; }
+
+    /* Down payment */
+    .down-options { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .down-pill { padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; background: var(--bg); color: var(--text); font-family: inherit; }
+    .down-pill.selected { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    /* Info tooltip */
+    .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--border); font-size: 10px; color: var(--text-muted); cursor: default; margin-left: 6px; vertical-align: middle; }
+
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .page { padding: 40px 20px; }
+      .radio-group { grid-template-columns: 1fr; }
+      .btn-row { flex-direction: column-reverse; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <a href="mockup-dashboard.html" class="nav-skip">Skip for now →</a>
+</nav>
+
+<div class="page">
+  <div class="wizard">
+
+    <!-- Progress -->
+    <div class="progress-bar">
+      <div class="progress-step active" id="prog-1">
+        <div class="step-dot">1</div>
+        <div class="step-label">Income</div>
+      </div>
+      <div class="progress-step" id="prog-2">
+        <div class="step-dot">2</div>
+        <div class="step-label">Location</div>
+      </div>
+      <div class="progress-step" id="prog-3">
+        <div class="step-dot">3</div>
+        <div class="step-label">Capital</div>
+      </div>
+    </div>
+
+    <!-- Step 1: Income + Filing Status -->
+    <div class="step active" id="step-1">
+      <h1 class="step-title">Your W2 income</h1>
+      <p class="step-sub">We use this to calculate your tax bracket and passive activity loss eligibility. Estimates only — never shared.</p>
+
+      <div class="form-group">
+        <label class="form-label">Annual W2 income (gross)</label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="form-input" type="text" placeholder="240,000" id="income-input" oninput="updateBracket()" />
+        </div>
+        <div class="bracket-display" id="bracket-display">
+          <div>
+            <div class="bracket-label">Estimated federal bracket</div>
+            <div class="bracket-value" id="bracket-value">32%</div>
+          </div>
+          <div style="text-align:right">
+            <div class="bracket-label">PAL eligibility</div>
+            <div class="bracket-value" id="pal-value">Phase-out</div>
+          </div>
+        </div>
+        <div class="bracket-note" id="bracket-note" style="display:none; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+          Based on 2025 MFJ brackets · <a href="#" style="color:inherit">What's PAL?</a>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Filing status</label>
+        <div class="radio-group">
+          <label class="radio-option selected" onclick="selectFiling(this, 'mfj')">
+            <input type="radio" name="filing" value="mfj" checked />
+            <span class="radio-label">Married Filing Jointly</span>
+            <span class="radio-sub">MFJ — most common</span>
+          </label>
+          <label class="radio-option" onclick="selectFiling(this, 'single')">
+            <input type="radio" name="filing" value="single" />
+            <span class="radio-label">Single</span>
+            <span class="radio-sub">or Head of Household</span>
+          </label>
+          <label class="radio-option" onclick="selectFiling(this, 'mfs')">
+            <input type="radio" name="filing" value="mfs" />
+            <span class="radio-label">Married Filing Separately</span>
+            <span class="radio-sub">MFS</span>
+          </label>
+          <label class="radio-option" onclick="selectFiling(this, 'hoh')">
+            <input type="radio" name="filing" value="hoh" />
+            <span class="radio-label">Head of Household</span>
+            <span class="radio-sub">HOH</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-continue" onclick="goStep(2)">Continue →</button>
+      </div>
+      <a href="mockup-dashboard.html" class="btn-skip">Skip — I'll set this up later</a>
+    </div>
+
+    <!-- Step 2: State of Residence -->
+    <div class="step" id="step-2">
+      <h1 class="step-title">Where do you live?</h1>
+      <p class="step-sub">State income tax affects your after-tax returns. We pre-fill the rate — you can adjust it on any analysis.</p>
+
+      <div class="state-search">
+        <label class="form-label">State of residence</label>
+        <input class="form-input mb" type="text" placeholder="Search state…" id="state-input" oninput="filterStates()" onfocus="showStates()" />
+        <div class="state-results" id="state-results">
+          <div class="state-item" onclick="selectState('California', '13.3%')">California <span class="state-item-rate">13.3% top rate</span></div>
+          <div class="state-item" onclick="selectState('New York', '10.9%')">New York <span class="state-item-rate">10.9% top rate</span></div>
+          <div class="state-item" onclick="selectState('Texas', '0%')">Texas <span class="state-item-rate">No income tax</span></div>
+          <div class="state-item" onclick="selectState('Florida', '0%')">Florida <span class="state-item-rate">No income tax</span></div>
+          <div class="state-item" onclick="selectState('Washington', '0%')">Washington <span class="state-item-rate">No income tax</span></div>
+          <div class="state-item" onclick="selectState('Colorado', '4.4%')">Colorado <span class="state-item-rate">4.4% flat</span></div>
+          <div class="state-item" onclick="selectState('Illinois', '4.95%')">Illinois <span class="state-item-rate">4.95% flat</span></div>
+          <div class="state-item" onclick="selectState('Georgia', '5.49%')">Georgia <span class="state-item-rate">5.49% top rate</span></div>
+          <div class="state-item" onclick="selectState('Arizona', '2.5%')">Arizona <span class="state-item-rate">2.5% flat</span></div>
+          <div class="state-item" onclick="selectState('Nevada', '0%')">Nevada <span class="state-item-rate">No income tax</span></div>
+        </div>
+      </div>
+
+      <div class="selected-state show" id="selected-state">
+        <div>
+          <div class="selected-state-name" id="selected-state-name">California</div>
+          <div class="selected-state-rate" id="selected-state-rate">State rate: 13.3% (top bracket)</div>
+        </div>
+        <span class="state-change" onclick="changeState()">Change</span>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goStep(1)">← Back</button>
+        <button class="btn-continue" onclick="goStep(3)">Continue →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Cash + Down Payment -->
+    <div class="step" id="step-3">
+      <h1 class="step-title">Your investment capital</h1>
+      <p class="step-sub">Used to calculate cash-on-cash return and how much you can put down. You can change these on every analysis.</p>
+
+      <div class="form-group">
+        <label class="form-label">Liquid cash available to invest
+          <span class="info-icon" title="Cash you're willing to deploy — not your total savings">?</span>
+        </label>
+        <div class="input-wrap">
+          <span class="input-prefix">$</span>
+          <input class="form-input" type="text" placeholder="150,000" id="cash-input" />
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top: 24px;">
+        <label class="form-label">Default down payment %</label>
+        <div class="down-options">
+          <button class="down-pill" onclick="selectDown(this, 10)">10%</button>
+          <button class="down-pill selected" onclick="selectDown(this, 20)">20%</button>
+          <button class="down-pill" onclick="selectDown(this, 25)">25%</button>
+          <button class="down-pill" onclick="selectDown(this, 30)">30%</button>
+        </div>
+        <p class="form-hint">20% avoids PMI. Adjustable per analysis.</p>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goStep(2)">← Back</button>
+        <button class="btn-continue" onclick="finish()">Start Analyzing →</button>
+      </div>
+      <a href="mockup-dashboard.html" class="btn-skip">Skip — use defaults</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const BRACKETS_MFJ = [
+    { max: 23200, rate: '10%', pal: 'Full ($25K)' },
+    { max: 94300, rate: '12%', pal: 'Full ($25K)' },
+    { max: 100000, rate: '22%', pal: 'Full ($25K)' },
+    { max: 150000, rate: '22%', pal: 'Phase-out' },
+    { max: 201050, rate: '24%', pal: 'Suspended' },
+    { max: 383900, rate: '32%', pal: 'Suspended' },
+    { max: 487450, rate: '35%', pal: 'Suspended' },
+    { max: Infinity, rate: '37%', pal: 'Suspended' }
+  ];
+
+  function parseDollars(s) { return parseInt(s.replace(/[^0-9]/g, '')) || 0; }
+
+  function updateBracket() {
+    const val = parseDollars(document.getElementById('income-input').value);
+    const display = document.getElementById('bracket-display');
+    const note = document.getElementById('bracket-note');
+    if (val < 10000) { display.classList.remove('show'); note.style.display='none'; return; }
+    let b = BRACKETS_MFJ.find(b => val <= b.max) || BRACKETS_MFJ[BRACKETS_MFJ.length - 1];
+    document.getElementById('bracket-value').textContent = b.rate;
+    document.getElementById('pal-value').textContent = b.pal;
+    display.classList.add('show');
+    note.style.display = 'block';
+  }
+
+  function selectFiling(el, val) {
+    document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    updateBracket();
+  }
+
+  function goStep(n) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    for (let i = 1; i <= 3; i++) {
+      const prog = document.getElementById('prog-' + i);
+      prog.classList.remove('active', 'done');
+      if (i < n) prog.classList.add('done');
+      else if (i === n) prog.classList.add('active');
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function filterStates() {
+    document.getElementById('state-results').classList.add('show');
+    document.getElementById('selected-state').classList.remove('show');
+  }
+  function showStates() { document.getElementById('state-results').classList.add('show'); }
+  function selectState(name, rate) {
+    document.getElementById('state-input').value = name;
+    document.getElementById('state-results').classList.remove('show');
+    document.getElementById('selected-state-name').textContent = name;
+    document.getElementById('selected-state-rate').textContent = 'State rate: ' + rate;
+    document.getElementById('selected-state').classList.add('show');
+  }
+  function changeState() {
+    document.getElementById('selected-state').classList.remove('show');
+    document.getElementById('state-input').value = '';
+    document.getElementById('state-input').focus();
+  }
+
+  function selectDown(el, pct) {
+    document.querySelectorAll('.down-pill').forEach(p => p.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function finish() { window.location.href = 'mockup-dashboard.html'; }
+
+  // pre-select California for demo
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('income-input').value = '240,000';
+    updateBracket();
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.state-search') && !e.target.closest('.selected-state')) {
+      document.getElementById('state-results').classList.remove('show');
+    }
+  });
+</script>
+</body>
+</html>

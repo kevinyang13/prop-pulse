@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Upgrade to Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+      --green: #2D7A4F;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 60px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 24px; }
+    .nav-link { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .nav-link:hover { color: var(--text); }
+    .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--text); }
+
+    .page { flex: 1; padding: 72px 24px 80px; }
+
+    /* Hero */
+    .upgrade-hero { text-align: center; max-width: 600px; margin: 0 auto 64px; }
+    .hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
+    .hero-title { font-size: 38px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; }
+    .hero-sub { font-size: 16px; color: var(--text-muted); line-height: 1.6; max-width: 440px; margin: 0 auto; }
+
+    /* Billing toggle */
+    .billing-toggle { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 48px; }
+    .toggle-label { font-size: 14px; font-weight: 500; color: var(--text-muted); cursor: pointer; }
+    .toggle-label.active { color: var(--text); font-weight: 700; }
+    .period-toggle { width: 48px; height: 26px; border-radius: 13px; background: var(--text); cursor: pointer; position: relative; }
+    .period-toggle::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: white; top: 4px; left: 4px; transition: transform 0.2s; }
+    .period-toggle.annual::after { transform: translateX(22px); }
+    .save-chip { background: var(--green); color: white; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+
+    /* Plans grid */
+    .plans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 760px; margin: 0 auto 64px; }
+
+    .plan-card { border: 1.5px solid var(--border); border-radius: 4px; padding: 32px; position: relative; }
+    .plan-card.featured { border-color: var(--text); background: var(--text); color: var(--bg); }
+
+    .plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--text); font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+
+    .plan-name { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+    .plan-card.featured .plan-name { color: var(--accent); }
+
+    .plan-price { margin-bottom: 8px; }
+    .price-amount { font-size: 40px; font-weight: 900; letter-spacing: -0.03em; }
+    .price-period { font-size: 14px; font-weight: 500; color: var(--text-muted); }
+    .plan-card.featured .price-period { color: var(--accent); }
+    .plan-price-annual { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; min-height: 18px; }
+    .plan-card.featured .plan-price-annual { color: var(--accent); }
+
+    .plan-divider { height: 1px; background: var(--border); margin-bottom: 24px; }
+    .plan-card.featured .plan-divider { background: rgba(255,255,255,0.15); }
+
+    .plan-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+    .plan-feature { display: flex; gap: 10px; font-size: 13px; align-items: flex-start; }
+    .plan-feature .check { flex-shrink: 0; margin-top: 1px; }
+    .plan-feature.muted { color: var(--text-muted); }
+    .plan-feature.muted .check { opacity: 0.4; }
+    .plan-card.featured .plan-feature.muted { color: rgba(255,255,255,0.4); }
+
+    .btn-plan { width: 100%; padding: 14px; border-radius: 4px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; letter-spacing: 0.02em; border: none; }
+    .btn-free { background: var(--surface); color: var(--text-muted); }
+    .btn-free:hover { background: var(--surface-2); }
+    .btn-pro { background: white; color: var(--text); }
+    .btn-pro:hover { opacity: 0.92; }
+
+    .plan-note { font-size: 11px; text-align: center; margin-top: 10px; color: var(--text-muted); }
+    .plan-card.featured .plan-note { color: var(--accent); }
+
+    /* Feature comparison table */
+    .compare-table { max-width: 760px; margin: 0 auto 64px; }
+    .compare-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 24px; text-align: center; }
+    .compare-row { display: grid; grid-template-columns: 1fr 100px 100px; gap: 0; padding: 14px 0; border-bottom: 1px solid var(--border); align-items: center; }
+    .compare-row:first-child { border-top: 1px solid var(--border); }
+    .compare-row.header { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); padding-bottom: 12px; border-top: none; border-bottom: 2px solid var(--border); }
+    .compare-feat { font-size: 13px; }
+    .compare-feat .feat-note { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .compare-cell { text-align: center; font-size: 13px; font-weight: 600; }
+    .compare-cell.yes { color: var(--green); }
+    .compare-cell.no { color: var(--text-muted); }
+
+    /* Testimonial / trust */
+    .trust-section { max-width: 600px; margin: 0 auto 64px; text-align: center; }
+    .trust-title { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 32px; }
+    .testimonials { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
+    .testimonial { background: var(--surface); border-radius: 4px; padding: 20px; }
+    .testimonial-text { font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
+    .testimonial-author { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+
+    /* FAQ */
+    .faq-section { max-width: 600px; margin: 0 auto; }
+    .faq-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 24px; text-align: center; }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 18px 0; cursor: pointer; }
+    .faq-q { font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .faq-arrow { font-size: 16px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-a { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 12px; display: none; }
+    .faq-item.open .faq-a { display: block; }
+
+    @media (max-width: 640px) {
+      nav { padding: 14px 20px; }
+      .page { padding: 48px 20px 60px; }
+      .hero-title { font-size: 28px; }
+      .plans-grid { grid-template-columns: 1fr; }
+      .testimonials { grid-template-columns: 1fr; }
+      .compare-row { grid-template-columns: 1fr 80px 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <div class="nav-right">
+    <a href="mockup-dashboard.html" class="nav-link">My Analyses</a>
+    <div class="nav-avatar">KY</div>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="upgrade-hero">
+    <div class="hero-eyebrow">PropPulse Pro</div>
+    <h1 class="hero-title">Serious investors need serious tools.</h1>
+    <p class="hero-sub">Unlimited analyses, side-by-side comparison, and PDF export — built for people who evaluate 10–20 deals before buying one.</p>
+  </div>
+
+  <!-- Billing toggle -->
+  <div class="billing-toggle">
+    <span class="toggle-label active" id="label-monthly" onclick="setBilling('monthly')">Monthly</span>
+    <div class="period-toggle" id="period-toggle" onclick="toggleBilling()"></div>
+    <span class="toggle-label" id="label-annual" onclick="setBilling('annual')">Annual</span>
+    <span class="save-chip">Save 38%</span>
+  </div>
+
+  <!-- Plans -->
+  <div class="plans-grid">
+
+    <!-- Free -->
+    <div class="plan-card">
+      <div class="plan-name">Free</div>
+      <div class="plan-price">
+        <span class="price-amount">$0</span>
+        <span class="price-period">/mo</span>
+      </div>
+      <div class="plan-price-annual">&nbsp;</div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="plan-feature"><span class="check">✓</span> 3 property analyses</div>
+        <div class="plan-feature"><span class="check">✓</span> Personalized tax math</div>
+        <div class="plan-feature"><span class="check">✓</span> Environmental risk</div>
+        <div class="plan-feature"><span class="check">✓</span> Neighborhood signals</div>
+        <div class="plan-feature muted"><span class="check">✗</span> Unlimited analyses</div>
+        <div class="plan-feature muted"><span class="check">✗</span> Side-by-side comparison</div>
+        <div class="plan-feature muted"><span class="check">✗</span> PDF export</div>
+      </div>
+      <button class="btn-plan btn-free" onclick="window.location.href='mockup-dashboard.html'">Current plan</button>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan-card featured">
+      <div class="plan-badge">Most popular</div>
+      <div class="plan-name">Pro</div>
+      <div class="plan-price" id="pro-price">
+        <span class="price-amount" id="price-amount">$7.99</span>
+        <span class="price-period">/mo</span>
+      </div>
+      <div class="plan-price-annual" id="price-annual">&nbsp;</div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="plan-feature"><span class="check">✓</span> Everything in Free</div>
+        <div class="plan-feature"><span class="check">✓</span> Unlimited analyses</div>
+        <div class="plan-feature"><span class="check">✓</span> Side-by-side comparison (3)</div>
+        <div class="plan-feature"><span class="check">✓</span> PDF export</div>
+        <div class="plan-feature"><span class="check">✓</span> Saved property history</div>
+        <div class="plan-feature"><span class="check">✓</span> Price drop alerts</div>
+        <div class="plan-feature"><span class="check">✓</span> Priority support</div>
+      </div>
+      <button class="btn-plan btn-pro" onclick="handleUpgrade()">Start Pro →</button>
+      <div class="plan-note" id="pro-note">No credit card required to try. Cancel anytime.</div>
+    </div>
+
+  </div>
+
+  <!-- Feature comparison table -->
+  <div class="compare-table">
+    <div class="compare-title">Everything included</div>
+    <div class="compare-row header">
+      <div>Feature</div>
+      <div class="compare-cell">Free</div>
+      <div class="compare-cell">Pro</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Property analyses<div class="feat-note">Per account, per month</div></div>
+      <div class="compare-cell">3 total</div>
+      <div class="compare-cell yes">Unlimited</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Personalized W2 tax math</div>
+      <div class="compare-cell yes">✓</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">PAL rules engine<div class="feat-note">Passive activity loss tiers</div></div>
+      <div class="compare-cell yes">✓</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Environmental risk<div class="feat-note">Flood, fire, AQI, earthquake</div></div>
+      <div class="compare-cell yes">✓</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Neighborhood signals<div class="feat-note">Walk Score, schools, crime</div></div>
+      <div class="compare-cell yes">✓</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Location demographics<div class="feat-note">Census income, renter ratio, vacancy</div></div>
+      <div class="compare-cell yes">✓</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Stress scenario table<div class="feat-note">6 scenarios, color-coded</div></div>
+      <div class="compare-cell yes">✓</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Side-by-side comparison<div class="feat-note">Up to 3 properties, 7 dimensions</div></div>
+      <div class="compare-cell no">—</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">PDF export</div>
+      <div class="compare-cell no">—</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Saved property history</div>
+      <div class="compare-cell no">—</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-feat">Price drop alerts</div>
+      <div class="compare-cell no">—</div>
+      <div class="compare-cell yes">✓</div>
+    </div>
+  </div>
+
+  <!-- Social proof -->
+  <div class="trust-section">
+    <div class="trust-title">What investors say</div>
+    <div class="testimonials">
+      <div class="testimonial">
+        <div class="testimonial-text">"The tax math alone saved me from a deal that looked great on paper but would have been negative after PAL phase-out."</div>
+        <div class="testimonial-author">Sarah M. · $285K income · Austin</div>
+      </div>
+      <div class="testimonial">
+        <div class="testimonial-text">"I evaluated 14 properties in two weeks. Comparison view made it obvious which two to pursue. Paid for itself on the first deal."</div>
+        <div class="testimonial-author">James T. · Engineer · Denver</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-title">Common questions</div>
+
+    <div class="faq-item open">
+      <div class="faq-q">Is my financial data secure? <span class="faq-arrow">▾</span></div>
+      <div class="faq-a">Your tax profile is encrypted at rest in Supabase and never shared with third parties. We only use it to calculate your analysis on demand — we don't sell or profile your data.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I cancel anytime? <span class="faq-arrow">▾</span></div>
+      <div class="faq-a">Yes. Cancel from Settings → Subscription at any time. You'll retain Pro access until the end of your billing period.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">How accurate is the tax math? <span class="faq-arrow">▾</span></div>
+      <div class="faq-a">PropPulse uses 2025 IRS brackets, standard depreciation rules (27.5-year straight-line), and the PAL phase-out schedule. Results are estimates — always consult a CPA before making investment decisions.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What happens to my free analyses if I upgrade? <span class="faq-arrow">▾</span></div>
+      <div class="faq-a">They stay saved in your account. Upgrading adds unlimited new analyses on top of what you've already done.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do you offer a refund? <span class="faq-arrow">▾</span></div>
+      <div class="faq-a">Yes — within 7 days of your first charge. Email support@proppulse.io and we'll process it within 24 hours.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let billing = 'monthly';
+
+  function toggleBilling() {
+    setBilling(billing === 'monthly' ? 'annual' : 'monthly');
+  }
+
+  function setBilling(mode) {
+    billing = mode;
+    const toggle = document.getElementById('period-toggle');
+    const lm = document.getElementById('label-monthly');
+    const la = document.getElementById('label-annual');
+    const amt = document.getElementById('price-amount');
+    const annual = document.getElementById('price-annual');
+    const note = document.getElementById('pro-note');
+    if (mode === 'annual') {
+      toggle.classList.add('annual');
+      lm.classList.remove('active');
+      la.classList.add('active');
+      amt.textContent = '$4.92';
+      annual.textContent = 'Billed $59/yr — save $37';
+      note.textContent = 'Billed annually. Cancel anytime.';
+    } else {
+      toggle.classList.remove('annual');
+      lm.classList.add('active');
+      la.classList.remove('active');
+      amt.textContent = '$7.99';
+      annual.textContent = ' ';
+      note.textContent = 'No credit card required to try. Cancel anytime.';
+    }
+  }
+
+  function handleUpgrade() {
+    // In real app: Stripe Checkout redirect
+    alert('Stripe checkout would open here.');
+  }
+
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+  });
+</script>
+</body>
+</html>

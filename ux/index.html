@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Know Before You Buy</title>
+  <style>
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── OVERFLOW LOCK — the only reliable cross-browser fix ── */
+    html {
+      overflow-x: hidden;
+      width: 100%;
+    }
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #FAFAF8;
+      color: #1A1A1A;
+      line-height: 1.5;
+    }
+    /* Hard outer clipping wrapper — prevents ANY child from pushing scroll width */
+    #app {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      position: relative;
+    }
+
+    :root {
+      --bg:       #FAFAF8;
+      --surface:  #F2EDE8;
+      --surf2:    #EAE3DC;
+      --text:     #1A1A1A;
+      --muted:    #6B6560;
+      --accent:   #C4B5A5;
+      --border:   #E0D8D0;
+      --green:    #2D7A4F;
+      --red:      #B94040;
+      --amber:    #B07D2A;
+    }
+    img, svg { max-width: 100%; display: block; }
+
+    /* ── UNIVERSAL INNER WRAPPER ──
+       Every section's content sits inside one of these.
+       max-width 900px desktop, 100% mobile, always 16px side padding. */
+    .inner {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+
+    /* ────────────── NAV ────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      width: 100%;
+    }
+    .nav-inner {
+      width: 100%; max-width: 900px; margin: 0 auto;
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .logo { font-size: 16px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+    .logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { text-decoration: none; font-size: 13px; color: var(--muted); white-space: nowrap; }
+    .nav-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 20px; border-radius: 4px; cursor: pointer;
+      font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none; border: 1.5px solid transparent;
+      white-space: nowrap; min-height: 42px;
+    }
+    .btn-dark  { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .btn-light { background: transparent; color: var(--text); border-color: var(--border); }
+
+    /* ────────────── HERO ────────────── */
+    .hero { width: 100%; padding: 64px 0 56px; }
+    .hero-inner {
+      width: 100%; max-width: 900px; margin: 0 auto;
+      padding: 0 20px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 2px;
+      padding: 5px 12px; margin-bottom: 20px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .hero h1 { font-size: 44px; font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero-desc { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 28px; }
+    .hero-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .hero-fine { font-size: 11px; color: var(--muted); margin-top: 12px; }
+
+    /* Hero card */
+    .hero-card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+    .hero-card-top { background: var(--text); color: var(--bg); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; }
+    .hero-card-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .go-pill { display: inline-flex; align-items: center; gap: 5px; background: #4ADE80; color: #0A2E1A; padding: 3px 10px; border-radius: 2px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .hero-card-body { padding: 18px; }
+    .hc-addr { font-size: 14px; font-weight: 800; margin-bottom: 3px; }
+    .hc-city { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+    .hc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+    .hc-cell { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; }
+    .hc-lbl { font-size: 9px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+    .hc-val { font-size: 18px; font-weight: 800; }
+    .hc-val.g { color: var(--green); }
+    .hc-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: var(--muted); }
+    .hc-row strong { color: var(--text); }
+    .hc-tax { background: var(--text); color: var(--bg); border-radius: 4px; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 12px; }
+    .hc-tax-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.55; }
+    .hc-tax-val { font-size: 17px; font-weight: 900; color: #4ADE80; flex-shrink: 0; }
+
+    /* ────────────── DIVIDER ────────────── */
+    .divider { width: 100%; border: none; border-top: 1px solid var(--border); }
+
+    /* ────────────── SHARED SECTION CHROME ────────────── */
+    .section { width: 100%; padding: 64px 0; }
+    .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .section h2 { font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+    .section-lead { font-size: 15px; color: var(--muted); line-height: 1.7; margin-bottom: 36px; }
+
+    /* ────────────── INPUT SECTION ────────────── */
+    .input-section { width: 100%; padding: 56px 0 64px; text-align: center; }
+    .input-inner { width: 100%; max-width: 560px; margin: 0 auto; padding: 0 20px; }
+    .input-section h2 { font-size: 24px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 18px; }
+    .input-row {
+      display: flex; width: 100%;
+      border: 2px solid var(--text); border-radius: 4px; overflow: hidden;
+    }
+    .addr-input {
+      flex: 1; min-width: 0;
+      padding: 14px 16px; font-size: 16px; /* 16px prevents iOS zoom */
+      font-family: inherit; border: none; outline: none;
+      background: var(--bg); color: var(--text);
+    }
+    .addr-input::placeholder { color: var(--muted); }
+    .addr-btn {
+      flex-shrink: 0; padding: 14px 18px;
+      background: var(--text); color: var(--bg);
+      border: none; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; cursor: pointer; white-space: nowrap;
+    }
+    .input-hint { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+    #demo-msg { display: none; margin-top: 14px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; font-size: 13px; color: var(--muted); text-align: left; }
+    #demo-msg a { color: var(--text); font-weight: 600; display: inline-block; margin-top: 4px; }
+
+    /* ────────────── HOW IT WORKS ────────────── */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .step { padding: 28px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; }
+    .step-num { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+    .step h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+    .step p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ────────────── MOCKUP SECTION (desktop only) ────────────── */
+    .mockup-section { background: var(--text); color: var(--bg); width: 100%; padding: 64px 0; overflow: hidden; }
+    .mockup-inner { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 20px; }
+    .mockup-inner .section-label { color: rgba(255,255,255,0.4); }
+    .mockup-inner h2 { color: var(--bg); font-size: 34px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 12px; }
+    .mockup-inner .section-lead { color: rgba(255,255,255,0.6); margin-bottom: 36px; }
+    .mockup-frame { background: var(--bg); border-radius: 4px; overflow: hidden; width: 100%; box-shadow: 0 20px 56px rgba(0,0,0,0.4); }
+    .mockup-bar { background: var(--surf2); padding: 8px 14px; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid var(--border); }
+    .m-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .mockup-url { flex: 1; min-width: 0; background: var(--bg); border-radius: 3px; padding: 4px 10px; font-size: 10px; color: var(--muted); max-width: 340px; margin: 0 auto; text-align: center; border: 1px solid var(--border); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mockup-body { padding: 20px; color: var(--text); }
+
+    /* Mockup app content */
+    .mc-nav { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+    .mc-logo { font-size: 12px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; flex-shrink: 0; }
+    .mc-logo span { color: var(--accent); }
+    .mc-toggle { display: inline-flex; border: 1.5px solid var(--border); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+    .mc-toggle-btn { padding: 4px 10px; font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border: none; cursor: pointer; background: transparent; color: var(--muted); white-space: nowrap; }
+    .mc-toggle-btn.on { background: var(--text); color: var(--bg); }
+    .mc-profile { font-size: 10px; color: var(--muted); margin-left: auto; }
+
+    .mc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .mc-photo { background: var(--surf2); border-radius: 4px; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .mc-prop-tag { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .mc-prop-addr { font-size: 15px; font-weight: 900; margin-bottom: 2px; }
+    .mc-prop-city { font-size: 10px; color: var(--muted); margin-bottom: 10px; }
+    .mc-prop-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+    .mc-meta-item label { font-size: 8px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 1px; }
+    .mc-meta-item span { font-size: 11px; font-weight: 700; }
+    .mc-verdict { display: inline-flex; align-items: center; gap: 6px; background: var(--text); color: var(--bg); padding: 7px 12px; border-radius: 4px; }
+    .mc-verdict-lbl { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.5; }
+    .mc-verdict-val { font-size: 13px; font-weight: 900; text-transform: uppercase; }
+    .mc-verdict-dot { width: 5px; height: 5px; border-radius: 50%; background: #4ADE80; }
+
+    .mc-row-lbl { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+    .mc-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+    .mc-metric { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 8px; min-width: 0; }
+    .mc-metric-lbl { font-size: 7px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+    .mc-metric-val { font-size: 16px; font-weight: 800; }
+    .mc-metric-val.g { color: var(--green); }
+    .mc-metric-sub { font-size: 8px; color: var(--muted); }
+
+    .mc-cf { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+    .mc-cf-title { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+    .mc-cf-row { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 4px; }
+    .mc-cf-row.mt { color: var(--muted); }
+    .mc-cf-row.tot { font-weight: 800; font-size: 11px; padding-top: 6px; border-top: 1px solid var(--border); margin-top: 4px; }
+    .mc-cf-row.tot .g { color: var(--green); }
+
+    .mc-tax-box { background: var(--text); color: var(--bg); border-radius: 4px; padding: 12px; }
+    .mc-tax-title { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.5; margin-bottom: 8px; }
+    .mc-tax-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .mc-tax-item label { font-size: 7px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.5; display: block; margin-bottom: 2px; }
+    .mc-tax-item span { font-size: 13px; font-weight: 800; }
+    .mc-tax-item span.g { color: #4ADE80; }
+
+    .mockup-link { margin-top: 16px; text-align: center; }
+    .mockup-link a { color: rgba(255,255,255,0.5); font-size: 12px; text-decoration: none; letter-spacing: 0.04em; }
+
+    /* ────────────── STRESS TEST ────────────── */
+    .stress-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 2px; background: var(--border); border-radius: 4px;
+      overflow: hidden; width: 100%;
+    }
+    .sc { background: var(--bg); padding: 16px 12px; min-width: 0; overflow: hidden; }
+    .sc.alt { background: var(--surf2); }
+    .sc.base { background: var(--surface); }
+    .sc-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+    .sc-val { font-size: 18px; font-weight: 800; margin-bottom: 3px; word-break: break-all; }
+    .sc-val.g { color: var(--green); }
+    .sc-val.r { color: var(--red); }
+    .sc-val.a { color: var(--amber); }
+    .sc-coc { font-size: 11px; color: var(--muted); }
+
+    /* ────────────── FEATURES ────────────── */
+    .features { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .feat { display: flex; gap: 16px; padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; }
+    .feat-icon { width: 38px; height: 38px; min-width: 38px; background: var(--surf2); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+    .feat-body h3 { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+    .feat-body p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* ────────────── COMPARE ────────────── */
+    /* Desktop: scrollable table */
+    .compare-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .compare-table { width: 100%; min-width: 480px; border-collapse: collapse; margin-top: 24px; }
+    .compare-table th { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    .compare-table td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table .tn { font-weight: 700; white-space: nowrap; }
+    .compare-table .y { color: var(--green); font-weight: 700; }
+    .compare-table .n { color: var(--red); }
+    .compare-table .pp { background: var(--surface); }
+    .compare-table .pp .tn { font-weight: 900; }
+    .badge { display: inline-block; background: var(--text); color: var(--bg); font-size: 8px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 5px; border-radius: 2px; vertical-align: middle; margin-left: 4px; }
+
+    /* Mobile: simple card list (hidden on desktop) */
+    .compare-cards { display: none; }
+    .cmp-card { padding: 14px 16px; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px; }
+    .cmp-card.pp { background: var(--surface); border-color: var(--text); }
+    .cmp-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .cmp-card.pp .cmp-name { font-weight: 900; }
+    .cmp-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cmp-tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 3px; }
+    .cmp-tag.y { background: #DCFCE7; color: #166534; }
+    .cmp-tag.n { background: #FEE2E2; color: #991B1B; opacity: 0.7; }
+
+    /* ────────────── PRICING ────────────── */
+    .pricing { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 640px; }
+    .plan { padding: 28px; border-radius: 4px; border: 1.5px solid var(--border); }
+    .plan.pro { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .plan-name { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; }
+    .plan.pro .plan-name { color: var(--accent); }
+    .plan-price { font-size: 38px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 3px; }
+    .plan-period { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+    .plan.pro .plan-period { color: rgba(255,255,255,0.5); }
+    .plan-feats { list-style: none; margin-bottom: 22px; }
+    .plan-feats li { font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .plan.pro .plan-feats li { border-color: rgba(255,255,255,0.12); }
+    .plan-feats li::before { content: '✓'; font-weight: 700; color: var(--green); flex-shrink: 0; }
+    .plan.pro .plan-feats li::before { color: #4ADE80; }
+    .plan-feats li.off { color: var(--muted); }
+    .plan.pro .plan-feats li.off { color: rgba(255,255,255,0.35); }
+    .plan-feats li.off::before { color: var(--border); }
+
+    /* ────────────── CTA ────────────── */
+    .cta-section { width: 100%; text-align: center; padding: 72px 0 80px; }
+    .cta-inner { width: 100%; max-width: 480px; margin: 0 auto; padding: 0 20px; }
+    .cta-section h2 { font-size: 30px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .cta-section p { font-size: 15px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+    .cta-btn { display: block; width: 100%; padding: 16px 24px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: var(--text); color: var(--bg); border: none; border-radius: 4px; cursor: pointer; text-decoration: none; text-align: center; }
+    .cta-fine { margin-top: 12px; font-size: 11px; color: var(--muted); }
+
+    /* ────────────── FOOTER ────────────── */
+    .footer-wrap { border-top: 1px solid var(--border); width: 100%; }
+    footer { max-width: 900px; margin: 0 auto; padding: 32px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; }
+    .foot-logo { font-size: 13px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; }
+    .foot-logo span { color: var(--accent); }
+    .foot-note { font-size: 11px; color: var(--muted); }
+    .foot-links { display: flex; gap: 18px; flex-wrap: wrap; }
+    .foot-links a { font-size: 12px; color: var(--muted); text-decoration: none; }
+
+    /* ════════════════════════════════════
+       MOBILE  ≤ 640px
+       Every container: max-width 100%, padding 0 16px
+       No fixed px widths anywhere
+    ════════════════════════════════════ */
+    @media (max-width: 640px) {
+
+      /* Lock every inner wrapper to viewport */
+      .inner,
+      .nav-inner,
+      .hero-inner,
+      .input-inner,
+      .mockup-inner,
+      .cta-inner,
+      footer {
+        max-width: 100%;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      /* Force every section to clip its children */
+      nav, .hero, .section, .input-section,
+      .mockup-section, .cta-section, .footer-wrap {
+        overflow: hidden;
+      }
+
+      /* ── Nav ── */
+      .nav-links { display: none; }
+      .nav-login { display: none; }
+
+      /* ── Hero ── */
+      .hero { padding: 40px 0 36px; }
+      .hero-inner { grid-template-columns: 1fr; gap: 0; }
+      .hero-card { display: none; }
+      .hero h1 { font-size: 28px; }
+      .hero-btns { flex-direction: column; }
+      .hero-btns .btn { width: 100%; text-align: center; min-height: 48px; font-size: 13px; }
+
+      /* ── Input ── */
+      .input-section { padding: 40px 0 48px; }
+      .input-row { flex-direction: column; border-radius: 4px; }
+      .addr-input { border-bottom: 1px solid var(--border); border-radius: 0; width: 100%; }
+      .addr-btn { width: 100%; text-align: center; min-height: 48px; border-radius: 0; }
+
+      /* ── Sections ── */
+      .section { padding: 44px 0; }
+      .section h2 { font-size: 24px; }
+
+      /* ── Steps ── */
+      .steps { grid-template-columns: 1fr; gap: 12px; }
+      .step { padding: 20px; }
+
+      /* ── Mockup: hide the complex desktop preview ── */
+      .mockup-section { display: none; }
+
+      /* ── Stress grid: minmax(0,1fr) prevents implicit auto-minimum overflow ── */
+      .stress-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+      .sc {
+        padding: 12px 8px;
+        min-width: 0;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+      }
+      .sc-val { font-size: 14px; word-break: break-word; overflow: hidden; }
+      .sc-lbl { font-size: 8px; }
+      .sc-coc { font-size: 10px; overflow: hidden; }
+
+      /* ── Features ── */
+      .features { grid-template-columns: 1fr; gap: 12px; }
+      .feat { padding: 18px; }
+
+      /* ── Compare: hide table, show cards ── */
+      .compare-scroll { display: none; }
+      .compare-cards { display: block; margin-top: 20px; }
+
+      /* ── Pricing ── */
+      .pricing { grid-template-columns: 1fr; max-width: 100%; gap: 14px; }
+      .plan { padding: 22px; }
+
+      /* ── CTA ── */
+      .cta-section { padding: 48px 0 56px; }
+      .cta-section h2 { font-size: 24px; }
+
+      /* ── Footer ── */
+      footer { flex-direction: column; align-items: flex-start; gap: 10px; padding: 28px 16px; }
+      .foot-links { gap: 10px 16px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">Prop<span>Pulse</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="mockup-results.html">Full Demo →</a>
+    </div>
+    <div class="nav-btns">
+      <a href="mockup-login.html" class="btn btn-light nav-login">Log in</a>
+      <a href="mockup-login.html" class="btn btn-dark">Try free</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-badge"><span class="badge-dot"></span>Now in beta — free for early access</div>
+      <h1>Investment analysis, <em>personalized</em> to your taxes.</h1>
+      <p class="hero-desc">Same property. Completely different ROI depending on your W2 income, tax bracket, and passive loss rules. PropPulse runs the real math in under 2 minutes.</p>
+      <div class="hero-btns">
+        <a href="mockup-login.html" class="btn btn-dark">Analyze a property — free</a>
+        <a href="mockup-results.html" class="btn btn-light">See sample report</a>
+      </div>
+      <p class="hero-fine">Free trial includes 3 full analyses. No credit card required.</p>
+    </div>
+    <div class="hero-card">
+      <div class="hero-card-top">
+        <span class="hero-card-title">PropPulse Analysis</span>
+        <span class="go-pill">● GO</span>
+      </div>
+      <div class="hero-card-body">
+        <div class="hc-addr">4821 Coronado Ave</div>
+        <div class="hc-city">San Diego, CA 92107 · Single Family</div>
+        <div class="hc-grid">
+          <div class="hc-cell"><div class="hc-lbl">Monthly Cashflow</div><div class="hc-val g">+$487</div></div>
+          <div class="hc-cell"><div class="hc-lbl">Cash-on-Cash</div><div class="hc-val">6.2%</div></div>
+          <div class="hc-cell"><div class="hc-lbl">Cap Rate</div><div class="hc-val">4.8%</div></div>
+          <div class="hc-cell"><div class="hc-lbl">GRM</div><div class="hc-val">17.4×</div></div>
+        </div>
+        <div class="hc-row"><span>Purchase Price</span><strong>$625,000</strong></div>
+        <div class="hc-row"><span>Down (20%)</span><strong>$125,000</strong></div>
+        <div class="hc-row"><span>Monthly Rent</span><strong>$3,100</strong></div>
+        <div class="hc-row"><span>Tax Bracket</span><strong>32%</strong></div>
+        <div class="hc-tax">
+          <div><div class="hc-tax-lbl">Annual Tax Savings</div><div style="font-size:9px;opacity:0.4;margin-top:2px">via depreciation + Schedule E</div></div>
+          <div class="hc-tax-val">$7,840/yr</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── ADDRESS INPUT ── -->
+<div id="try" class="input-section">
+  <div class="input-inner">
+    <div class="section-label" style="text-align:center;display:block;margin-bottom:8px">Analyze a property</div>
+    <h2>Enter any US address</h2>
+    <div class="input-row">
+      <input class="addr-input" type="text" placeholder="4821 Coronado Ave, San Diego, CA" id="addressInput" autocomplete="street-address" />
+      <button class="addr-btn" onclick="handleAnalyze()">Analyze →</button>
+    </div>
+    <p class="input-hint">Auto-fills price, tax &amp; rent via Rentcast · No account needed for first 3 analyses</p>
+    <div id="demo-msg">
+      ✓ Address captured! In production this opens the full analysis →
+      <a href="mockup-results.html">See the full mockup here</a>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── HOW IT WORKS ── -->
+<div id="how" class="section">
+  <div class="inner">
+    <div class="section-label">How it works</div>
+    <h2>From address to answer in 2 minutes.</h2>
+    <p class="section-lead">No spreadsheets. No tab-switching. Just personalized numbers for your situation.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">Step 01</div>
+        <h3>Set your profile</h3>
+        <p>W2 income, filing status, state, available cash, down payment target. One-time setup, ~3 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 02</div>
+        <h3>Paste the address</h3>
+        <p>PropPulse auto-fills price, property tax, and rent estimate via Rentcast. Adjust any number — all inputs editable.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">Step 03</div>
+        <h3>Get your verdict</h3>
+        <p>GO / CAUTION / PASS with personalized cashflow, tax impact, neighborhood signals, and a 6-scenario stress test.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── MOCKUP SECTION (hidden on mobile) ── -->
+<div class="mockup-section">
+  <div class="mockup-inner">
+    <div class="section-label">Product mockup</div>
+    <h2>The full results page.</h2>
+    <p class="section-lead">Every section adapts to your property type and financial profile. Numbers update live as you adjust assumptions.</p>
+    <div class="mockup-frame">
+      <div class="mockup-bar">
+        <div class="m-dot" style="background:#FF5F57"></div>
+        <div class="m-dot" style="background:#FFBD2E"></div>
+        <div class="m-dot" style="background:#28C840"></div>
+        <div class="mockup-url">app.proppulse.com/analyze/4821-coronado-ave</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mc-nav">
+          <div class="mc-logo">Prop<span>Pulse</span></div>
+          <div class="mc-toggle">
+            <button class="mc-toggle-btn on">Single Family</button>
+            <button class="mc-toggle-btn">Multi-Unit</button>
+          </div>
+          <div class="mc-profile">Profile: $280k income · 32% bracket</div>
+        </div>
+        <div class="mc-cols">
+          <div class="mc-photo">🏠</div>
+          <div>
+            <div class="mc-prop-tag">Single Family · 3 bed · 2 bath · 1,480 sqft</div>
+            <div class="mc-prop-addr">4821 Coronado Ave</div>
+            <div class="mc-prop-city">San Diego, CA 92107 · Built 1962</div>
+            <div class="mc-prop-meta">
+              <div class="mc-meta-item"><label>List Price</label><span>$625,000</span></div>
+              <div class="mc-meta-item"><label>Down Pmt</label><span>$125,000</span></div>
+              <div class="mc-meta-item"><label>Rate</label><span>7.1%</span></div>
+              <div class="mc-meta-item"><label>Cash In</label><span>$138,500</span></div>
+            </div>
+            <div class="mc-verdict">
+              <span class="mc-verdict-lbl">Verdict</span>
+              <span class="mc-verdict-dot"></span>
+              <span class="mc-verdict-val">GO</span>
+              <span style="font-size:9px;opacity:0.4">Strong cashflow + tax upside</span>
+            </div>
+          </div>
+        </div>
+        <div class="mc-row-lbl">Key Metrics</div>
+        <div class="mc-metrics">
+          <div class="mc-metric"><div class="mc-metric-lbl">Cashflow</div><div class="mc-metric-val g">+$487</div><div class="mc-metric-sub">After expenses</div></div>
+          <div class="mc-metric"><div class="mc-metric-lbl">Cash-on-Cash</div><div class="mc-metric-val">6.2%</div><div class="mc-metric-sub">Pre-tax</div></div>
+          <div class="mc-metric"><div class="mc-metric-lbl">Cap Rate</div><div class="mc-metric-val">4.8%</div><div class="mc-metric-sub">NOI/price</div></div>
+          <div class="mc-metric"><div class="mc-metric-lbl">Tax-Adj COC</div><div class="mc-metric-val g">8.9%</div><div class="mc-metric-sub">After depr.</div></div>
+        </div>
+        <div class="mc-cf">
+          <div class="mc-cf-title">Monthly Cashflow Breakdown</div>
+          <div class="mc-cf-row"><span>Gross Rent</span><span style="font-weight:600">$3,100</span></div>
+          <div class="mc-cf-row mt"><span>Vacancy (5%)</span><span>−$155</span></div>
+          <div class="mc-cf-row mt"><span>Mortgage (P&amp;I)</span><span>−$3,355</span></div>
+          <div class="mc-cf-row mt"><span>Tax + Insurance</span><span>−$730</span></div>
+          <div class="mc-cf-row mt"><span>Maintenance + HOA</span><span>−$373</span></div>
+          <div class="mc-cf-row tot"><span>Net Cashflow</span><span class="g">+$487/mo</span></div>
+        </div>
+        <div class="mc-tax-box">
+          <div class="mc-tax-title">Tax Impact · 32% Bracket · PAL Eligible</div>
+          <div class="mc-tax-grid">
+            <div class="mc-tax-item"><label>Annual Depreciation</label><span>$18,182</span></div>
+            <div class="mc-tax-item"><label>Tax Savings / yr</label><span class="g">$7,840</span></div>
+            <div class="mc-tax-item"><label>Break-even Occ.</label><span>85.4%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockup-link">
+      <a href="mockup-results.html">View full interactive mockup — stress test, map, equity outlook →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── STRESS TEST ── -->
+<div id="features" class="section">
+  <div class="inner">
+    <div class="section-label">Stress test</div>
+    <h2>Six scenarios. Instant.</h2>
+    <p class="section-lead">See how your investment holds up if rates spike, rent drops, or vacancies climb — before you write a check.</p>
+    <div class="stress-grid">
+      <div class="sc alt"><div class="sc-lbl">Rent −10%</div><div class="sc-val a">−$103/mo</div><div class="sc-coc">4.1% COC</div></div>
+      <div class="sc base"><div class="sc-lbl">Base Case</div><div class="sc-val g">+$487/mo</div><div class="sc-coc">6.2% COC</div></div>
+      <div class="sc alt"><div class="sc-lbl">Rent +10%</div><div class="sc-val g">+$797/mo</div><div class="sc-coc">7.9% COC</div></div>
+      <div class="sc"><div class="sc-lbl">Vacancy 15%</div><div class="sc-val a">+$177/mo</div><div class="sc-coc">4.8% COC</div></div>
+      <div class="sc"><div class="sc-lbl">Rate 8.0%</div><div class="sc-val r">−$221/mo</div><div class="sc-coc">3.2% COC</div></div>
+      <div class="sc"><div class="sc-lbl">Both Worst</div><div class="sc-val r">−$612/mo</div><div class="sc-coc">0.8% COC</div></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── FEATURES ── -->
+<div class="section">
+  <div class="inner">
+    <div class="section-label">What's included</div>
+    <h2>Built for the W2 investor.</h2>
+    <p class="section-lead">Designed for the casual accumulator — not the spreadsheet power user, not the RE professional.</p>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">🧮</div><div class="feat-body"><h3>Personalized Tax Math</h3><p>27.5-year depreciation, PAL rules by AGI tier, Schedule E deductions — all against your W2 income. The killer feature no other tool offers.</p></div></div>
+      <div class="feat"><div class="feat-icon">🗺</div><div class="feat-body"><h3>Neighborhood Signals Map</h3><p>Leaflet map with school ratings, crime zones, transit stops, and infrastructure project markers pinned to the property.</p></div></div>
+      <div class="feat"><div class="feat-icon">🏘</div><div class="feat-body"><h3>Multi-Unit + House Hack</h3><p>Duplex, triplex, fourplex with per-unit rent table. House hack toggle applies FHA eligibility and excludes owner unit from depreciation.</p></div></div>
+      <div class="feat"><div class="feat-icon">📈</div><div class="feat-body"><h3>Equity Outlook</h3><p>Population trend, net migration, job growth, home price appreciation, rent growth. STRONG UPSIDE / NEUTRAL / DECLINING RISK verdict.</p></div></div>
+      <div class="feat"><div class="feat-icon">⚡</div><div class="feat-body"><h3>Live Recalculation</h3><p>Every metric, stress test, and verdict updates instantly as you edit any assumption. Change rent or rate — see impact in real time.</p></div></div>
+      <div class="feat"><div class="feat-icon">📄</div><div class="feat-body"><h3>Save, Compare, Export</h3><p>Save unlimited properties (Pro), compare side-by-side, and export a PDF summary for your partner, lender, or CPA.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── COMPARE ── -->
+<div class="section">
+  <div class="inner">
+    <div class="section-label">Competitive comparison</div>
+    <h2>The only tool that knows your taxes.</h2>
+
+    <!-- Desktop table (hidden on mobile) -->
+    <div class="compare-scroll">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Tool</th>
+            <th>Cashflow</th>
+            <th>W2 Tax Math</th>
+            <th>PAL Rules</th>
+            <th>Nbhd Map</th>
+            <th>Auto-fill</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="pp"><td class="tn">PropPulse <span class="badge">US</span></td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td class="tn">BiggerPockets</td><td class="y">✓</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗ manual</td></tr>
+          <tr><td class="tn">DealCheck</td><td class="y">✓</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗ manual</td></tr>
+          <tr><td class="tn">Excel</td><td class="y">✓ manual</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td><td class="n">✗</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile cards (hidden on desktop) -->
+    <div class="compare-cards">
+      <div class="cmp-card pp">
+        <div style="flex:1">
+          <div class="cmp-name">PropPulse <span class="badge">US</span></div>
+          <div class="cmp-checks">
+            <span class="cmp-tag y">✓ Cashflow</span>
+            <span class="cmp-tag y">✓ W2 Tax Math</span>
+            <span class="cmp-tag y">✓ PAL Rules</span>
+            <span class="cmp-tag y">✓ Nbhd Map</span>
+            <span class="cmp-tag y">✓ Auto-fill</span>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-card">
+        <div style="flex:1">
+          <div class="cmp-name">BiggerPockets</div>
+          <div class="cmp-checks">
+            <span class="cmp-tag y">✓ Cashflow</span>
+            <span class="cmp-tag n">✗ No tax math</span>
+            <span class="cmp-tag n">✗ No map</span>
+            <span class="cmp-tag n">✗ Manual entry</span>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-card">
+        <div style="flex:1">
+          <div class="cmp-name">DealCheck</div>
+          <div class="cmp-checks">
+            <span class="cmp-tag y">✓ Cashflow</span>
+            <span class="cmp-tag n">✗ No tax math</span>
+            <span class="cmp-tag n">✗ No map</span>
+            <span class="cmp-tag n">✗ Manual entry</span>
+          </div>
+        </div>
+      </div>
+      <div class="cmp-card">
+        <div style="flex:1">
+          <div class="cmp-name">Excel spreadsheet</div>
+          <div class="cmp-checks">
+            <span class="cmp-tag y">✓ Cashflow</span>
+            <span class="cmp-tag n">✗ No tax math</span>
+            <span class="cmp-tag n">✗ No map</span>
+            <span class="cmp-tag n">✗ Fully manual</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── PRICING ── -->
+<div id="pricing" class="section">
+  <div class="inner">
+    <div class="section-label">Pricing</div>
+    <h2>Start free. Upgrade when ready.</h2>
+    <p class="section-lead">Three free analyses to see if PropPulse fits your deal flow. No credit card, no expiry.</p>
+    <div class="pricing">
+      <div class="plan">
+        <div class="plan-name">Free Trial</div>
+        <div class="plan-price">$0</div>
+        <div class="plan-period">No credit card required</div>
+        <ul class="plan-feats">
+          <li>3 full property analyses</li>
+          <li>SFH + multi-unit support</li>
+          <li>Tax impact calculation</li>
+          <li>Neighborhood signals map</li>
+          <li class="off">Save properties</li>
+          <li class="off">Compare properties</li>
+          <li class="off">Export PDF</li>
+        </ul>
+        <a href="#try" class="btn btn-light" style="width:100%;text-align:center;display:block">Get started free</a>
+      </div>
+      <div class="plan pro">
+        <div class="plan-name">PropPulse Pro</div>
+        <div class="plan-price">$7.99</div>
+        <div class="plan-period">/month · or $59/yr (save 2 months)</div>
+        <ul class="plan-feats">
+          <li>Unlimited analyses</li>
+          <li>SFH + multi-unit + house hack</li>
+          <li>Full tax impact + PAL rules</li>
+          <li>Neighborhood signals + equity outlook</li>
+          <li>Save unlimited properties</li>
+          <li>Side-by-side comparison</li>
+          <li>Export PDF</li>
+        </ul>
+        <a href="#try" class="btn btn-dark" style="width:100%;text-align:center;display:block;background:#FAFAF8;color:#1A1A1A;border-color:#FAFAF8">Start with Pro</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ── CTA ── -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <div class="section-label" style="display:block;text-align:center;margin-bottom:12px">Get started</div>
+    <h2>Stop losing 45 minutes per deal.</h2>
+    <p>Enter any address. Get your personalized GO / CAUTION / PASS in under 2 minutes.</p>
+    <a href="#try" class="cta-btn">Analyze your first property — free</a>
+    <p class="cta-fine">Estimate only — consult a CPA for tax advice.</p>
+  </div>
+</div>
+
+<!-- ── FOOTER ── -->
+<div class="footer-wrap">
+  <footer>
+    <div>
+      <div class="foot-logo">Prop<span>Pulse</span></div>
+      <div class="foot-note" style="margin-top:4px">Know before you buy.</div>
+    </div>
+    <div class="foot-links">
+      <a href="../plan/PROJECT_PLAN.md">Project Plan</a>
+      <a href="mockup-results.html">Full Mockup</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+    </div>
+    <div class="foot-note">Estimate only — consult a CPA. © 2026 PropPulse.</div>
+  </footer>
+</div>
+
+</div><!-- #app -->
+
+<script>
+  function handleAnalyze() {
+    var input = document.getElementById('addressInput');
+    if (input.value.trim()) {
+      window.location.href = 'mockup-loading.html';
+    } else {
+      input.focus();
+      input.placeholder = 'Enter an address first...';
+    }
+  }
+  document.getElementById('addressInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleAnalyze();
+  });
+</script>
+</body>
+</html>

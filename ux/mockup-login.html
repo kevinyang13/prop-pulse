@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PropPulse — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #FAFAF8; --surface: #F2EDE8; --surface-2: #EAE3DC;
+      --text: #1A1A1A; --text-muted: #6B6560; --accent: #C4B5A5; --border: #E0D8D0;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 60px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-back { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .nav-back:hover { color: var(--text); }
+
+    .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 24px; }
+
+    .login-card { width: 100%; max-width: 400px; }
+    .login-title { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .login-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; line-height: 1.5; }
+
+    .btn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; background: var(--text); color: var(--bg); border: none; padding: 14px 24px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 4px; margin-bottom: 20px; font-family: inherit; text-decoration: none; }
+    .btn-google:hover { opacity: 0.88; }
+    .google-icon { width: 22px; height: 22px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: #4285F4; flex-shrink: 0; }
+
+    .divider { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .divider-line { flex: 1; height: 1px; background: var(--border); }
+    .divider-text { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+
+    .form-label { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; display: block; }
+    .form-input { width: 100%; border: 1.5px solid var(--border); border-radius: 4px; padding: 12px 16px; font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text); outline: none; margin-bottom: 12px; }
+    .form-input:focus { border-color: var(--text); }
+
+    .btn-magic { width: 100%; background: var(--surface); border: 1.5px solid var(--border); border-radius: 4px; padding: 12px 24px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--text); letter-spacing: 0.02em; }
+    .btn-magic:hover { background: var(--surface-2); }
+
+    /* sent state */
+    .sent-banner { display: none; background: #D4EDDA; border: 1px solid #A8D5B5; border-radius: 4px; padding: 14px 18px; margin-top: 16px; }
+    .sent-banner.show { display: flex; align-items: flex-start; gap: 12px; }
+    .sent-icon { font-size: 18px; flex-shrink: 0; }
+    .sent-text { font-size: 13px; color: #1A5C2E; line-height: 1.5; }
+    .sent-text strong { font-weight: 700; }
+
+    .cooldown { font-size: 12px; color: var(--text-muted); margin-top: 10px; display: none; }
+    .cooldown.show { display: block; }
+
+    /* error state */
+    .error-banner { background: #FEF2F2; border: 1px solid #FECACA; border-radius: 4px; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #7F1D1D; display: none; }
+    .error-banner.show { display: block; }
+
+    .login-footer { margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+    .login-footer a { color: var(--text-muted); }
+
+    /* demo links for mockup nav */
+    .demo-nav { margin-top: 32px; padding: 16px; background: var(--surface); border-radius: 4px; border: 1px dashed var(--border); }
+    .demo-nav-title { font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+    .demo-links { display: flex; flex-direction: column; gap: 8px; }
+    .demo-link { font-size: 12px; color: var(--text-muted); text-decoration: none; display: flex; align-items: center; gap: 6px; }
+    .demo-link:hover { color: var(--text); }
+    .demo-link-arrow { font-size: 10px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="mockup-landing.html" class="logo">Prop<span>Pulse</span></a>
+  <a href="mockup-landing.html" class="nav-back">← Back</a>
+</nav>
+
+<div class="page">
+  <div class="login-card">
+    <h1 class="login-title">Sign in to PropPulse</h1>
+    <p class="login-sub">Analyze investment properties personalized to your tax profile. Free — 3 analyses, no credit card.</p>
+
+    <!-- Google OAuth -->
+    <a href="mockup-onboarding.html" class="btn-google">
+      <div class="google-icon">G</div>
+      Continue with Google
+    </a>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">or</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Magic link -->
+    <label class="form-label">Email address</label>
+    <input class="form-input" type="email" placeholder="you@example.com" id="email-input" />
+    <button class="btn-magic" onclick="sendMagicLink()">Send sign-in link</button>
+
+    <div class="sent-banner" id="sent-banner">
+      <div class="sent-icon">✉️</div>
+      <div class="sent-text">
+        <strong>Check your inbox.</strong> We sent a sign-in link to <span id="sent-email">you@example.com</span>. Link expires in 1 hour.
+      </div>
+    </div>
+    <div class="cooldown" id="cooldown">⏱ You can request another link in <span id="countdown">60</span>s</div>
+
+    <!-- Mockup demo navigation -->
+    <div class="demo-nav">
+      <div class="demo-nav-title">Mockup — choose flow</div>
+      <div class="demo-links">
+        <a href="mockup-onboarding.html" class="demo-link"><span class="demo-link-arrow">→</span> First-time user (go to Onboarding)</a>
+        <a href="mockup-dashboard.html" class="demo-link"><span class="demo-link-arrow">→</span> Returning user (go to Dashboard)</a>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      By signing in you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.<br>
+      Estimates only — consult a CPA for tax advice.
+    </div>
+  </div>
+</div>
+
+<script>
+  let cooling = false;
+  let timer;
+
+  function sendMagicLink() {
+    const email = document.getElementById('email-input').value.trim();
+    if (!email || cooling) return;
+
+    document.getElementById('sent-email').textContent = email || 'you@example.com';
+    document.getElementById('sent-banner').classList.add('show');
+    document.getElementById('cooldown').classList.add('show');
+
+    cooling = true;
+    let secs = 60;
+    document.getElementById('countdown').textContent = secs;
+    timer = setInterval(() => {
+      secs--;
+      document.getElementById('countdown').textContent = secs;
+      if (secs <= 0) {
+        clearInterval(timer);
+        cooling = false;
+        document.getElementById('cooldown').classList.remove('show');
+      }
+    }, 1000);
+  }
+</script>
+</body>
+</html>
