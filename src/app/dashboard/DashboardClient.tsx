@@ -11,6 +11,12 @@ export interface AnalysisCard {
   verdict: string
   verdict_reason: string | null
   created_at: string
+  assumptions: {
+    down_payment_pct?: number
+    interest_rate?: number
+    purchase_price?: number
+    loan_term_years?: number
+  } | null
   results: {
     monthly_cashflow?: number
     cash_on_cash_return?: number
@@ -199,9 +205,9 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                       {a.property?.property_type && ` · ${a.property.property_type.toUpperCase()}`}
                       {a.property?.list_price && ` · $${(a.property.list_price / 1000).toFixed(0)}K`}
                     </div>
-                    {a.scenario_name && (
+                    {a.assumptions && (
                       <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 3, display: 'inline-block' }}>
-                        {a.scenario_name}
+                        {a.assumptions.down_payment_pct}% down · {a.assumptions.interest_rate}% · ${computeMortgagePayment(a.assumptions).toLocaleString()}/mo
                       </span>
                     )}
                     {/* Metrics shown here on mobile (below address) */}
@@ -238,6 +244,15 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
       )}
     </div>
   )
+}
+
+function computeMortgagePayment(a: { purchase_price?: number; down_payment_pct?: number; interest_rate?: number; loan_term_years?: number }): number {
+  const price = a.purchase_price ?? 0
+  const loan = price * (1 - (a.down_payment_pct ?? 20) / 100)
+  const mr = (a.interest_rate ?? 7) / 100 / 12
+  const n = (a.loan_term_years ?? 30) * 12
+  if (mr === 0) return Math.round(loan / n)
+  return Math.round((loan * (mr * Math.pow(1 + mr, n))) / (Math.pow(1 + mr, n) - 1))
 }
 
 function VerdictBadge({ verdict }: { verdict: string }) {

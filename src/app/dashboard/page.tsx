@@ -31,6 +31,7 @@ export default async function DashboardPage() {
     verdict: r.verdict,
     verdict_reason: r.verdict_reason,
     created_at: r.created_at,
+    assumptions: r.assumptions as AnalysisCard['assumptions'],
     results: r.results as AnalysisCard['results'],
     property: r.properties as AnalysisCard['property'],
   }))
