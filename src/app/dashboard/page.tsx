@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import Nav from '@/components/layout/Nav'
+import DeleteButton from './DeleteButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -172,6 +173,7 @@ export default async function DashboardPage() {
                     }}>
                       View
                     </Link>
+                    <DeleteButton analysisId={a.id} />
                   </div>
                 </div>
               )
