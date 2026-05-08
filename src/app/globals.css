@@ -58,8 +58,9 @@ body {
     gap: 12px !important;
     padding: 16px !important;
   }
-  .dash-card-body { min-width: 0; width: 100%; }
-  .dash-card-metrics { flex-direction: row !important; gap: 20px !important; width: 100%; }
+  .dash-card-body { min-width: 0; width: 100%; flex-direction: column !important; align-items: flex-start !important; }
+  .dash-card-metrics-desktop { display: none !important; }
+  .dash-card-metrics-mobile { display: flex !important; }
   .dash-card-actions { width: 100%; display: flex !important; gap: 8px !important; }
   .dash-card-actions a,
   .dash-card-actions button { flex: 1; text-align: center; justify-content: center; }

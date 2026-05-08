@@ -188,27 +188,34 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                 {/* Verdict badge */}
                 <VerdictBadge verdict={a.verdict} />
 
-                {/* Property info */}
-                <div className="dash-card-body" style={{ flex: 1, minWidth: 0 }}>
-                  <div className="dash-addr" style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>
-                    {a.property?.full_address ?? 'Unknown address'}
+                {/* Property info + metrics grouped — metrics move under address on mobile */}
+                <div className="dash-card-body" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 24 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="dash-addr" style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>
+                      {a.property?.full_address ?? 'Unknown address'}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
+                      {[a.property?.city, a.property?.state].filter(Boolean).join(', ')}
+                      {a.property?.property_type && ` · ${a.property.property_type.toUpperCase()}`}
+                      {a.property?.list_price && ` · $${(a.property.list_price / 1000).toFixed(0)}K`}
+                    </div>
+                    {a.scenario_name && (
+                      <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 3, display: 'inline-block' }}>
+                        {a.scenario_name}
+                      </span>
+                    )}
+                    {/* Metrics shown here on mobile (below address) */}
+                    <div className="dash-card-metrics-mobile" style={{ display: 'none', gap: 20, marginTop: 10 }}>
+                      <Metric label="Monthly CF" value={`${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}`} positive={cf >= 0} />
+                      <Metric label="COC Return" value={`${coc.toFixed(1)}%`} positive={coc >= 5} />
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
-                    {[a.property?.city, a.property?.state].filter(Boolean).join(', ')}
-                    {a.property?.property_type && ` · ${a.property.property_type.toUpperCase()}`}
-                    {a.property?.list_price && ` · $${(a.property.list_price / 1000).toFixed(0)}K`}
-                  </div>
-                  {a.scenario_name && (
-                    <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 3, display: 'inline-block' }}>
-                      {a.scenario_name}
-                    </span>
-                  )}
-                </div>
 
-                {/* Metrics */}
-                <div className="dash-card-metrics" style={{ display: 'flex', gap: 32, flexShrink: 0 }}>
-                  <Metric label="Monthly CF" value={`${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}`} positive={cf >= 0} />
-                  <Metric label="COC Return" value={`${coc.toFixed(1)}%`} positive={coc >= 5} />
+                  {/* Metrics shown here on desktop (right side) */}
+                  <div className="dash-card-metrics-desktop" style={{ display: 'flex', gap: 32, flexShrink: 0 }}>
+                    <Metric label="Monthly CF" value={`${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}`} positive={cf >= 0} />
+                    <Metric label="COC Return" value={`${coc.toFixed(1)}%`} positive={coc >= 5} />
+                  </div>
                 </div>
 
                 {/* Actions — hidden in compare mode */}
