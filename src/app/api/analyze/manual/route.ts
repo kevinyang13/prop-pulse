@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
+import { createServiceClient } from '@/lib/supabase/server'
 import { computeFinancials } from '@/lib/financial-model'
 import { autoScenarioName } from '@/lib/scenario-name'
-import type { Assumptions } from '@/types/analysis'
+import type { Assumptions, UnitRent } from '@/types/analysis'
 
 const DEFAULT_ASSUMPTIONS = {
   down_payment_pct: 20,
@@ -27,6 +28,7 @@ interface ManualProperty {
   sqft: number | null
   year_built: number | null
   property_type: string
+  unit_rents: UnitRent[] | null
 }
 
 export async function POST(request: Request) {
@@ -39,7 +41,6 @@ export async function POST(request: Request) {
 
   const { user, supabase, profile } = auth
 
-  // Free tier gate
   const { data: sub } = await supabase
     .from('subscriptions')
     .select('tier')
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
 
   const analyses_used = (profile as { analyses_used?: number })?.analyses_used ?? 0
 
-  if (sub?.tier !== 'pro' && analyses_used >= 3) {
+  if (process.env.NODE_ENV !== 'development' && sub?.tier !== 'pro' && analyses_used >= 3) {
     return NextResponse.json({ error: 'free_limit_reached' }, { status: 402 })
   }
 
@@ -68,7 +69,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'validation_error', message: 'list_price and monthly_rent are required' }, { status: 400 })
   }
 
-  // Get latest mortgage rate
   let mortgageRate = DEFAULT_ASSUMPTIONS.interest_rate
   try {
     const { data: rate } = await supabase
@@ -82,6 +82,7 @@ export async function POST(request: Request) {
 
   const property_tax_monthly = Math.round(property.property_tax_annual / 12)
   const insurance_monthly = Math.round(property.list_price * 0.004 / 12)
+  const unit_rents = property.unit_rents ?? null
 
   const assumptions: Assumptions = {
     ...DEFAULT_ASSUMPTIONS,
@@ -92,9 +93,9 @@ export async function POST(request: Request) {
     insurance_monthly,
     hoa_monthly: property.hoa_monthly ?? 0,
     interest_rate: mortgageRate,
+    unit_rents,
   }
 
-  // Get user tax profile
   const { data: taxProfile } = await supabase
     .from('user_profiles')
     .select('w2_income, tax_bracket, filing_status, state_tax_rate')
@@ -108,8 +109,10 @@ export async function POST(request: Request) {
     state_tax_rate: taxProfile?.state_tax_rate ?? null,
   })
 
-  // Persist property
+  const serviceClient = createServiceClient()
   const addressKey = address.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim().replace(/\s+/g, '-')
+  const unitCount = unit_rents?.length ?? 1
+  const propertyType = property.property_type ?? 'sfh'
 
   const propertyPayload = {
     address_key: addressKey,
@@ -120,7 +123,7 @@ export async function POST(request: Request) {
     zip: null,
     lat: null,
     lng: null,
-    property_type: property.property_type ?? 'sfh',
+    property_type: propertyType,
     beds: property.beds,
     baths: property.baths,
     sqft: property.sqft,
@@ -132,12 +135,12 @@ export async function POST(request: Request) {
     rent_estimate_mid: property.monthly_rent,
     hoa_monthly: property.hoa_monthly ?? 0,
     property_tax_annual: property.property_tax_annual,
-    unit_count: 1,
+    unit_count: unitCount,
     data_source: 'manual',
     fetched_at: new Date().toISOString(),
   }
 
-  const { data: savedProperty, error: propertyError } = await supabase
+  const { data: savedProperty, error: propertyError } = await serviceClient
     .from('properties')
     .upsert(propertyPayload, { onConflict: 'address_key' })
     .select('id')
@@ -148,7 +151,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'internal', message: 'Failed to save property' }, { status: 500 })
   }
 
-  // Persist analysis
   const finalScenarioName = scenario_name?.trim() || autoScenarioName(assumptions)
   const verdictReason = buildVerdictReason(results.verdict, results)
 
@@ -157,7 +159,7 @@ export async function POST(request: Request) {
     .insert({
       user_id: user.id,
       property_id: savedProperty.id,
-      property_type: property.property_type ?? 'sfh',
+      property_type: propertyType,
       scenario_name: finalScenarioName,
       verdict: results.verdict,
       verdict_reason: verdictReason,
@@ -172,7 +174,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'internal', message: 'Failed to save analysis' }, { status: 500 })
   }
 
-  // Increment free tier counter
   if (sub?.tier !== 'pro') {
     await supabase
       .from('user_profiles')

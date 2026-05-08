@@ -39,6 +39,10 @@ export interface Results {
   break_even_occupancy: number
   total_cash_invested: number
   annual_depreciation: number
+  mortgage_interest_annual: number
+  schedule_e_deductions_annual: number
+  schedule_e_net_income: number
+  tax_bracket_used: number
   tax_savings_annual: number
   tax_adjusted_coc: number
   passive_loss_status: 'full' | 'phase_out' | 'suspended'
