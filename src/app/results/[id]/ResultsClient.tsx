@@ -213,20 +213,16 @@ export default function ResultsClient({
       )}
 
       {/* ── ASSUMPTIONS EDITOR ── */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: assumptionsOpen ? '20px 24px' : '0', marginBottom: 24 }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, marginBottom: 24, overflow: 'hidden' }}>
+        {/* Clickable header row */}
         <div
           onClick={() => setAssumptionsOpen(o => !o)}
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: assumptionsOpen ? '0 0 18px' : '16px 24px' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '16px 24px', borderBottom: assumptionsOpen ? '1px solid var(--border)' : 'none' }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 10, opacity: 0.6, transform: assumptionsOpen ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', transition: 'transform 0.15s' }}>▶</span>
-              Assumptions
-              {isDirty && <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600 }}>● unsaved</span>}
-            </div>
-            {!assumptionsOpen && (
-              <AssumptionsSummary assumptions={assumptions} />
-            )}
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, opacity: 0.6, transform: assumptionsOpen ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', transition: 'transform 0.15s' }}>▶</span>
+            Assumptions
+            {isDirty && <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600 }}>● unsaved</span>}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
             {saveStatus === 'saved' && (
@@ -256,7 +252,14 @@ export default function ResultsClient({
           </div>
         </div>
 
-        {assumptionsOpen && <>
+        {/* Collapsed summary */}
+        {!assumptionsOpen && (
+          <div style={{ padding: '20px 24px' }}>
+            <AssumptionsSummary assumptions={assumptions} />
+          </div>
+        )}
+
+        {assumptionsOpen && <div style={{ padding: '20px 24px' }}>
         {/* Row 1: property type + purchase price + down payment */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
           <EditField label="Property type">
@@ -419,7 +422,7 @@ export default function ResultsClient({
             </div>
           </EditField>
         </div>
-        </>}
+        </div>}
       </div>
 
       {/* Key metrics */}
@@ -631,23 +634,33 @@ function AssumptionsSummary({ assumptions: a }: { assumptions: Assumptions }) {
   const totalCashIn = downAmount + closingCosts
 
   const fmt = (n: number) =>
-    n >= 1000000 ? `$${(n / 1000000).toFixed(2)}M` : `$${Math.round(n / 1000)}K`
+    n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(2)}M` : `$${n.toLocaleString()}`
 
   const items = [
-    { label: 'Purchase', value: fmt(a.purchase_price) },
-    { label: 'Down', value: `${fmt(downAmount)} (${a.down_payment_pct}%)` },
-    { label: 'Loan', value: fmt(loanAmount) },
-    { label: 'Rate', value: `${a.interest_rate}% / ${a.loan_term_years}yr` },
-    { label: 'Cash-in', value: fmt(totalCashIn) },
+    { label: 'Purchase Price', value: fmt(a.purchase_price) },
+    { label: `Down (${a.down_payment_pct}%)`, value: fmt(downAmount) },
+    { label: 'Loan Amount', value: fmt(loanAmount) },
+    { label: 'Interest Rate', value: `${a.interest_rate}% / ${a.loan_term_years}yr` },
+    { label: 'Total Cash In', value: fmt(totalCashIn) },
   ]
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 20px', paddingLeft: 18 }}>
-      {items.map(item => (
-        <span key={item.label} style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-          <span style={{ fontWeight: 600, color: 'var(--text)' }}>{item.value}</span>
-          {' '}{item.label}
-        </span>
+    <div style={{ display: 'flex' }}>
+      {items.map((item, i) => (
+        <div
+          key={item.label}
+          style={{
+            flex: 1,
+            paddingLeft: i === 0 ? 0 : 20,
+            paddingRight: 20,
+            borderRight: i < items.length - 1 ? '1px solid var(--border)' : 'none',
+          }}
+        >
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 }}>
+            {item.label}
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 800 }}>{item.value}</div>
+        </div>
       ))}
     </div>
   )
