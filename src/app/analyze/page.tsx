@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Nav from '@/components/layout/Nav'
 
 export default function AnalyzePage() {
@@ -75,6 +76,14 @@ export default function AnalyzePage() {
           </div>
           <div style={{ marginTop: 12, fontSize: 12, color: 'var(--text-muted)' }}>
             Tip: Include city, state, and zip for best results.
+          </div>
+          <div style={{ marginTop: 16, fontSize: 13 }}>
+            <Link
+              href="/analyze/manual"
+              style={{ color: 'var(--text-muted)', textDecoration: 'underline', textUnderlineOffset: 3 }}
+            >
+              Multi-unit property (duplex/triplex/fourplex)? Enter manually →
+            </Link>
           </div>
         </form>
 

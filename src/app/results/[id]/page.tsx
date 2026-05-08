@@ -331,7 +331,7 @@ function VerdictBadge({ verdict, reason }: { verdict: string; reason: string | n
   const colors: Record<string, { color: string }> = {
     GO: { color: 'var(--green)' },
     CAUTION: { color: 'var(--amber)' },
-    PASS: { color: 'var(--text-muted)' },
+    PASS: { color: 'var(--red)' },
   }
   const c = colors[verdict] ?? colors.PASS
   return (
