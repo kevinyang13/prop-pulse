@@ -134,13 +134,10 @@ export default function ResultsClient({
     })
   }, [propertyId])
 
-  // Live recompute only when dirty; show stored results otherwise to avoid jarring
-  // recompute on mount (Sprint 2 model improvements may differ slightly)
-  const liveResults = useMemo(
+  const results: Results = useMemo(
     () => computeFinancials(assumptions, taxProfile),
     [assumptions, taxProfile]
   )
-  const results: Results = isDirty ? liveResults : initialResults
 
   const isMultiUnit = MULTI_UNIT_TYPES.has(propertyType)
   const unitCount = UNIT_COUNTS[propertyType] ?? 1
