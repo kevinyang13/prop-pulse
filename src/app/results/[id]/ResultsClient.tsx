@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { computeFinancials } from '@/lib/financial-model'
@@ -11,6 +11,56 @@ interface TaxProfile {
   tax_bracket: number | null
   filing_status: string | null
   state_tax_rate: number | null
+}
+
+interface NeighborhoodData {
+  walk_score: number | null
+  walk_score_label: string | null
+  transit_score: number | null
+  bike_score: number | null
+  school_rating: number | null
+  crime_index: number | null
+  crime_grade: string | null
+  crime_vs_city_avg: string | null
+  infra_project_count_2mi: number | null
+}
+
+interface EnvironmentalData {
+  flood_zone: string | null
+  flood_risk_level: string | null
+  flood_insurance_required: boolean | null
+  aqi_annual_avg: number | null
+  aqi_category: string | null
+  aqi_monitoring_station: string | null
+  earthquake_pga: number | null
+  earthquake_risk_level: string | null
+  fire_risk_level: string | null
+  fire_zone_label: string | null
+  fire_insurance_impact_monthly: number | null
+  wind_zone: string | null
+  wind_risk_level: string | null
+  wind_design_speed_mph: number | null
+  insurance_total_impact_monthly: number | null
+}
+
+interface DemographicsData {
+  zip_code: string | null
+  census_vintage: number | null
+  population_total: number | null
+  median_household_income: number | null
+  median_age: number | null
+  renter_occupied_units: number | null
+  owner_occupied_units: number | null
+  renter_ratio: number | null
+  vacant_units: number | null
+  total_housing_units: number | null
+  vacancy_rate: number | null
+  unemployment_rate: number | null
+  college_educated_pct: number | null
+  median_gross_rent: number | null
+  median_home_value: number | null
+  price_to_rent_ratio: number | null
+  renter_demand_signal: string | null
 }
 
 interface PropertyData {
@@ -30,6 +80,7 @@ interface PropertyData {
 
 interface Props {
   analysisId: string
+  propertyId: string
   initialScenarioName: string | null
   initialPropertyType: string
   initialAssumptions: Assumptions
@@ -44,6 +95,7 @@ const MULTI_UNIT_TYPES = new Set(['duplex', 'triplex', 'fourplex'])
 
 export default function ResultsClient({
   analysisId,
+  propertyId,
   initialScenarioName,
   initialPropertyType,
   initialAssumptions,
@@ -59,6 +111,28 @@ export default function ResultsClient({
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  const [neighborhood, setNeighborhood] = useState<NeighborhoodData | null>(null)
+  const [envData, setEnvData] = useState<EnvironmentalData | null>(null)
+  const [demographics, setDemographics] = useState<DemographicsData | null>(null)
+  const [loadingNbh, setLoadingNbh] = useState(true)
+  const [loadingEnv, setLoadingEnv] = useState(true)
+  const [loadingDemo, setLoadingDemo] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/properties/${propertyId}/neighborhood`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/properties/${propertyId}/environmental`).then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch(`/api/properties/${propertyId}/demographics`).then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([nbh, env, demo]) => {
+      setNeighborhood(nbh)
+      setEnvData(env)
+      setDemographics(demo)
+      setLoadingNbh(false)
+      setLoadingEnv(false)
+      setLoadingDemo(false)
+    })
+  }, [propertyId])
 
   // Live recompute only when dirty; show stored results otherwise to avoid jarring
   // recompute on mount (Sprint 2 model improvements may differ slightly)
@@ -585,8 +659,17 @@ export default function ResultsClient({
         </table>
       </Section>
 
+      {/* Neighborhood Signals */}
+      <NeighborhoodSection data={neighborhood} loading={loadingNbh} style={{ marginTop: 16 }} />
+
+      {/* Location Demographics */}
+      <DemographicsSection data={demographics} loading={loadingDemo} style={{ marginTop: 16 }} />
+
+      {/* Environmental Risk */}
+      <EnvironmentalRiskSection data={envData} loading={loadingEnv} style={{ marginTop: 16 }} />
+
       {/* PropPulse Verdict — Recommendation Panel */}
-      <RecommendationPanel results={results} taxProfile={taxProfile} style={{ marginTop: 16 }} />
+      <RecommendationPanel results={results} taxProfile={taxProfile} envData={envData} demographics={demographics} style={{ marginTop: 16 }} />
 
       {/* Property details */}
       <Section title="Property Details" style={{ marginTop: 16 }}>
@@ -690,7 +773,7 @@ function VerdictBadge({ verdict }: { verdict: string }) {
   )
 }
 
-function RecommendationPanel({ results, taxProfile, style }: { results: Results; taxProfile: TaxProfile; style?: React.CSSProperties }) {
+function RecommendationPanel({ results, taxProfile, envData, demographics, style }: { results: Results; taxProfile: TaxProfile; envData: EnvironmentalData | null; demographics: DemographicsData | null; style?: React.CSSProperties }) {
   const cf = results.monthly_cashflow
   const coc = results.cash_on_cash_return
   const taxSavings = results.tax_savings_annual ?? 0
@@ -824,26 +907,56 @@ function RecommendationPanel({ results, taxProfile, style }: { results: Results;
           </div>
         </div>
 
-        {/* Equity Outlook — Sprint 4 */}
+        {/* Equity Outlook — coming later */}
         <div style={dimStyle}>
           <DimHeader label="Equity Outlook" sigCls="sig-neu" sigLabel="Pending" />
           <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
-          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Appreciation data coming in Sprint 4</div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Metro appreciation data coming soon</div>
         </div>
 
-        {/* Environmental Risk — Sprint 4 */}
-        <div style={dimStyle}>
-          <DimHeader label="Environmental Risk" sigCls="sig-neu" sigLabel="Pending" />
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
-          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Climate & hazard data coming in Sprint 4</div>
-        </div>
+        {/* Environmental Risk */}
+        {(() => {
+          const elevated = envData && (['high','severe','coastal'].includes(envData.fire_risk_level ?? '') || ['high','coastal'].includes(envData.flood_risk_level ?? ''))
+          const envSigCls = !envData ? 'sig-neu' : elevated ? 'sig-warn' : 'sig-pos'
+          const envSigLabel = !envData ? 'Loading' : elevated ? 'Elevated' : 'Low Risk'
+          const topRisk = envData?.fire_risk_level === 'high' || envData?.fire_risk_level === 'severe'
+            ? 'Fire HIGH'
+            : envData?.flood_risk_level === 'high' || envData?.flood_risk_level === 'coastal'
+              ? `Flood ${envData.flood_zone ?? 'AE'}`
+              : envData?.earthquake_risk_level === 'very_high'
+                ? `Quake ${envData.earthquake_pga?.toFixed(2) ?? '—'}g`
+                : envData
+                  ? 'All Clear'
+                  : '—'
+          const envSub = envData
+            ? [envData.flood_zone ? `Flood Zone ${envData.flood_zone}` : null, envData.aqi_annual_avg ? `AQI ${envData.aqi_annual_avg}` : null, envData.earthquake_risk_level ? `Seismic ${envData.earthquake_risk_level.replace('_',' ')}` : null].filter(Boolean).join(' · ')
+            : 'Loading environmental data…'
+          return (
+            <div style={dimStyle}>
+              <DimHeader label="Environmental Risk" sigCls={envSigCls} sigLabel={envSigLabel} />
+              <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: envData ? 1 : 0.35 }}>{topRisk}</div>
+              <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.45)', lineHeight: 1.4 }}>{envSub}</div>
+            </div>
+          )
+        })()}
 
-        {/* Location Demographics — Sprint 4 */}
-        <div style={dimStyle}>
-          <DimHeader label="Location Demographics" sigCls="sig-neu" sigLabel="Pending" />
-          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
-          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Census & rental demand data coming in Sprint 4</div>
-        </div>
+        {/* Location Demographics */}
+        {(() => {
+          const signal = demographics?.renter_demand_signal
+          const demoSigCls = !demographics ? 'sig-neu' : signal === 'strong' ? 'sig-pos' : signal === 'owner_dominated' ? 'sig-neu' : 'sig-warn'
+          const demoSigLabel = !demographics ? 'Loading' : signal === 'strong' ? 'Strong' : signal === 'owner_dominated' ? 'Low Demand' : 'Mixed'
+          const renterPct = demographics?.renter_ratio != null ? `${Math.round(demographics.renter_ratio * 100)}% renters` : '—'
+          const demoSub = demographics
+            ? [demographics.median_household_income ? `Median income $${(demographics.median_household_income / 1000).toFixed(0)}K` : null, demographics.unemployment_rate ? `${(demographics.unemployment_rate * 100).toFixed(1)}% unemployment` : null, demographics.price_to_rent_ratio ? `P/R ${demographics.price_to_rent_ratio.toFixed(1)}×` : null].filter(Boolean).join(' · ')
+            : 'Loading census data…'
+          return (
+            <div style={dimStyle}>
+              <DimHeader label="Location Demographics" sigCls={demoSigCls} sigLabel={demoSigLabel} />
+              <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: demographics ? 1 : 0.35 }}>{renterPct}</div>
+              <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.45)', lineHeight: 1.4 }}>{demoSub}</div>
+            </div>
+          )
+        })()}
 
         {/* Downside Resilience */}
         <div style={dimStyle}>
@@ -1003,6 +1116,289 @@ function stressRowBg(outcome: string): string {
   if (outcome === 'negative') return '#FEF2F2'
   if (outcome === 'marginal') return '#FEFCE8'
   return 'transparent'
+}
+
+// ── Sprint 4 Sections ──
+
+function SectionHeader({ title, sub }: { title: string; sub?: string }) {
+  return (
+    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <span>{title}</span>
+      {sub && <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 11 }}>{sub}</span>}
+    </div>
+  )
+}
+
+function LoadingSkeleton({ height = 120 }: { height?: number }) {
+  return <div style={{ height, background: 'var(--surface-2)', borderRadius: 4, animation: 'pulse 1.5s ease-in-out infinite' }} />
+}
+
+function NeighborhoodSection({ data, loading, style }: { data: NeighborhoodData | null; loading: boolean; style?: React.CSSProperties }) {
+  const cards = [
+    {
+      label: 'Walk Score',
+      score: data?.walk_score != null ? String(data.walk_score) : '—',
+      sub: data?.walk_score_label ?? (loading ? 'Loading…' : 'No data'),
+      available: data?.walk_score != null,
+    },
+    {
+      label: 'School Rating',
+      score: data?.school_rating != null ? `${data.school_rating}/10` : '—',
+      sub: data?.school_rating != null ? 'GreatSchools' : (loading ? 'Loading…' : 'No data'),
+      available: data?.school_rating != null,
+    },
+    {
+      label: 'Crime Index',
+      score: data?.crime_grade ?? (data?.crime_index != null ? String(data.crime_index) : '—'),
+      sub: data?.crime_vs_city_avg === 'below' ? 'Below city avg' : data?.crime_vs_city_avg === 'above' ? 'Above city avg' : (loading ? 'Loading…' : 'No data'),
+      available: data?.crime_grade != null || data?.crime_index != null,
+    },
+    {
+      label: 'Infra Projects',
+      score: data?.infra_project_count_2mi != null ? String(data.infra_project_count_2mi) : '—',
+      sub: 'Nearby (2 mi)',
+      available: data?.infra_project_count_2mi != null,
+    },
+  ]
+
+  return (
+    <div style={style}>
+      <SectionHeader title="Neighborhood Signals" />
+      {loading && !data
+        ? <LoadingSkeleton height={100} />
+        : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+            {cards.map((c) => (
+              <div key={c.label} style={{ background: 'var(--surface)', padding: '20px' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>{c.label}</div>
+                <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.02em', marginBottom: 4, color: c.available ? 'var(--text)' : 'var(--text-muted)' }}>{c.score}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{c.sub}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      {data?.walk_score != null && (
+        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
+          Walk Score® by Walk Score℠ · <a href="https://www.walkscore.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-muted)' }}>walkscore.com</a>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DemographicsSection({ data, loading, style }: { data: DemographicsData | null; loading: boolean; style?: React.CSSProperties }) {
+  const fmt = (n: number | null | undefined, prefix = '', suffix = '') =>
+    n != null ? `${prefix}${n.toLocaleString()}${suffix}` : '—'
+
+  const cards = data ? [
+    {
+      label: 'Median Household Income',
+      value: data.median_household_income ? `$${(data.median_household_income / 1000).toFixed(0)}K` : '—',
+      sub: 'Annual household median',
+      barPct: data.median_household_income ? Math.min(100, (data.median_household_income / 150000) * 100) : 0,
+      badge: null,
+    },
+    {
+      label: 'Renter Ratio',
+      value: data.renter_ratio != null ? `${Math.round(data.renter_ratio * 100)}%` : '—',
+      sub: 'Renter-occupied of all units',
+      barPct: null,
+      badge: data.renter_demand_signal === 'strong' ? { text: 'Strong Renter Market', cls: 'strong' }
+        : data.renter_demand_signal === 'owner_dominated' ? { text: 'Owner-Dominated', cls: 'owner' }
+        : { text: 'Mixed Market', cls: 'mixed' },
+    },
+    {
+      label: 'Population',
+      value: data.population_total ? data.population_total.toLocaleString() : '—',
+      sub: data.zip_code ? `ZIP ${data.zip_code}${data.median_age ? ` · Median age ${data.median_age}` : ''}` : 'ZIP data',
+      barPct: null,
+      badge: null,
+    },
+    {
+      label: 'Unemployment Rate',
+      value: data.unemployment_rate != null ? `${(data.unemployment_rate * 100).toFixed(1)}%` : '—',
+      sub: 'vs. ~4% national avg',
+      barPct: data.unemployment_rate != null ? Math.min(100, data.unemployment_rate * 100 * 10) : 0,
+      badge: null,
+    },
+    {
+      label: 'College Educated',
+      value: data.college_educated_pct != null ? `${Math.round(data.college_educated_pct * 100)}%` : '—',
+      sub: "Bachelor's degree or higher (25+)",
+      barPct: data.college_educated_pct != null ? data.college_educated_pct * 100 : 0,
+      badge: null,
+    },
+    {
+      label: 'Price-to-Rent Ratio',
+      value: data.price_to_rent_ratio != null ? `${data.price_to_rent_ratio.toFixed(1)}×` : '—',
+      sub: [data.median_home_value ? `Home $${(data.median_home_value / 1000).toFixed(0)}K` : null, data.median_gross_rent ? `Rent $${data.median_gross_rent.toLocaleString()}/mo` : null].filter(Boolean).join(' · '),
+      barPct: null,
+      badge: data.price_to_rent_ratio != null
+        ? (data.price_to_rent_ratio > 20 ? { text: 'Renting Favored', cls: 'mixed' } : data.price_to_rent_ratio < 12 ? { text: 'Buying Favored', cls: 'strong' } : { text: 'Balanced', cls: 'mixed' })
+        : null,
+    },
+  ] : []
+
+  const badgeColors: Record<string, React.CSSProperties> = {
+    strong: { background: 'rgba(45,122,79,0.12)', color: '#2D7A4F' },
+    mixed: { background: 'rgba(196,181,165,0.3)', color: 'var(--text-muted)' },
+    owner: { background: 'var(--surface-2)', color: 'var(--text-muted)' },
+  }
+
+  return (
+    <div style={style}>
+      <SectionHeader
+        title="Location Demographics"
+        sub={data?.zip_code && data?.census_vintage ? `${data.zip_code} · US Census ACS 5-Year (${data.census_vintage})` : undefined}
+      />
+      {loading && !data
+        ? <LoadingSkeleton height={200} />
+        : !data
+          ? <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, background: 'var(--surface)', borderRadius: 4 }}>Census data unavailable for this location.</div>
+          : (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, background: 'var(--border)', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+                {cards.map((c) => (
+                  <div key={c.label} style={{ background: 'var(--surface)', padding: '20px' }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 10 }}>{c.label}</div>
+                    <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: 4 }}>{c.value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>{c.sub}</div>
+                    {c.barPct != null && (
+                      <div style={{ height: 3, background: 'var(--border)', borderRadius: 2 }}>
+                        <div style={{ height: 3, background: 'var(--text)', borderRadius: 2, width: `${c.barPct}%` }} />
+                      </div>
+                    )}
+                    {c.badge && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 2, letterSpacing: '0.06em', textTransform: 'uppercase', ...badgeColors[c.badge.cls] }}>
+                        {c.badge.text}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: 'var(--surface)', borderRadius: 4, padding: '12px 16px', fontSize: 12, color: 'var(--text-muted)', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                {data.vacancy_rate != null && <span>Housing vacancy: <strong style={{ color: 'var(--text)' }}>{(data.vacancy_rate * 100).toFixed(1)}%</strong></span>}
+                {data.median_gross_rent != null && <span>Median gross rent: <strong style={{ color: 'var(--text)' }}>${data.median_gross_rent.toLocaleString()}/mo</strong></span>}
+                {data.owner_occupied_units != null && <span>Owner-occ units: <strong style={{ color: 'var(--text)' }}>{fmt(data.owner_occupied_units)}</strong></span>}
+                {data.renter_occupied_units != null && <span>Renter-occ units: <strong style={{ color: 'var(--text)' }}>{fmt(data.renter_occupied_units)}</strong></span>}
+              </div>
+            </>
+          )}
+    </div>
+  )
+}
+
+function EnvironmentalRiskSection({ data, loading, style }: { data: EnvironmentalData | null; loading: boolean; style?: React.CSSProperties }) {
+  type RiskLevel = 'minimal' | 'low' | 'moderate' | 'high' | 'severe' | 'coastal' | 'very_high' | null
+
+  function riskBadge(level: RiskLevel) {
+    const map: Record<string, { label: string; style: React.CSSProperties }> = {
+      minimal: { label: 'Minimal', style: { background: 'rgba(45,122,79,0.1)', color: '#2D7A4F' } },
+      low:     { label: 'Low',     style: { background: 'rgba(45,122,79,0.1)', color: '#2D7A4F' } },
+      moderate:{ label: 'Moderate',style: { background: 'rgba(252,211,77,0.18)', color: '#B87333' } },
+      high:    { label: 'High',    style: { background: 'rgba(192,90,26,0.12)', color: '#C05A1A' } },
+      very_high:{ label: 'High',   style: { background: 'rgba(192,90,26,0.12)', color: '#C05A1A' } },
+      severe:  { label: 'Severe',  style: { background: 'rgba(185,64,64,0.12)', color: '#B94040' } },
+      coastal: { label: 'Coastal', style: { background: 'rgba(185,64,64,0.12)', color: '#B94040' } },
+    }
+    const s = level ? (map[level] ?? map.moderate) : map.minimal
+    return <span style={{ fontSize: 9, fontWeight: 800, padding: '3px 8px', borderRadius: 2, letterSpacing: '0.1em', textTransform: 'uppercase', ...s.style }}>{s.label}</span>
+  }
+
+  function scoreColor(level: RiskLevel): string {
+    if (!level || level === 'minimal' || level === 'low') return 'var(--text)'
+    if (level === 'moderate') return '#B87333'
+    return '#C05A1A'
+  }
+
+  const aqiCategoryLabel: Record<string, string> = {
+    good: 'Good', moderate: 'Moderate', unhealthy_sensitive: 'USG',
+    unhealthy: 'Unhealthy', very_unhealthy: 'Very Unhealthy', hazardous: 'Hazardous',
+  }
+  const aqiRiskLevel = (cat: string | null): RiskLevel => {
+    if (!cat || cat === 'good') return 'low'
+    if (cat === 'moderate') return 'moderate'
+    if (cat === 'unhealthy_sensitive') return 'moderate'
+    if (cat === 'unhealthy') return 'high'
+    return 'severe'
+  }
+
+  const floodLabel = data?.flood_zone ? `Zone ${data.flood_zone}` : '—'
+  const aqiLabel = data?.aqi_annual_avg != null ? `${data.aqi_annual_avg} AQI` : '—'
+  const quakeLabel = data?.earthquake_pga != null ? `${data.earthquake_pga.toFixed(2)}g PGA` : '—'
+
+  const cards = [
+    {
+      icon: '🔥', label: 'Fire Risk',
+      score: data?.fire_risk_level ? data.fire_risk_level.toUpperCase() : '—',
+      level: (data?.fire_risk_level ?? null) as RiskLevel,
+      sub: data?.fire_zone_label ?? (data?.fire_risk_level ? 'Fire hazard data' : 'No data available'),
+      available: !!data?.fire_risk_level,
+    },
+    {
+      icon: '🌊', label: 'Flood Zone',
+      score: floodLabel,
+      level: (data?.flood_risk_level ?? null) as RiskLevel,
+      sub: data?.flood_insurance_required ? 'Flood insurance required' : data?.flood_zone ? 'No flood insurance required' : (loading ? 'Loading…' : 'No data'),
+      available: !!data?.flood_zone,
+    },
+    {
+      icon: '💨', label: 'Air Quality',
+      score: aqiLabel,
+      level: aqiRiskLevel(data?.aqi_category ?? null),
+      sub: data?.aqi_category ? aqiCategoryLabel[data.aqi_category] ?? data.aqi_category : (loading ? 'Loading…' : 'No data'),
+      available: data?.aqi_annual_avg != null,
+    },
+    {
+      icon: '🌬️', label: 'Wind Risk',
+      score: data?.wind_zone ? `Zone ${data.wind_zone}` : '—',
+      level: (data?.wind_risk_level ?? null) as RiskLevel,
+      sub: data?.wind_design_speed_mph ? `${data.wind_design_speed_mph} mph design wind` : (data?.wind_risk_level ?? (loading ? 'Loading…' : 'No data')),
+      available: !!data?.wind_zone,
+    },
+    {
+      icon: '🌍', label: 'Earthquake',
+      score: quakeLabel,
+      level: (data?.earthquake_risk_level?.replace('very_high', 'high') ?? null) as RiskLevel,
+      sub: data?.earthquake_risk_level ? `${data.earthquake_risk_level.replace('_', ' ')} seismic hazard` : (loading ? 'Loading…' : 'No data'),
+      available: data?.earthquake_pga != null,
+    },
+  ]
+
+  const fireElevated = data?.fire_risk_level === 'high' || data?.fire_risk_level === 'severe'
+  const floodElevated = data?.flood_risk_level === 'high' || data?.flood_risk_level === 'coastal'
+
+  return (
+    <div style={style}>
+      <SectionHeader title="Environmental Risk" />
+      {loading && !data
+        ? <LoadingSkeleton height={140} />
+        : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2, background: 'var(--border)', borderRadius: 4, overflow: 'hidden', marginBottom: 8 }}>
+              {cards.map((c) => (
+                <div key={c.label} style={{ background: 'var(--surface)', padding: '20px 16px' }}>
+                  <div style={{ fontSize: 20, marginBottom: 10 }}>{c.icon}</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>{c.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '-0.01em', marginBottom: 6, color: c.available ? scoreColor(c.level) : 'var(--text-muted)' }}>{c.score}</div>
+                  <div style={{ marginBottom: 6 }}>{riskBadge(c.available ? c.level : null)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.5 }}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
+            {(fireElevated || floodElevated) && (
+              <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: '3px solid #C05A1A', borderRadius: 4, padding: '14px 20px', display: 'flex', gap: 12, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.6 }}>
+                <span>⚠️</span>
+                <div>
+                  {fireElevated && <><strong>Elevated fire risk detected.</strong> {data?.fire_zone_label ?? 'Fire Hazard Severity Zone'} designation may affect insurability. Verify homeowner + fire insurance availability before proceeding — some carriers have withdrawn from high-risk zones. Factor any premium increase into cashflow assumptions.</>}
+                  {!fireElevated && floodElevated && <><strong>Flood zone {data?.flood_zone} detected.</strong> Federal flood insurance (NFIP) is required for federally-backed mortgages in this zone. Obtain a flood insurance quote and add to your monthly expense assumptions.</>}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+    </div>
+  )
 }
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {

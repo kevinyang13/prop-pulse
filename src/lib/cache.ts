@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function fetchWithCache<T>(
   cacheKey: string,
   ttlDays: number,
   fetcher: () => Promise<T>
 ): Promise<T> {
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   // 1. Check cache
   const { data: cached } = await supabase

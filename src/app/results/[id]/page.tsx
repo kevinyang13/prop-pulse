@@ -18,7 +18,7 @@ export default async function ResultsPage({ params }: Props) {
   const { data: analysis } = await supabase
     .from('saved_analyses')
     .select(`
-      id, scenario_name, verdict, verdict_reason, property_type, assumptions, results,
+      id, property_id, scenario_name, verdict, verdict_reason, property_type, assumptions, results,
       properties ( full_address, city, state, beds, baths, sqft, year_built,
                    list_price, rent_estimate_mid, hoa_monthly, property_tax_annual, unit_count )
     `)
@@ -39,6 +39,7 @@ export default async function ResultsPage({ params }: Props) {
       <Nav variant="post-auth" />
       <ResultsClient
         analysisId={analysis.id}
+        propertyId={analysis.property_id}
         initialScenarioName={analysis.scenario_name}
         initialPropertyType={analysis.property_type ?? 'sfh'}
         initialAssumptions={analysis.assumptions as Assumptions}
@@ -57,6 +58,7 @@ export default async function ResultsPage({ params }: Props) {
 
 interface AnalysisRow {
   id: string
+  property_id: string
   scenario_name: string | null
   verdict: string
   verdict_reason: string | null
