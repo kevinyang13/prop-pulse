@@ -63,7 +63,7 @@ export async function PATCH(request: Request, { params }: Params) {
       results,
       verdict: results.verdict,
       verdict_reason: verdictReason,
-      ...(property_type != null ? { property_type } : {}),
+      ...(property_type != null ? { property_type: ['duplex','triplex','fourplex'].includes(property_type) ? 'mfu' : 'sfh' } : {}),
       ...(scenario_name != null ? { scenario_name } : {}),
     })
     .eq('id', id)
