@@ -112,9 +112,10 @@ interface Props {
   taxProfile: TaxProfile
 }
 
-const PROPERTY_TYPES = ['sfh', 'condo', 'townhouse', 'duplex', 'triplex', 'fourplex'] as const
-const UNIT_COUNTS: Record<string, number> = { duplex: 2, triplex: 3, fourplex: 4 }
-const MULTI_UNIT_TYPES = new Set(['duplex', 'triplex', 'fourplex'])
+const PROPERTY_TYPES = ['sfh', 'condo', 'townhouse', 'mfu'] as const
+const LEGACY_MFU = new Set(['duplex', 'triplex', 'fourplex'])
+function normalizePropertyType(t: string) { return LEGACY_MFU.has(t) ? 'mfu' : t }
+function legacyUnitCount(t: string) { return t === 'duplex' ? 2 : t === 'triplex' ? 3 : t === 'fourplex' ? 4 : 2 }
 
 export default function ResultsClient({
   analysisId,
@@ -128,7 +129,12 @@ export default function ResultsClient({
 }: Props) {
   const router = useRouter()
   const [assumptions, setAssumptions] = useState<Assumptions>(initialAssumptions)
-  const [propertyType, setPropertyType] = useState(initialPropertyType)
+  const [propertyType, setPropertyType] = useState(() => normalizePropertyType(initialPropertyType))
+  const [unitCount, setUnitCount] = useState(() => {
+    if (initialAssumptions.unit_rents && initialAssumptions.unit_rents.length > 1) return initialAssumptions.unit_rents.length
+    if (LEGACY_MFU.has(initialPropertyType)) return legacyUnitCount(initialPropertyType)
+    return 2
+  })
   const [isDirty, setIsDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
@@ -167,8 +173,7 @@ export default function ResultsClient({
     [assumptions, taxProfile]
   )
 
-  const isMultiUnit = MULTI_UNIT_TYPES.has(propertyType)
-  const unitCount = UNIT_COUNTS[propertyType] ?? 1
+  const isMultiUnit = propertyType === 'mfu'
 
   // Unit rent strings (controlled inputs)
   const [unitRentInputs, setUnitRentInputs] = useState<string[]>(() => {
@@ -188,37 +193,35 @@ export default function ResultsClient({
     markDirty()
   }, [])
 
+  function applyUnitCount(count: number) {
+    const perUnit = Math.round(assumptions.monthly_rent / count)
+    const newUnitRents: UnitRent[] = Array.from({ length: count }, (_, i) => ({
+      unit: `Unit ${i + 1}`,
+      monthly_rent: Number(unitRentInputs[i]) || perUnit,
+      status: assumptions.unit_rents?.[i]?.status ?? ('occupied' as const),
+    }))
+    setUnitRentInputs(Array.from({ length: count }, (_, i) => String(Number(unitRentInputs[i]) || perUnit)))
+    setAssumptions(prev => ({
+      ...prev,
+      unit_rents: newUnitRents,
+      monthly_rent: newUnitRents.reduce((s, u) => s + u.monthly_rent, 0),
+    }))
+  }
+
   function handlePropertyTypeChange(newType: string) {
     setPropertyType(newType)
     markDirty()
-
-    const newUnitCount = UNIT_COUNTS[newType] ?? 1
-    if (newUnitCount > 1) {
-      // Split current monthly_rent evenly across units as default
-      const perUnit = Math.round(assumptions.monthly_rent / newUnitCount)
-      const newUnitRents: UnitRent[] = Array.from({ length: newUnitCount }, (_, i) => ({
-        unit: `Unit ${i + 1}`,
-        monthly_rent: perUnit,
-        status: 'occupied' as const,
-      }))
-      setUnitRentInputs(prev => {
-        const merged = newUnitRents.map((u, i) => ({ ...u, monthly_rent: Number(prev[i]) || perUnit }))
-        return merged.map(u => String(u.monthly_rent))
-      })
-      setAssumptions(prev => ({
-        ...prev,
-        unit_rents: newUnitRents,
-        monthly_rent: newUnitRents.reduce((s, u) => s + u.monthly_rent, 0),
-      }))
-      // keep newInputs consistent
-      setUnitRentInputs(Array.from({ length: newUnitCount }, (_, i) => {
-        const existing = Number(unitRentInputs[i])
-        return String(existing || perUnit)
-      }))
+    if (newType === 'mfu') {
+      applyUnitCount(unitCount)
     } else {
-      // Clear unit rents, keep current monthly_rent
       setAssumptions(prev => ({ ...prev, unit_rents: null }))
     }
+  }
+
+  function handleUnitCountChange(count: number) {
+    setUnitCount(count)
+    markDirty()
+    applyUnitCount(count)
   }
 
   function handleUnitRentChange(index: number, raw: string) {
@@ -287,7 +290,7 @@ export default function ResultsClient({
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>
               {[prop?.city, prop?.state].filter(Boolean).join(', ')}
-              {propertyType ? ` · ${propertyType.toUpperCase()}` : ''}
+              {propertyType ? ` · ${PROPERTY_TYPE_LABELS[propertyType] ?? propertyType.toUpperCase()}` : ''}
             </div>
             <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>
               {prop?.full_address ?? 'Property Analysis'}
@@ -358,8 +361,8 @@ export default function ResultsClient({
         )}
 
         {assumptionsOpen && <div style={{ padding: '20px 24px' }}>
-        {/* Row 1: property type + purchase price + down payment */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+        {/* Row 1: property type + units (if mfu) + purchase price + down payment */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMultiUnit ? '1fr 80px 1fr 1fr' : '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
           <EditField label="Property type">
             <select
               value={propertyType}
@@ -371,6 +374,15 @@ export default function ResultsClient({
               ))}
             </select>
           </EditField>
+          {isMultiUnit && (
+            <EditField label="Units">
+              <input
+                type="number" min="2" max="10" style={inputStyle}
+                value={unitCount}
+                onChange={e => handleUnitCountChange(Math.max(2, Number(e.target.value) || 2))}
+              />
+            </EditField>
+          )}
           <EditField label="Purchase price ($)">
             <input
               type="number" min="0" style={inputStyle}
@@ -1558,9 +1570,7 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   sfh: 'Single Family',
   condo: 'Condo',
   townhouse: 'Townhouse',
-  duplex: 'Duplex (2 units)',
-  triplex: 'Triplex (3 units)',
-  fourplex: 'Fourplex (4 units)',
+  mfu: 'Multi Family',
 }
 
 const inputStyle: React.CSSProperties = {
