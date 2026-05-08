@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { computeFinancials } from '@/lib/financial-model'
 import type { Assumptions, Results, UnitRent } from '@/types/analysis'
@@ -50,11 +51,14 @@ export default function ResultsClient({
   prop,
   taxProfile,
 }: Props) {
+  const router = useRouter()
   const [assumptions, setAssumptions] = useState<Assumptions>(initialAssumptions)
   const [propertyType, setPropertyType] = useState(initialPropertyType)
   const [isDirty, setIsDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
+  const [assumptionsOpen, setAssumptionsOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   // Live recompute only when dirty; show stored results otherwise to avoid jarring
   // recompute on mount (Sprint 2 model improvements may differ slightly)
@@ -154,6 +158,19 @@ export default function ResultsClient({
     }
   }
 
+  async function handleDelete() {
+    if (!confirm('Delete this analysis? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/analyses/${analysisId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('delete failed')
+      router.push('/dashboard')
+    } catch {
+      alert('Delete failed. Try again.')
+      setDeleting(false)
+    }
+  }
+
   const cf = results.monthly_cashflow
   const coc = results.cash_on_cash_return
   const taxSavings = results.tax_savings_annual ?? 0
@@ -196,15 +213,17 @@ export default function ResultsClient({
       )}
 
       {/* ── ASSUMPTIONS EDITOR ── */}
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: '20px 24px', marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: assumptionsOpen ? '20px 24px' : '0', marginBottom: 24 }}>
+        <div
+          onClick={() => setAssumptionsOpen(o => !o)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: assumptionsOpen ? '0 0 18px' : '16px 24px' }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 10, opacity: 0.6, transform: assumptionsOpen ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', transition: 'transform 0.15s' }}>▶</span>
             Assumptions
+            {isDirty && <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600 }}>● unsaved</span>}
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {isDirty && (
-              <span style={{ fontSize: 11, color: 'var(--amber)' }}>Unsaved changes</span>
-            )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
             {saveStatus === 'saved' && (
               <span style={{ fontSize: 11, color: 'var(--green)' }}>Saved</span>
             )}
@@ -232,6 +251,7 @@ export default function ResultsClient({
           </div>
         </div>
 
+        {assumptionsOpen && <>
         {/* Row 1: property type + purchase price + down payment */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
           <EditField label="Property type">
@@ -394,6 +414,7 @@ export default function ResultsClient({
             </div>
           </EditField>
         </div>
+        </>}
       </div>
 
       {/* Key metrics */}
@@ -572,9 +593,16 @@ export default function ResultsClient({
       </Section>
 
       {/* Actions */}
-      <div style={{ marginTop: 32, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      <div style={{ marginTop: 32, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <Link href="/analyze" style={btnPrimary}>+ Analyze Another</Link>
         <Link href="/dashboard" style={btnGhost}>← My Analyses</Link>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          style={{ marginLeft: 'auto', padding: '9px 16px', fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', background: 'transparent', color: 'var(--red)', border: '1.5px solid var(--red)', borderRadius: 4, cursor: deleting ? 'wait' : 'pointer', opacity: deleting ? 0.6 : 1 }}
+        >
+          {deleting ? 'Deleting…' : 'Delete Analysis'}
+        </button>
       </div>
     </div>
   )

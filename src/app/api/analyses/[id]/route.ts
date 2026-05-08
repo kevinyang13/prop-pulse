@@ -76,6 +76,32 @@ export async function PATCH(request: Request, { params }: Params) {
   return NextResponse.json({ verdict: results.verdict, verdict_reason: verdictReason, results })
 }
 
+export async function DELETE(_request: Request, { params }: Params) {
+  const { id } = await params
+
+  let auth
+  try {
+    auth = await requireAuth()
+  } catch (res) {
+    return res as Response
+  }
+
+  const { user, supabase } = auth
+
+  const { error } = await supabase
+    .from('saved_analyses')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Analysis delete failed:', error)
+    return NextResponse.json({ error: 'internal' }, { status: 500 })
+  }
+
+  return NextResponse.json({ deleted: true })
+}
+
 function buildVerdictReason(verdict: string, results: ReturnType<typeof computeFinancials>): string {
   const coc = results.cash_on_cash_return
   const cf = results.monthly_cashflow
