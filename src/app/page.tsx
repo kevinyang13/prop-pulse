@@ -1,65 +1,127 @@
-import Image from "next/image";
+import Link from 'next/link'
+import Nav from '@/components/layout/Nav'
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <Nav variant="pre-auth" />
+
+      {/* Hero */}
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '100px 24px 80px', textAlign: 'center' }}>
+        <div style={{
+          display: 'inline-block',
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.2em',
+          textTransform: 'uppercase',
+          color: 'var(--text-muted)',
+          background: 'var(--surface-2)',
+          padding: '5px 14px',
+          borderRadius: 3,
+          marginBottom: 28,
+        }}>
+          Rental property analysis · Free
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <h1 style={{
+          fontSize: 56,
+          fontWeight: 900,
+          letterSpacing: '-0.03em',
+          lineHeight: 1.05,
+          marginBottom: 24,
+          color: 'var(--text)',
+        }}>
+          Is this rental a<br />
+          <span style={{ color: 'var(--accent)' }}>good investment?</span>
+        </h1>
+
+        <p style={{
+          fontSize: 18,
+          color: 'var(--text-muted)',
+          lineHeight: 1.6,
+          maxWidth: 520,
+          margin: '0 auto 40px',
+        }}>
+          Enter an address. Get cashflow, cap rate, COC return, and a personalized
+          go/no-go — including your tax impact — in under 30 seconds.
+        </p>
+
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Link href="/login" style={{
+            background: 'var(--text)',
+            color: 'var(--bg)',
+            padding: '14px 32px',
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            textDecoration: 'none',
+            borderRadius: 4,
+          }}>
+            Start free — no card needed →
+          </Link>
         </div>
-      </main>
+
+        <div style={{ marginTop: 16, fontSize: 12, color: 'var(--text-muted)' }}>
+          3 analyses free · Takes 30 seconds
+        </div>
+      </div>
+
+      {/* Feature grid */}
+      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px 100px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          {FEATURES.map((f) => (
+            <div key={f.title} style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 4,
+              padding: '24px 28px',
+            }}>
+              <div style={{ fontSize: 22, marginBottom: 12 }}>{f.icon}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{f.title}</div>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: '1px solid var(--border)', padding: '24px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
+        PropPulse · Built for real estate investors
+      </div>
     </div>
-  );
+  )
 }
+
+const FEATURES = [
+  {
+    icon: '⚡',
+    title: 'Instant analysis',
+    desc: 'Geocoding, property data, rent estimates, and financial model — all in under 30 seconds.',
+  },
+  {
+    icon: '🧾',
+    title: 'Your tax impact',
+    desc: 'Depreciation, PAL rules, and bracket-aware tax savings based on your actual W2 income.',
+  },
+  {
+    icon: '📉',
+    title: 'Stress scenarios',
+    desc: 'See how the deal holds up if rent drops 10%, vacancy spikes, or rates rise.',
+  },
+  {
+    icon: '🏘️',
+    title: 'Multi-scenario',
+    desc: 'Fork any analysis — compare 20% down vs house hack vs higher rent assumption.',
+  },
+  {
+    icon: '📊',
+    title: 'Full breakdown',
+    desc: 'Cashflow, NOI, cap rate, GRM, break-even occupancy — every number explained.',
+  },
+  {
+    icon: '🔒',
+    title: 'Private by default',
+    desc: 'Your analyses and tax profile are only visible to you. No sharing, no ads.',
+  },
+]
