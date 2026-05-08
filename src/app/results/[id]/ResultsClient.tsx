@@ -218,10 +218,15 @@ export default function ResultsClient({
           onClick={() => setAssumptionsOpen(o => !o)}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: assumptionsOpen ? '0 0 18px' : '16px 24px' }}
         >
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, opacity: 0.6, transform: assumptionsOpen ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', transition: 'transform 0.15s' }}>▶</span>
-            Assumptions
-            {isDirty && <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600 }}>● unsaved</span>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 10, opacity: 0.6, transform: assumptionsOpen ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', transition: 'transform 0.15s' }}>▶</span>
+              Assumptions
+              {isDirty && <span style={{ fontSize: 10, color: 'var(--amber)', fontWeight: 600 }}>● unsaved</span>}
+            </div>
+            {!assumptionsOpen && (
+              <AssumptionsSummary assumptions={assumptions} />
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
             {saveStatus === 'saved' && (
@@ -618,6 +623,35 @@ function computeMortgage(a: Assumptions): number {
   return (loanAmount * (mr * Math.pow(1 + mr, n))) / (Math.pow(1 + mr, n) - 1)
 }
 
+
+function AssumptionsSummary({ assumptions: a }: { assumptions: Assumptions }) {
+  const loanAmount = a.purchase_price * (1 - a.down_payment_pct / 100)
+  const downAmount = a.purchase_price * a.down_payment_pct / 100
+  const closingCosts = a.purchase_price * a.closing_cost_pct / 100
+  const totalCashIn = downAmount + closingCosts
+
+  const fmt = (n: number) =>
+    n >= 1000000 ? `$${(n / 1000000).toFixed(2)}M` : `$${Math.round(n / 1000)}K`
+
+  const items = [
+    { label: 'Purchase', value: fmt(a.purchase_price) },
+    { label: 'Down', value: `${fmt(downAmount)} (${a.down_payment_pct}%)` },
+    { label: 'Loan', value: fmt(loanAmount) },
+    { label: 'Rate', value: `${a.interest_rate}% / ${a.loan_term_years}yr` },
+    { label: 'Cash-in', value: fmt(totalCashIn) },
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 20px', paddingLeft: 18 }}>
+      {items.map(item => (
+        <span key={item.label} style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          <span style={{ fontWeight: 600, color: 'var(--text)' }}>{item.value}</span>
+          {' '}{item.label}
+        </span>
+      ))}
+    </div>
+  )
+}
 
 // ── Sub-components ──
 
