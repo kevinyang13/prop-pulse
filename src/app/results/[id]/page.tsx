@@ -40,8 +40,6 @@ export default async function ResultsPage({ params }: Props) {
       <ResultsClient
         analysisId={analysis.id}
         initialScenarioName={analysis.scenario_name}
-        initialVerdict={analysis.verdict}
-        initialVerdictReason={analysis.verdict_reason}
         initialPropertyType={analysis.property_type ?? 'sfh'}
         initialAssumptions={analysis.assumptions as Assumptions}
         initialResults={analysis.results as Results}

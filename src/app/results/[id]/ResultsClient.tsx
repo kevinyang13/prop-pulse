@@ -30,8 +30,6 @@ interface PropertyData {
 interface Props {
   analysisId: string
   initialScenarioName: string | null
-  initialVerdict: string
-  initialVerdictReason: string | null
   initialPropertyType: string
   initialAssumptions: Assumptions
   initialResults: Results
@@ -46,8 +44,6 @@ const MULTI_UNIT_TYPES = new Set(['duplex', 'triplex', 'fourplex'])
 export default function ResultsClient({
   analysisId,
   initialScenarioName,
-  initialVerdict,
-  initialVerdictReason,
   initialPropertyType,
   initialAssumptions,
   initialResults,
@@ -102,7 +98,6 @@ export default function ResultsClient({
         monthly_rent: perUnit,
         status: 'occupied' as const,
       }))
-      const newInputs = newUnitRents.map(u => String(u.monthly_rent))
       setUnitRentInputs(prev => {
         const merged = newUnitRents.map((u, i) => ({ ...u, monthly_rent: Number(prev[i]) || perUnit }))
         return merged.map(u => String(u.monthly_rent))
@@ -186,7 +181,7 @@ export default function ResultsClient({
               </span>
             )}
           </div>
-          <VerdictBadge verdict={results.verdict} reason={isDirty ? buildVerdictReason(results.verdict, results) : initialVerdictReason} />
+          <VerdictBadge verdict={results.verdict} />
         </div>
       </div>
 
@@ -561,6 +556,9 @@ export default function ResultsClient({
         </table>
       </Section>
 
+      {/* PropPulse Verdict — Recommendation Panel */}
+      <RecommendationPanel results={results} taxProfile={taxProfile} style={{ marginTop: 16 }} />
+
       {/* Property details */}
       <Section title="Property Details" style={{ marginTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 24px' }}>
@@ -592,27 +590,219 @@ function computeMortgage(a: Assumptions): number {
   return (loanAmount * (mr * Math.pow(1 + mr, n))) / (Math.pow(1 + mr, n) - 1)
 }
 
-function buildVerdictReason(verdict: string, results: Results): string {
-  const coc = results.cash_on_cash_return
-  const cf = results.monthly_cashflow
-  const pal = results.passive_loss_status
-  if (verdict === 'GO') {
-    return `${coc.toFixed(1)}% COC with $${cf.toLocaleString()}/mo cashflow. ${pal === 'full' ? 'Full PAL deduction boosts tax-adjusted return to ' + results.tax_adjusted_coc.toFixed(1) + '%.' : ''}`
-  }
-  if (verdict === 'CAUTION') {
-    return `Marginal cashflow ($${cf.toLocaleString()}/mo). ${coc.toFixed(1)}% COC is below the 6% target. Evaluate closely before committing.`
-  }
-  return `Negative cashflow ($${cf.toLocaleString()}/mo). Does not pencil at current assumptions.`
-}
 
 // ── Sub-components ──
 
-function VerdictBadge({ verdict, reason }: { verdict: string; reason: string | null }) {
-  const colors: Record<string, string> = { GO: 'var(--green)', CAUTION: 'var(--amber)', PASS: 'var(--red)' }
+function VerdictBadge({ verdict }: { verdict: string }) {
+  const dotColor: Record<string, string> = { GO: '#4ADE80', CAUTION: '#FCD34D', PASS: '#9CA3AF' }
+  const prefix = verdict === 'PASS' ? '✗' : '✓'
   return (
-    <div style={{ textAlign: 'right' }}>
-      <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.02em', color: colors[verdict] ?? 'var(--text-muted)', marginBottom: 8 }}>{verdict}</div>
-      {reason && <div style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 280 }}>{reason}</div>}
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 10,
+      padding: '14px 20px', borderRadius: 4,
+      background: 'var(--text)', color: 'var(--bg)',
+    }}>
+      <div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', opacity: 0.6, marginBottom: 2 }}>
+          PropPulse Verdict
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          {prefix}&nbsp;&nbsp;{verdict}
+        </div>
+      </div>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: dotColor[verdict] ?? '#9CA3AF', flexShrink: 0 }} />
+    </div>
+  )
+}
+
+function RecommendationPanel({ results, taxProfile, style }: { results: Results; taxProfile: TaxProfile; style?: React.CSSProperties }) {
+  const cf = results.monthly_cashflow
+  const coc = results.cash_on_cash_return
+  const taxSavings = results.tax_savings_annual ?? 0
+  const bracket = results.tax_bracket_used ?? (taxProfile.tax_bracket ?? 0.22)
+  const depreciation = results.annual_depreciation
+  const pal = results.passive_loss_status
+  const verdict = results.verdict
+
+  // Scorecard signals
+  const cfSignal = cf > 100 ? 'sig-pos' : cf >= 0 ? 'sig-warn' : 'sig-neg'
+  const cfSignalLabel = cf > 100 ? 'Positive' : cf >= 0 ? 'Marginal' : 'Negative'
+  const taxSignal = taxSavings > 0 ? 'sig-pos' : 'sig-neu'
+  const taxSignalLabel = taxSavings > 0 ? 'Beneficial' : 'Neutral'
+
+  // Downside resilience: count non-base positive scenarios
+  const nonBaseScenarios = results.stress_scenarios.filter(s => s.outcome !== 'base')
+  const positiveCount = nonBaseScenarios.filter(s => s.outcome === 'positive').length
+  const totalNonBase = nonBaseScenarios.length
+  const resilienceSignal = positiveCount >= Math.ceil(totalNonBase * 0.6) ? 'sig-pos' : positiveCount >= Math.ceil(totalNonBase * 0.4) ? 'sig-warn' : 'sig-neg'
+  const resilienceLabel = positiveCount >= Math.ceil(totalNonBase * 0.6) ? 'Resilient' : positiveCount >= Math.ceil(totalNonBase * 0.4) ? 'Mixed' : 'Fragile'
+
+  // Key flags
+  const flags: Array<{ cls: 'good' | 'watch' | 'risk'; text: string }> = []
+  const rateSensitiveScenario = results.stress_scenarios.find(s => s.label.includes('8%') || s.label.includes('8.0%'))
+  if (rateSensitiveScenario && rateSensitiveScenario.cashflow < 0) {
+    flags.push({ cls: 'watch', text: '⚡ Rate sensitivity — cashflow turns negative above 8%' })
+  }
+  if (coc >= 8) {
+    flags.push({ cls: 'good', text: `✓ Strong ${coc.toFixed(1)}% COC — above 8% target` })
+  }
+  if (pal === 'full') {
+    flags.push({ cls: 'good', text: '✓ PAL fully deductible at your AGI' })
+  } else if (pal === 'phase_out') {
+    flags.push({ cls: 'watch', text: '⚡ PAL partial — AGI in $100K–$150K phase-out range' })
+  } else {
+    flags.push({ cls: 'risk', text: '✗ PAL suspended — AGI exceeds $150K threshold' })
+  }
+  if (results.break_even_occupancy > 90) {
+    flags.push({ cls: 'risk', text: `⚠ Break-even at ${results.break_even_occupancy.toFixed(0)}% — very little cushion` })
+  } else if (results.break_even_occupancy > 80) {
+    flags.push({ cls: 'watch', text: `⚡ Break-even at ${results.break_even_occupancy.toFixed(0)}% — watch vacancy rate` })
+  } else {
+    flags.push({ cls: 'good', text: `✓ Breaks even at ${results.break_even_occupancy.toFixed(0)}% occupancy — strong cushion` })
+  }
+
+  // Rec title + body
+  const recTitles: Record<string, string> = {
+    GO: 'Strong investment at your profile.',
+    CAUTION: 'Proceed with caution.',
+    PASS: 'Does not pencil — pass.',
+  }
+  const palDesc = pal === 'full' ? 'PAL fully deductible' : pal === 'phase_out' ? 'PAL partially deductible' : 'PAL suspended'
+  const recBody: Record<string, string> = {
+    GO: `Numbers work on cashflow and tax dimensions. Monthly cashflow at ${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}/mo, ${coc.toFixed(1)}% COC, with $${taxSavings.toLocaleString()} in annual tax savings at your ${Math.round(bracket * 100)}% bracket. ${palDesc}.`,
+    CAUTION: `Marginal cashflow at ${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}/mo. COC of ${coc.toFixed(1)}% is below the 6% target — evaluate closely before committing. Tax savings of $${taxSavings.toLocaleString()}/yr at your ${Math.round(bracket * 100)}% bracket provide some offset. ${palDesc}.`,
+    PASS: `Negative cashflow at $${cf.toLocaleString()}/mo. Does not pencil at current assumptions. Consider negotiating a lower purchase price, increasing rents, or adjusting financing terms before proceeding.`,
+  }
+
+  const recBadgeColor: Record<string, string> = { GO: '#4ADE80', CAUTION: '#FCD34D', PASS: '#9CA3AF' }
+
+  const dimStyle: React.CSSProperties = {
+    background: 'rgba(255,255,255,0.04)',
+    padding: '16px 18px',
+  }
+
+  function Signal({ cls, label }: { cls: string; label: string }) {
+    const sigStyles: Record<string, React.CSSProperties> = {
+      'sig-pos': { background: 'rgba(74,222,128,0.25)', color: '#4ADE80' },
+      'sig-warn': { background: 'rgba(252,211,77,0.25)', color: '#FCD34D' },
+      'sig-neg': { background: 'rgba(252,165,165,0.25)', color: '#FCA5A5' },
+      'sig-neu': { background: 'rgba(255,255,255,0.1)', color: 'rgba(250,250,248,0.6)' },
+    }
+    return (
+      <span style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 2, ...sigStyles[cls] }}>
+        {label}
+      </span>
+    )
+  }
+
+  function DimHeader({ label, sigCls, sigLabel }: { label: string; sigCls: string; sigLabel: string }) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>{label}</span>
+        <Signal cls={sigCls} label={sigLabel} />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ background: 'var(--text)', color: 'var(--bg)', borderRadius: 4, padding: 32, ...style }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
+        <span style={{
+          fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase',
+          padding: '6px 14px', borderRadius: 2,
+          background: recBadgeColor[verdict] ?? '#9CA3AF', color: '#1A1A1A',
+        }}>
+          {verdict}
+        </span>
+        <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.01em' }}>
+          {recTitles[verdict] ?? 'Analysis complete.'}
+        </span>
+      </div>
+
+      {/* Body */}
+      <p style={{ fontSize: 14, lineHeight: 1.8, color: 'rgba(250,250,248,0.75)', maxWidth: 700, marginBottom: 28 }}>
+        {recBody[verdict] ?? ''}
+      </p>
+
+      {/* 6-dimension scorecard */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 24 }}>
+        {/* Cashflow */}
+        <div style={dimStyle}>
+          <DimHeader label="Cashflow" sigCls={cfSignal} sigLabel={cfSignalLabel} />
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3 }}>
+            {cf >= 0 ? '+' : ''}${cf.toLocaleString()}/mo
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.45)', lineHeight: 1.4 }}>
+            {coc.toFixed(1)}% COC · {results.cap_rate.toFixed(1)}% cap rate · breaks even at {results.break_even_occupancy.toFixed(0)}% occupancy
+          </div>
+        </div>
+
+        {/* Tax Impact */}
+        <div style={dimStyle}>
+          <DimHeader label="Tax Impact" sigCls={taxSignal} sigLabel={taxSignalLabel} />
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3 }}>
+            +${Math.round(Math.abs(taxSavings) / 12).toLocaleString()}/mo
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.45)', lineHeight: 1.4 }}>
+            ${depreciation.toLocaleString()}/yr depreciation · ${taxSavings.toLocaleString()} savings at {Math.round(bracket * 100)}% · {palDesc}
+          </div>
+        </div>
+
+        {/* Equity Outlook — Sprint 4 */}
+        <div style={dimStyle}>
+          <DimHeader label="Equity Outlook" sigCls="sig-neu" sigLabel="Pending" />
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Appreciation data coming in Sprint 4</div>
+        </div>
+
+        {/* Environmental Risk — Sprint 4 */}
+        <div style={dimStyle}>
+          <DimHeader label="Environmental Risk" sigCls="sig-neu" sigLabel="Pending" />
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Climate & hazard data coming in Sprint 4</div>
+        </div>
+
+        {/* Location Demographics — Sprint 4 */}
+        <div style={dimStyle}>
+          <DimHeader label="Location Demographics" sigCls="sig-neu" sigLabel="Pending" />
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3, opacity: 0.35 }}>—</div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.25)', lineHeight: 1.4 }}>Census & rental demand data coming in Sprint 4</div>
+        </div>
+
+        {/* Downside Resilience */}
+        <div style={dimStyle}>
+          <DimHeader label="Downside Resilience" sigCls={resilienceSignal} sigLabel={resilienceLabel} />
+          <div style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 3 }}>
+            {positiveCount} of {totalNonBase}
+          </div>
+          <div style={{ fontSize: 11, color: 'rgba(250,250,248,0.45)', lineHeight: 1.4 }}>
+            Stress scenarios cash-flow positive
+          </div>
+        </div>
+      </div>
+
+      {/* Key flags */}
+      <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', margin: '0 0 20px' }} />
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+        {flags.map((f, i) => {
+          const flagStyles: Record<string, React.CSSProperties> = {
+            good: { background: 'rgba(74,222,128,0.15)', color: '#4ADE80', border: '1px solid rgba(74,222,128,0.2)' },
+            watch: { background: 'rgba(252,211,77,0.18)', color: '#FCD34D', border: '1px solid rgba(252,211,77,0.25)' },
+            risk: { background: 'rgba(252,165,165,0.18)', color: '#FCA5A5', border: '1px solid rgba(252,165,165,0.25)' },
+          }
+          return (
+            <span key={i} style={{ fontSize: 11, padding: '5px 12px', borderRadius: 2, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, ...flagStyles[f.cls] }}>
+              {f.text}
+            </span>
+          )
+        })}
+      </div>
+
+      {/* Disclaimer */}
+      <p style={{ fontSize: 11, color: 'rgba(250,250,248,0.35)', fontStyle: 'italic', lineHeight: 1.6, margin: 0 }}>
+        PropPulse provides estimates for informational purposes only. Tax calculations are approximations based on stated income and bracket — consult a CPA before making investment decisions. Rent estimates may not reflect actual market conditions.
+      </p>
     </div>
   )
 }
