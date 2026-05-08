@@ -289,7 +289,7 @@ Goal: working analysis tool with personalized tax math, auth, and data pipeline.
 | 2 | Tax Engine | Depreciation, PAL rules, Schedule E, multi-unit support, house hack toggle, stress scenarios |
 | 3 | Results Page | GO/CAUTION/PASS verdict, stress table, cashflow breakdown, key metrics, recommendation panel |
 | 4 | Map + Neighborhood + Demographics + Env Risk | Leaflet map, Walk Score, GreatSchools, Census ACS demographics, FEMA flood, fire risk, AQI, earthquake, equity outlook |
-| 6 (Phase 2) | Property Comparison | Side-by-side up to 3 saved properties across 7 dimensions; best-in-row highlighting; overall verdict with score pips |
+| 6 (Phase 2) | Analysis Comparison | Side-by-side up to 3 saved analyses across 7 dimensions; best-in-row highlighting; overall verdict with score pips |
 | 5 | Save + Paywall + Share | Saved properties dashboard, 3-analysis free tier, Stripe Pro subscription, PDF export |
 
 ### Phase 2 — Polish + Apple Auth
@@ -485,7 +485,7 @@ Options for Phase 2: CPA partnership (referring users to a CPA network), in-prod
 | [AUTH_STRATEGY.md](AUTH_STRATEGY.md) | OAuth setup, session management, RLS, security rules |
 | [DATA_MODEL.md](DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes |
 | [DATA_SOURCES.md](DATA_SOURCES.md) | Per-API analysis: endpoints, cost, coverage, rate limits, caching |
-| [plan/mockup-results.html](plan/mockup-results.html) | Interactive results page mockup |
+| [../ux/mockup-results.html](../ux/mockup-results.html) | Interactive results page mockup |
 
 ---
 

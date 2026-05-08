@@ -253,7 +253,7 @@ User's saved property analysis runs. Stores both inputs and outputs.
 | `user_id` | `uuid` | NOT NULL FK → `auth.users.id` ON DELETE CASCADE | |
 | `property_id` | `uuid` | NOT NULL FK → `properties.id` | |
 | `property_type` | `text` | NOT NULL CHECK IN ('sfh','mfu') | Mode at time of analysis |
-| `scenario_name` | `text` | | User-supplied or auto-generated; e.g. `"20% · 6.87% · $2,100/mo"` or `"House Hack"` |
+| `scenario_name` | `text` | | User-supplied or auto-generated; e.g. `"20% down · 6.87% · $2,100/mo"` or `"House Hack · 20% down · 6.87% · $2,100/mo"` |
 | `verdict` | `text` | NOT NULL CHECK IN ('GO','CAUTION','PASS') | |
 | `verdict_reason` | `text` | | Short narrative, 1–2 sentences |
 | `assumptions` | `jsonb` | NOT NULL | See assumptions schema below |

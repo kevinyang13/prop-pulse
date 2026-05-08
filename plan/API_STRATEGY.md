@@ -196,7 +196,7 @@ const supabase = createServerClient(...)
 const { data: analyses } = await supabase
   .from('saved_analyses')
   .select(`
-    id, verdict, created_at, is_starred, notes,
+    id, scenario_name, verdict, created_at, is_starred, notes,
     properties ( full_address, city, state, property_type, beds, baths ),
     results
   `)

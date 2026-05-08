@@ -231,7 +231,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 
 #### Sprint 5 — Save, Paywall & Share (Weeks 9–10)
 - [ ] Save analysis to `saved_analyses` (assumptions jsonb + results jsonb)
-- [ ] "My Properties" dashboard — list saved analyses with verdict badges
+- [ ] "My Analyses" dashboard — list saved analyses with verdict badges
 - [ ] 3 free analyses enforcement — server-side counter, upgrade prompt at limit
 - [ ] Stripe integration: Pro subscription ($7.99/mo + $59/yr)
 - [ ] Stripe webhook → sync `subscriptions` table
@@ -246,7 +246,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Custom auth UI (replace Supabase Auth UI with PropPulse-branded components)
 - [ ] Stress test interactive sliders (not static table)
 
-**Property Comparison (up to 3 properties)**
+**Analysis Comparison (up to 3 analyses)**
 - [ ] `/compare` page — Pro-gated; redirect free users to upgrade prompt
 - [ ] Property selector bar: 3 slots; pull from `saved_analyses`; empty slot shows "＋ Add Property" dashed picker
 - [ ] Highlight best-in-dimension per row (green left border + background tint); worst in red
@@ -255,7 +255,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Overall Verdict row: GO/CAUTION/PASS badge + score pip bar (6 pips, colored by dimension outcome) + narrative
 - [ ] Action footer per property: "View Full Analysis" · "Star Property"
 - [ ] Mobile: show max 2 properties; hide 3rd column below 600px
-- [ ] "My Properties" dashboard: "Compare" checkbox on each saved analysis card → opens `/compare?ids=...`
+- [ ] "My Analyses" dashboard: "Compare" checkbox on each saved analysis card → opens `/compare?ids=...`
 - [ ] Saved property history with verdict tracking over time
 - [ ] Email alerts for saved search price drops (Resend)
 - [ ] Unit rent history chart (multi-unit)
@@ -392,7 +392,7 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | File | Contents |
 |------|---------|
 | [AUTH_STRATEGY.md](AUTH_STRATEGY.md) | OAuth setup, session management, RLS, security rules, onboarding flow |
-| [API_STRATEGY.md](API_STRATEGY.md) | REST vs GraphQL decision, all 13 routes, analysis pipeline, error handling, security |
+| [API_STRATEGY.md](API_STRATEGY.md) | REST vs GraphQL decision, all 21 routes, analysis pipeline, error handling, security |
 | [DATA_MODEL.md](DATA_MODEL.md) | Full Supabase schema, indexes, RLS policies, jsonb shapes, TTL reference |
 | [DATA_SOURCES.md](DATA_SOURCES.md) | Per-API analysis: endpoints, cost tiers, coverage, rate limits, fallbacks, risk register |
 | [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy policy, ToS, financial disclaimer, data retention, breach response |
@@ -410,8 +410,8 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 | [../ux/mockup-onboarding.html](../ux/mockup-onboarding.html) | `/onboarding` | 3-step wizard: income+filing → state → cash+down; bracket auto-display; skip link |
 | [../ux/mockup-dashboard.html](../ux/mockup-dashboard.html) | `/dashboard` | Property cards with verdict badges + metrics; compare-select mode; free tier banner; sort/search |
 | [../ux/mockup-loading.html](../ux/mockup-loading.html) | `/analyze` (in-progress) | 8-step animated progress; Rentcast fallback banner trigger; auto-redirect on completion |
-| [../ux/mockup-results.html](../ux/mockup-results.html) | `/analyze/[id]` | Full analysis: metrics, cashflow, tax, stress table, scenario editor, neighborhood, demographics, env risk, equity, recommendation scorecard |
-| [../ux/mockup-comparison.html](../ux/mockup-comparison.html) | `/compare` (Pro) | 3-property side-by-side, 7 dimensions, per-row highlight, per-section winner, verdict pip bar |
+| [../ux/mockup-results.html](../ux/mockup-results.html) | `/results/[id]` | Full analysis: metrics, cashflow, tax, stress table, scenario editor, neighborhood, demographics, env risk, equity, recommendation scorecard |
+| [../ux/mockup-comparison.html](../ux/mockup-comparison.html) | `/compare` (Pro) | 3-analysis side-by-side, 7 dimensions, per-row highlight, per-section winner, verdict pip bar |
 | [../ux/mockup-manual-entry.html](../ux/mockup-manual-entry.html) | `/analyze/manual` | Rentcast fallback form: address, property basics, purchase/financing, income, expenses, house hack toggle |
 | [../ux/mockup-settings.html](../ux/mockup-settings.html) | `/settings` | Profile, tax profile edit, subscription (free/pro states), notifications, privacy/CCPA, danger zone |
 | [../ux/mockup-upgrade.html](../ux/mockup-upgrade.html) | `/upgrade` | Pricing cards (monthly/annual toggle), feature comparison table, testimonials, FAQ |

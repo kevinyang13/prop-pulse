@@ -13,7 +13,7 @@
 | `/login` | Sign-in | No | No |
 | `/auth/callback` | OAuth redirect handler | No | No |
 | `/onboarding` | Financial profile setup | Yes | No |
-| `/dashboard` | My Properties (post-auth home) | Yes | No |
+| `/dashboard` | My Analyses (post-auth home) | Yes | No |
 | `/analyze` | Property search + analysis | Yes | No |
 | `/analyze/loading` | Analysis processing state | Yes | No |
 | `/results/[id]` | Property detail / results | Yes | No |
@@ -48,7 +48,7 @@
           ▼               ▼
 ┌─────────────────┐  ┌──────────────────────────────┐
 │  ONBOARDING     │  │  DASHBOARD  /dashboard        │
-│  /onboarding    │  │  My Properties list           │
+│  /onboarding    │  │  My Analyses list             │
 │  3-step wizard  │  └──────────────┬───────────────┘
 └────────┬────────┘                 │
          │ complete / skip          │
@@ -284,7 +284,7 @@ Shown on: dashboard, results page (tax panel), recommendation section.
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│  NAV: logo  |  My Properties  Compare  Settings  Sign Out  │
+│  NAV: logo  |  My Analyses  Compare  Settings  Sign Out  │
 ├────────────────────────────────────────────────────────────┤
 │                                                            │
 │  [  Search or enter a property address...  🔍  ]          │
@@ -293,7 +293,7 @@ Shown on: dashboard, results page (tax panel), recommendation section.
 │  [  Analyze  ]                                             │
 │                                                            │
 ├────────────────────────────────────────────────────────────┤
-│  MY PROPERTIES                           [ Compare ✓ ]    │
+│  MY ANALYSES                           [ Compare ✓ ]    │
 │                                                            │
 │  ┌─────────────────────────────────────────────────────┐  │
 │  │ □  4821 Oakwood Dr, San Diego CA          [ GO ]    │  │
@@ -435,14 +435,14 @@ NAV
 │
 └── Recommendation (full dimension scorecard — 6 dimensions)
     │
-    └── Action Buttons: Save Property · Compare · Edit Assumptions · Export PDF
+    └── Action Buttons: Save Analysis · Compare · Edit Assumptions · Export PDF
 ```
 
 ### Action Buttons
 
 | Button | Behavior |
 |--------|---------|
-| Save Property | POST to `/api/analyses` → saves to `saved_analyses`; button changes to "Saved ✓" |
+| Save Analysis | POST to `/api/analyses` → saves to `saved_analyses`; button changes to "Saved ✓" (note: pipeline auto-saves; button confirms/stars) |
 | Compare Properties | If Pro: navigates to `/compare` with this property pre-loaded. If free: navigates to `/upgrade` |
 | Edit Assumptions | Expands assumptions panel; fields become live-editable; recalculates on keystroke |
 | Export PDF | Generates PDF of current analysis; downloads in browser |
@@ -480,7 +480,7 @@ Results show a banner: "⚠ Property data manually entered — not verified by R
 
 ---
 
-## Page 8 — Property Comparison `/compare`
+## Page 8 — Analysis Comparison `/compare`
 
 **Purpose**: Side-by-side comparison of up to 3 saved properties across all investment dimensions.
 
@@ -491,7 +491,7 @@ Results show a banner: "⚠ Property data manually entered — not verified by R
 ```
 NAV
 │
-├── Page header: "Property Comparison"
+├── Page header: "Analysis Comparison"
 │
 ├── Property selector bar (3 slots)
 │   ├── Slot 1: filled (property card with address, verdict, COC)
@@ -797,11 +797,11 @@ Pre-auth nav:
   PROPPULSE logo         Sign In →
 
 Post-auth nav (desktop):
-  PROPPULSE logo    My Properties    Compare*    Settings    [ Analyze Property ]
+  PROPPULSE logo    My Analyses    Compare*    Settings    [ Analyze Property ]
 
 Post-auth nav (mobile):
   PROPPULSE logo                     ☰ hamburger
-  Drawer: My Properties / Compare* / Settings / Sign Out
+  Drawer: My Analyses / Compare* / Settings / Sign Out
 
 * Compare: hidden for free users until they save ≥ 2 properties;
   clicking opens /upgrade if free tier
@@ -843,5 +843,5 @@ Post-auth nav (mobile):
 | [AUTH_STRATEGY.md](AUTH_STRATEGY.md) | OAuth flows, session management, security |
 | [DATA_MODEL.md](DATA_MODEL.md) | Database schema |
 | [COMPLIANCE.md](COMPLIANCE.md) | CCPA, privacy, ToS, data deletion |
-| [plan/mockup-results.html](plan/mockup-results.html) | Results / detail page mockup |
-| [plan/mockup-comparison.html](plan/mockup-comparison.html) | Property comparison page mockup |
+| [../ux/mockup-results.html](../ux/mockup-results.html) | Results / detail page mockup |
+| [../ux/mockup-comparison.html](../ux/mockup-comparison.html) | Property comparison page mockup |
