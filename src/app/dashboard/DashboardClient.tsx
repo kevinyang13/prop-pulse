@@ -190,7 +190,7 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
 
                 {/* Property info + metrics grouped — metrics move under address on mobile */}
                 <div className="dash-card-body" style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 24 }}>
-                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                  <div style={{ flex: 1, minWidth: 0, overflow: 'hidden', width: '100%' }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {a.property?.full_address ?? 'Unknown address'}
                     </div>
