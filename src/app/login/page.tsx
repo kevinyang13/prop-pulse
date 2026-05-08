@@ -34,8 +34,8 @@ export default function LoginPage() {
         setCooldown(t)
         if (t <= 0) clearInterval(iv)
       }, 1000)
-    } catch {
-      setError('Failed to send link. Try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }

@@ -28,9 +28,10 @@ function LoadingContent() {
       return
     }
 
+    const controller = new AbortController()
+
     async function runAnalysis() {
       try {
-        // Animate steps while API runs in parallel
         const stepInterval = setInterval(() => {
           setCurrentStep(s => Math.min(s + 1, STEPS.length - 1))
         }, 1200)
@@ -39,6 +40,7 @@ function LoadingContent() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ address }),
+          signal: controller.signal,
         })
 
         clearInterval(stepInterval)
@@ -61,11 +63,13 @@ function LoadingContent() {
         const data = await res.json()
         router.push(`/results/${data.analysis_id}`)
       } catch (err) {
+        if ((err as { name?: string }).name === 'AbortError') return
         setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       }
     }
 
     runAnalysis()
+    return () => controller.abort()
   }, [address, router])
 
   const pct = Math.round((currentStep / STEPS.length) * 100)

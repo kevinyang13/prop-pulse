@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
+import { createServiceClient } from '@/lib/supabase/server'
 import { fetchWithCache } from '@/lib/cache'
 import { computeFinancials } from '@/lib/financial-model'
 import { autoScenarioName } from '@/lib/scenario-name'
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
 
   const analyses_used = (profile as { analyses_used?: number })?.analyses_used ?? 0
 
-  if (sub?.tier !== 'pro' && analyses_used >= 3) {
+  if (process.env.NODE_ENV !== 'development' && sub?.tier !== 'pro' && analyses_used >= 3) {
     return NextResponse.json({ error: 'free_limit_reached' }, { status: 402 })
   }
 
@@ -160,14 +161,15 @@ export async function POST(request: Request) {
   })
 
   // --- Step 7: Persist property ---
+  const serviceClient = createServiceClient()
   const addressKey = normalizeAddressKey(address)
   const propertyPayload = {
     address_key: addressKey,
     full_address: geocode?.full_address ?? address,
     street: rentcastData.addressLine1 ?? null,
     city: rentcastData.city ?? null,
-    state: rentcastData.state ?? null,
-    zip: rentcastData.zipCode ?? null,
+    state: rentcastData.state?.slice(0, 2) ?? null,
+    zip: rentcastData.zipCode?.slice(0, 5) ?? null,
     lat: geocode?.lat ?? null,
     lng: geocode?.lng ?? null,
     property_type: mapPropertyType(rentcastData.propertyType),
@@ -187,7 +189,7 @@ export async function POST(request: Request) {
     fetched_at: new Date().toISOString(),
   }
 
-  const { data: property, error: propertyError } = await supabase
+  const { data: property, error: propertyError } = await serviceClient
     .from('properties')
     .upsert(propertyPayload, { onConflict: 'address_key' })
     .select('id')
@@ -290,8 +292,8 @@ function mockRentcastData(
   return {
     addressLine1:   parts[0]?.trim() ?? address,
     city:           parts[1]?.trim() ?? 'San Diego',
-    state:          parts[2]?.trim().split(' ')[1] ?? 'CA',
-    zipCode:        parts[2]?.trim().split(' ')[2] ?? '92101',
+    state:          parts[2]?.trim().split(' ')[0] ?? 'CA',
+    zipCode:        parts[2]?.trim().split(' ')[1] ?? '92101',
     propertyType:   'Single Family',
     bedrooms:       3,
     bathrooms:      2,

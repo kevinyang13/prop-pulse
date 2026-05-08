@@ -9,10 +9,10 @@ interface TaxProfile {
   state_tax_rate: number | null
 }
 
-export function computeFinancials(
+function computeCore(
   assumptions: Assumptions,
   tax: TaxProfile
-): Results {
+): Omit<Results, 'stress_scenarios'> {
   const {
     purchase_price,
     down_payment_pct,
@@ -108,10 +108,6 @@ export function computeFinancials(
       ? ((annual_cashflow + tax_savings_annual) / total_cash_invested) * 100
       : 0
 
-  // --- Stress scenarios ---
-  const stress_scenarios = computeStress(assumptions, tax)
-
-  // --- Verdict ---
   const verdict = deriveVerdict(cash_on_cash_return, monthly_cashflow, pal_status)
 
   return {
@@ -127,12 +123,20 @@ export function computeFinancials(
     tax_savings_annual: Math.round(tax_savings_annual),
     tax_adjusted_coc: Math.round(tax_adjusted_coc * 10) / 10,
     passive_loss_status: pal_status,
-    stress_scenarios,
     verdict,
     price_per_unit: null,
     expense_ratio: null,
     blended_vacancy: null,
   }
+}
+
+export function computeFinancials(
+  assumptions: Assumptions,
+  tax: TaxProfile
+): Results {
+  const core = computeCore(assumptions, tax)
+  const stress_scenarios = computeStress(assumptions, tax)
+  return { ...core, stress_scenarios }
 }
 
 function computeStress(assumptions: Assumptions, tax: TaxProfile): StressScenario[] {
@@ -158,12 +162,12 @@ function stress(
     vacancy_pct: overrides.vacancy ?? a.vacancy_pct,
     interest_rate: overrides.rate ?? a.interest_rate,
   }
-  const r = computeFinancials(modified, tax)
+  const r = computeCore(modified, tax)
   return { cashflow: r.monthly_cashflow, coc: r.cash_on_cash_return }
 }
 
 function computeBaseForStress(a: Assumptions, tax: TaxProfile) {
-  const r = computeFinancials(a, tax)
+  const r = computeCore(a, tax)
   return { cashflow: r.monthly_cashflow, coc: r.cash_on_cash_return }
 }
 
