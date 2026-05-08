@@ -132,20 +132,22 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Next.js 15 + Tailwind project scaffold
 - [ ] Vercel project + preview deployments configured
 - [ ] Environment variables structure (`.env.local`, Vercel env)
+- [ ] `supabase gen types typescript` → `types/supabase.ts` (regenerate after every schema change)
+- [ ] Mapbox: two tokens configured — `MAPBOX_SECRET_TOKEN` (server, geocoding) + `NEXT_PUBLIC_MAPBOX_TOKEN` (client, map tiles)
 
 **Supabase setup**
 - [ ] Supabase project created
 - [ ] All 11 tables created per DATA_MODEL.md schema
 - [ ] RLS policies applied to all user-scoped tables
 - [ ] Postgres trigger: auto-create `user_profiles` + `subscriptions` on auth.users insert
-- [ ] `data_cache` cleanup cron job (nightly delete expired rows)
+- [ ] `data_cache` cleanup cron job (nightly delete expired rows via Supabase pg_cron — avoids Vercel Pro requirement)
 
-**Auth**
+**Auth** — use `@supabase/ssr` (not deprecated `auth-helpers-nextjs`); use `getUser()` not `getSession()` everywhere server-side
 - [ ] Google OAuth configured (GCP Console → Supabase Dashboard)
 - [ ] Magic Link (passwordless email) enabled
-- [ ] `/auth/callback` route handler (PKCE code exchange)
-- [ ] Middleware: session refresh on every request
-- [ ] Protected route wrapper (server component session check)
+- [ ] `/auth/callback` route handler (PKCE exchange + onboarding_complete check → redirect `/onboarding` or `/dashboard`)
+- [ ] Middleware: session refresh on every request (`getUser()`)
+- [ ] Protected route layout: `getUser()` server-side, redirect `/login` if null
 - [ ] Sign-out
 
 **Onboarding flow** (`/onboarding`)
@@ -156,15 +158,16 @@ Growth lever: "Invite a friend, get 2 more free analyses."
 - [ ] Skip link available — analysis runs with 22% default bracket if skipped
 
 **Address input + property data**
-- [ ] Address autocomplete (Mapbox Geocoding API)
-- [ ] Rentcast property fetch + parse → insert into `properties`
-- [ ] Cache check before Rentcast call (TTL 7 days)
-- [ ] Manual entry fallback if Rentcast returns no data
+- [ ] Address autocomplete (Mapbox Geocoding API — server token only)
+- [ ] Rentcast property fetch + parse → upsert into `properties` by `address_key`
+- [ ] Cache check before Rentcast call (`fetchWithCache`, TTL 7 days)
+- [ ] Manual entry fallback if Rentcast returns no data (`needs_manual_entry: true` response)
 
-**SFH financial model**
+**SFH financial model** (`lib/financial-model.ts` — pure function, no I/O, no UI yet)
 - [ ] Monthly cashflow, annual cashflow
 - [ ] Cash-on-cash return, cap rate, GRM, NOI
 - [ ] Break-even occupancy
+- [ ] `autoScenarioName()` helper (`lib/scenario-name.ts`)
 
 #### Sprint 2 — Tax Engine (Weeks 3–4)
 - [ ] Depreciation calc (27.5-year straight-line, 80% building value)

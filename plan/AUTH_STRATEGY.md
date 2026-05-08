@@ -51,12 +51,21 @@ No username/password. Passwords add friction, support burden, and credential bre
 
 **Step 3 — Next.js client**:
 ```typescript
-// lib/auth.ts
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+// lib/supabase/client.ts
+import { createBrowserClient } from '@supabase/ssr'
 
-const supabase = createClientComponentClient()
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
+// lib/auth.ts
+import { createClient } from '@/lib/supabase/client'
 
 export async function signInWithGoogle() {
+  const supabase = createClient()
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -73,20 +82,30 @@ export async function signInWithGoogle() {
 
 **Step 4 — Callback route** (`app/auth/callback/route.ts`):
 ```typescript
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: (cs) => cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options)) } }
+    )
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // Check onboarding — redirect new users to /onboarding
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('onboarding_complete')
+        .single()
+      const dest = profile?.onboarding_complete ? '/dashboard' : '/onboarding'
+      return NextResponse.redirect(`${origin}${dest}`)
     }
   }
 
@@ -130,16 +149,30 @@ Supabase Auth uses **JWT + refresh token** pattern.
 
 ```typescript
 // middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  let res = NextResponse.next({ request: req })
 
-  // Refreshes session if expired. Must be called in middleware.
-  await supabase.auth.getSession()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => req.cookies.getAll(),
+        setAll: (cs) => {
+          cs.forEach(({ name, value }) => req.cookies.set(name, value))
+          res = NextResponse.next({ request: req })
+          cs.forEach(({ name, value, options }) => res.cookies.set(name, value, options))
+        },
+      },
+    }
+  )
+
+  // MUST use getUser() not getSession() — getSession() reads cookie without
+  // server-side validation; getUser() validates JWT with Supabase Auth server.
+  await supabase.auth.getUser()
 
   return res
 }
@@ -153,15 +186,22 @@ export const config = {
 
 ```typescript
 // app/dashboard/layout.tsx
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 export default async function DashboardLayout({ children }) {
-  const supabase = createServerComponentClient({ cookies })
-  const { data: { session } } = await supabase.auth.getSession()
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+  )
 
-  if (!session) redirect('/login')
+  // Use getUser() not getSession() — validates JWT server-side
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
 
   return <>{children}</>
 }
@@ -403,10 +443,12 @@ Custom UI replaces this in Phase 2 — Supabase Auth UI styling is limited and w
 
 ```bash
 npm install @supabase/supabase-js \
-            @supabase/auth-helpers-nextjs \
+            @supabase/ssr \
             @supabase/auth-ui-react \
             @supabase/auth-ui-shared
 ```
+
+> **Note**: `@supabase/auth-helpers-nextjs` is deprecated — use `@supabase/ssr` instead. Do not install auth-helpers-nextjs.
 
 ---
 
