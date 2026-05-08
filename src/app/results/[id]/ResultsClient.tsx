@@ -222,6 +222,7 @@ export default function ResultsClient({
       if (!res.ok) throw new Error('save failed')
       setSaveStatus('saved')
       setIsDirty(false)
+      setAssumptionsOpen(false)
     } catch {
       setSaveStatus('error')
     } finally {
