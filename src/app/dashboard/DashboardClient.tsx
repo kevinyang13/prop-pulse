@@ -198,7 +198,7 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                     {a.property?.property_type && ` · ${a.property.property_type.toUpperCase()}`}
                     {a.property?.list_price && ` · $${(a.property.list_price / 1000).toFixed(0)}K`}
                   </div>
-                  {a.scenario_name && (
+                  {a.scenario_name && a.verdict === 'GO' && (
                     <span style={{ fontSize: 10, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '2px 8px', borderRadius: 3, display: 'inline-block' }}>
                       {a.scenario_name}
                     </span>
@@ -221,7 +221,7 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                     >
                       View
                     </Link>
-                    <DeleteButton analysisId={a.id} />
+                    {a.verdict === 'GO' && <DeleteButton analysisId={a.id} />}
                   </div>
                 )}
               </div>
