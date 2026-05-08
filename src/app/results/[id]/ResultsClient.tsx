@@ -292,11 +292,9 @@ export default function ResultsClient({
             <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>
               {prop?.full_address ?? 'Property Analysis'}
             </h1>
-            {initialScenarioName && (
-              <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '3px 10px', borderRadius: 3 }}>
-                {initialScenarioName}
-              </span>
-            )}
+            <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '3px 10px', borderRadius: 3 }}>
+              {assumptions.down_payment_pct}% down · {assumptions.interest_rate}% · ${Math.round(computeMortgage(assumptions)).toLocaleString()}/mo
+            </span>
           </div>
           <VerdictBadge verdict={results.verdict} />
         </div>
