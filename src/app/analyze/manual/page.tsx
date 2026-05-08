@@ -4,12 +4,6 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Nav from '@/components/layout/Nav'
 
-const UNIT_COUNTS: Record<string, number> = {
-  duplex: 2,
-  triplex: 3,
-  fourplex: 4,
-}
-
 function ManualEntryContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -26,30 +20,12 @@ function ManualEntryContent() {
     year_built: '',
     property_type: 'sfh',
   })
-  const [unitRents, setUnitRents] = useState<string[]>(['', ''])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const unitCount = UNIT_COUNTS[form.property_type] ?? 1
-  const isMultiUnit = unitCount > 1
-
   function set(field: string) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const value = e.target.value
-      setForm(f => ({ ...f, [field]: value }))
-      if (field === 'property_type') {
-        const newCount = UNIT_COUNTS[value] ?? 1
-        setUnitRents(Array(Math.max(newCount, 2)).fill('').map((_, i) => unitRents[i] ?? ''))
-      }
-    }
-  }
-
-  function setUnitRent(index: number, value: string) {
-    setUnitRents(prev => {
-      const next = [...prev]
-      next[index] = value
-      return next
-    })
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm(f => ({ ...f, [field]: e.target.value }))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -58,18 +34,6 @@ function ManualEntryContent() {
     setError(null)
 
     try {
-      const unitRentsPayload = isMultiUnit
-        ? unitRents.slice(0, unitCount).map((rent, i) => ({
-            unit: `Unit ${i + 1}`,
-            monthly_rent: Number(rent) || 0,
-            status: 'occupied' as const,
-          }))
-        : undefined
-
-      const totalRent = isMultiUnit
-        ? unitRentsPayload!.reduce((s, u) => s + u.monthly_rent, 0)
-        : Number(form.monthly_rent)
-
       const res = await fetch('/api/analyze/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -77,7 +41,7 @@ function ManualEntryContent() {
           address,
           property: {
             list_price: Number(form.list_price),
-            monthly_rent: totalRent,
+            monthly_rent: Number(form.monthly_rent),
             property_tax_annual: Number(form.property_tax_annual),
             hoa_monthly: Number(form.hoa_monthly),
             beds: form.beds ? Number(form.beds) : null,
@@ -85,7 +49,7 @@ function ManualEntryContent() {
             sqft: form.sqft ? Number(form.sqft) : null,
             year_built: form.year_built ? Number(form.year_built) : null,
             property_type: form.property_type,
-            unit_rents: unitRentsPayload ?? null,
+            unit_rents: null,
           },
         }),
       })
@@ -118,15 +82,25 @@ function ManualEntryContent() {
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6 }}>Enter property details</h1>
           <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-            {address || 'Property not found in database — enter details manually.'}
+            {address || 'Enter an address and property details to run the analysis.'}
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <Section label="Required">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <Field label="Purchase price ($)" value={form.list_price} onChange={set('list_price')} required placeholder="450000" />
+                <Field label="Monthly rent ($)" value={form.monthly_rent} onChange={set('monthly_rent')} required placeholder="2400" />
+                <Field label="Annual property tax ($)" value={form.property_tax_annual} onChange={set('property_tax_annual')} required placeholder="5400" />
+                <Field label="Monthly HOA ($)" value={form.hoa_monthly} onChange={set('hoa_monthly')} placeholder="0" />
+              </div>
+              <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-muted)' }}>
+                For multi-unit: enter total monthly rent across all units. You can set per-unit rents on the results page.
+              </div>
+            </Section>
 
-            {/* Property type — first so multi-unit rent section renders correctly */}
-            <Section label="Property details">
+            <Section label="Property details (optional)">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
                   <label style={labelStyle}>Property type</label>
@@ -134,9 +108,9 @@ function ManualEntryContent() {
                     <option value="sfh">Single Family</option>
                     <option value="condo">Condo</option>
                     <option value="townhouse">Townhouse</option>
-                    <option value="duplex">Duplex (2 units)</option>
-                    <option value="triplex">Triplex (3 units)</option>
-                    <option value="fourplex">Fourplex (4 units)</option>
+                    <option value="duplex">Duplex</option>
+                    <option value="triplex">Triplex</option>
+                    <option value="fourplex">Fourplex</option>
                   </select>
                 </div>
                 <Field label="Year built" value={form.year_built} onChange={set('year_built')} placeholder="2005" />
@@ -144,51 +118,6 @@ function ManualEntryContent() {
                 <Field label="Baths" value={form.baths} onChange={set('baths')} placeholder="2" />
                 <Field label="Sq ft" value={form.sqft} onChange={set('sqft')} placeholder="1400" />
               </div>
-            </Section>
-
-            {/* Required fields */}
-            <Section label="Purchase & income">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <Field label="Purchase price ($)" value={form.list_price} onChange={set('list_price')} required placeholder="450000" />
-                <Field label="Annual property tax ($)" value={form.property_tax_annual} onChange={set('property_tax_annual')} required placeholder="5400" />
-                <Field label="Monthly HOA ($)" value={form.hoa_monthly} onChange={set('hoa_monthly')} placeholder="0" />
-              </div>
-
-              {/* Rent — single field for SFH, per-unit for multi-unit */}
-              {!isMultiUnit ? (
-                <div style={{ marginTop: 16 }}>
-                  <Field label="Monthly rent estimate ($)" value={form.monthly_rent} onChange={set('monthly_rent')} required placeholder="2400" />
-                </div>
-              ) : (
-                <div style={{ marginTop: 20 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
-                    Monthly rent per unit
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    {Array.from({ length: unitCount }).map((_, i) => (
-                      <div key={i}>
-                        <label style={labelStyle}>Unit {i + 1} ($)</label>
-                        <input
-                          type="number"
-                          value={unitRents[i] ?? ''}
-                          onChange={e => setUnitRent(i, e.target.value)}
-                          placeholder="2000"
-                          required
-                          min="0"
-                          style={inputStyle}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  {unitRents.slice(0, unitCount).some(r => r) && (
-                    <div style={{ marginTop: 10, fontSize: 13, color: 'var(--text-muted)' }}>
-                      Total: <strong style={{ color: 'var(--text)' }}>
-                        ${unitRents.slice(0, unitCount).reduce((s, r) => s + (Number(r) || 0), 0).toLocaleString()}/mo
-                      </strong>
-                    </div>
-                  )}
-                </div>
-              )}
             </Section>
 
             {error && (
@@ -234,56 +163,29 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   )
 }
 
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-  required,
-}: {
-  label: string
-  value: string
+function Field({ label, value, onChange, placeholder, required }: {
+  label: string; value: string
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  placeholder?: string
-  required?: boolean
+  placeholder?: string; required?: boolean
 }) {
   return (
     <div>
       <label style={labelStyle}>{label}</label>
-      <input
-        type="number"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        min="0"
-        style={inputStyle}
-      />
+      <input type="number" value={value} onChange={onChange} placeholder={placeholder} required={required} min="0" style={inputStyle} />
     </div>
   )
 }
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  color: 'var(--text-muted)',
-  display: 'block',
-  marginBottom: 6,
+  fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
+  color: 'var(--text-muted)', display: 'block', marginBottom: 6,
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '9px 12px',
-  fontSize: 14,
-  border: '1.5px solid var(--border)',
-  borderRadius: 4,
-  background: 'var(--bg)',
-  color: 'var(--text)',
-  outline: 'none',
-  fontFamily: 'Inter, sans-serif',
-  boxSizing: 'border-box',
+  width: '100%', padding: '9px 12px', fontSize: 14,
+  border: '1.5px solid var(--border)', borderRadius: 4,
+  background: 'var(--bg)', color: 'var(--text)', outline: 'none',
+  fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
 }
 
 export default function ManualEntryPage() {

@@ -1,0 +1,791 @@
+'use client'
+
+import { useState, useMemo, useCallback } from 'react'
+import Link from 'next/link'
+import { computeFinancials } from '@/lib/financial-model'
+import type { Assumptions, Results, UnitRent } from '@/types/analysis'
+
+interface TaxProfile {
+  w2_income: number | null
+  tax_bracket: number | null
+  filing_status: string | null
+  state_tax_rate: number | null
+}
+
+interface PropertyData {
+  full_address: string
+  city: string | null
+  state: string | null
+  beds: number | null
+  baths: number | null
+  sqft: number | null
+  year_built: number | null
+  list_price: number | null
+  rent_estimate_mid: number | null
+  hoa_monthly: number | null
+  property_tax_annual: number | null
+  unit_count: number | null
+}
+
+interface Props {
+  analysisId: string
+  initialScenarioName: string | null
+  initialVerdict: string
+  initialVerdictReason: string | null
+  initialPropertyType: string
+  initialAssumptions: Assumptions
+  initialResults: Results
+  prop: PropertyData | null
+  taxProfile: TaxProfile
+}
+
+const PROPERTY_TYPES = ['sfh', 'condo', 'townhouse', 'duplex', 'triplex', 'fourplex'] as const
+const UNIT_COUNTS: Record<string, number> = { duplex: 2, triplex: 3, fourplex: 4 }
+const MULTI_UNIT_TYPES = new Set(['duplex', 'triplex', 'fourplex'])
+
+export default function ResultsClient({
+  analysisId,
+  initialScenarioName,
+  initialVerdict,
+  initialVerdictReason,
+  initialPropertyType,
+  initialAssumptions,
+  initialResults,
+  prop,
+  taxProfile,
+}: Props) {
+  const [assumptions, setAssumptions] = useState<Assumptions>(initialAssumptions)
+  const [propertyType, setPropertyType] = useState(initialPropertyType)
+  const [isDirty, setIsDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle')
+
+  // Live recompute only when dirty; show stored results otherwise to avoid jarring
+  // recompute on mount (Sprint 2 model improvements may differ slightly)
+  const liveResults = useMemo(
+    () => computeFinancials(assumptions, taxProfile),
+    [assumptions, taxProfile]
+  )
+  const results: Results = isDirty ? liveResults : initialResults
+
+  const isMultiUnit = MULTI_UNIT_TYPES.has(propertyType)
+  const unitCount = UNIT_COUNTS[propertyType] ?? 1
+
+  // Unit rent strings (controlled inputs)
+  const [unitRentInputs, setUnitRentInputs] = useState<string[]>(() => {
+    if (initialAssumptions.unit_rents && initialAssumptions.unit_rents.length > 0) {
+      return initialAssumptions.unit_rents.map(u => String(u.monthly_rent))
+    }
+    return Array(4).fill('')
+  })
+
+  function markDirty() {
+    setIsDirty(true)
+    setSaveStatus('idle')
+  }
+
+  const updateAssumption = useCallback(<K extends keyof Assumptions>(key: K, value: Assumptions[K]) => {
+    setAssumptions(prev => ({ ...prev, [key]: value }))
+    markDirty()
+  }, [])
+
+  function handlePropertyTypeChange(newType: string) {
+    setPropertyType(newType)
+    markDirty()
+
+    const newUnitCount = UNIT_COUNTS[newType] ?? 1
+    if (newUnitCount > 1) {
+      // Split current monthly_rent evenly across units as default
+      const perUnit = Math.round(assumptions.monthly_rent / newUnitCount)
+      const newUnitRents: UnitRent[] = Array.from({ length: newUnitCount }, (_, i) => ({
+        unit: `Unit ${i + 1}`,
+        monthly_rent: perUnit,
+        status: 'occupied' as const,
+      }))
+      const newInputs = newUnitRents.map(u => String(u.monthly_rent))
+      setUnitRentInputs(prev => {
+        const merged = newUnitRents.map((u, i) => ({ ...u, monthly_rent: Number(prev[i]) || perUnit }))
+        return merged.map(u => String(u.monthly_rent))
+      })
+      setAssumptions(prev => ({
+        ...prev,
+        unit_rents: newUnitRents,
+        monthly_rent: newUnitRents.reduce((s, u) => s + u.monthly_rent, 0),
+      }))
+      // keep newInputs consistent
+      setUnitRentInputs(Array.from({ length: newUnitCount }, (_, i) => {
+        const existing = Number(unitRentInputs[i])
+        return String(existing || perUnit)
+      }))
+    } else {
+      // Clear unit rents, keep current monthly_rent
+      setAssumptions(prev => ({ ...prev, unit_rents: null }))
+    }
+  }
+
+  function handleUnitRentChange(index: number, raw: string) {
+    setUnitRentInputs(prev => {
+      const next = [...prev]
+      next[index] = raw
+      return next
+    })
+    markDirty()
+
+    const newUnitRents: UnitRent[] = Array.from({ length: unitCount }, (_, i) => ({
+      unit: assumptions.unit_rents?.[i]?.unit ?? `Unit ${i + 1}`,
+      monthly_rent: i === index ? (Number(raw) || 0) : (Number(unitRentInputs[i]) || 0),
+      status: assumptions.unit_rents?.[i]?.status ?? ('occupied' as const),
+    }))
+    const total = newUnitRents.reduce((s, u) => s + u.monthly_rent, 0)
+    setAssumptions(prev => ({ ...prev, unit_rents: newUnitRents, monthly_rent: total }))
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    setSaveStatus('idle')
+    try {
+      const res = await fetch(`/api/analyses/${analysisId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assumptions }),
+      })
+      if (!res.ok) throw new Error('save failed')
+      setSaveStatus('saved')
+      setIsDirty(false)
+    } catch {
+      setSaveStatus('error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const cf = results.monthly_cashflow
+  const coc = results.cash_on_cash_return
+  const taxSavings = results.tax_savings_annual ?? 0
+  const bracketUsed = results.tax_bracket_used ?? 0.22
+  const scheduleENet = results.schedule_e_net_income ?? 0
+  const mortgageInterest = results.mortgage_interest_annual ?? 0
+
+  return (
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '40px 24px 80px' }}>
+
+      {/* Property header */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>
+              {[prop?.city, prop?.state].filter(Boolean).join(', ')}
+              {propertyType ? ` · ${propertyType.toUpperCase()}` : ''}
+            </div>
+            <h1 style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 8 }}>
+              {prop?.full_address ?? 'Property Analysis'}
+            </h1>
+            {initialScenarioName && (
+              <span style={{ fontSize: 11, fontWeight: 600, background: 'var(--surface-2)', color: 'var(--text-muted)', padding: '3px 10px', borderRadius: 3 }}>
+                {initialScenarioName}
+              </span>
+            )}
+          </div>
+          <VerdictBadge verdict={results.verdict} reason={isDirty ? buildVerdictReason(results.verdict, results) : initialVerdictReason} />
+        </div>
+      </div>
+
+      {/* House hack banner */}
+      {assumptions.house_hack && assumptions.house_hack_owner_pct != null && (
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderLeft: '3px solid var(--text)', borderRadius: 4, padding: '12px 20px', marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>House Hack Mode</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+            Owner occupies {assumptions.house_hack_owner_pct}% — depreciation and Schedule E scaled to {100 - assumptions.house_hack_owner_pct}% rental use.
+          </div>
+        </div>
+      )}
+
+      {/* ── ASSUMPTIONS EDITOR ── */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: '20px 24px', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+            Assumptions
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {isDirty && (
+              <span style={{ fontSize: 11, color: 'var(--amber)' }}>Unsaved changes</span>
+            )}
+            {saveStatus === 'saved' && (
+              <span style={{ fontSize: 11, color: 'var(--green)' }}>Saved</span>
+            )}
+            {saveStatus === 'error' && (
+              <span style={{ fontSize: 11, color: 'var(--red)' }}>Save failed</span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={!isDirty || saving}
+              style={{
+                padding: '6px 14px',
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: isDirty ? 'var(--text)' : 'var(--surface-2)',
+                color: isDirty ? 'var(--bg)' : 'var(--text-muted)',
+                border: 'none',
+                borderRadius: 3,
+                cursor: isDirty && !saving ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+
+        {/* Row 1: property type + purchase price + down payment */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <EditField label="Property type">
+            <select
+              value={propertyType}
+              onChange={e => handlePropertyTypeChange(e.target.value)}
+              style={selectStyle}
+            >
+              {PROPERTY_TYPES.map(t => (
+                <option key={t} value={t}>{PROPERTY_TYPE_LABELS[t]}</option>
+              ))}
+            </select>
+          </EditField>
+          <EditField label="Purchase price ($)">
+            <input
+              type="number" min="0" style={inputStyle}
+              value={assumptions.purchase_price}
+              onChange={e => updateAssumption('purchase_price', Number(e.target.value) || 0)}
+            />
+          </EditField>
+          <EditField label="Down payment (%)">
+            <input
+              type="number" min="0" max="100" step="0.5" style={inputStyle}
+              value={assumptions.down_payment_pct}
+              onChange={e => updateAssumption('down_payment_pct', Number(e.target.value) || 0)}
+            />
+          </EditField>
+        </div>
+
+        {/* Row 2: interest rate + loan term + closing costs */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <EditField label="Interest rate (%)">
+            <input
+              type="number" min="0" max="20" step="0.1" style={inputStyle}
+              value={assumptions.interest_rate}
+              onChange={e => updateAssumption('interest_rate', Number(e.target.value) || 0)}
+            />
+          </EditField>
+          <EditField label="Loan term (yrs)">
+            <select
+              value={assumptions.loan_term_years}
+              onChange={e => updateAssumption('loan_term_years', Number(e.target.value))}
+              style={selectStyle}
+            >
+              <option value={15}>15 yr</option>
+              <option value={20}>20 yr</option>
+              <option value={30}>30 yr</option>
+            </select>
+          </EditField>
+          <EditField label="Closing costs (%)">
+            <input
+              type="number" min="0" max="10" step="0.1" style={inputStyle}
+              value={assumptions.closing_cost_pct}
+              onChange={e => updateAssumption('closing_cost_pct', Number(e.target.value) || 0)}
+            />
+          </EditField>
+        </div>
+
+        {/* Row 3: rent / vacancy / mgmt */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          {!isMultiUnit ? (
+            <EditField label="Monthly rent ($)">
+              <input
+                type="number" min="0" style={inputStyle}
+                value={assumptions.monthly_rent}
+                onChange={e => updateAssumption('monthly_rent', Number(e.target.value) || 0)}
+              />
+            </EditField>
+          ) : (
+            <EditField label={`Rent — ${unitCount} units`}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {Array.from({ length: unitCount }).map((_, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 10, color: 'var(--text-muted)', width: 40, flexShrink: 0 }}>
+                      U{i + 1}
+                    </span>
+                    <input
+                      type="number" min="0" style={{ ...inputStyle, marginBottom: 0 }}
+                      value={unitRentInputs[i] ?? ''}
+                      placeholder="0"
+                      onChange={e => handleUnitRentChange(i, e.target.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </EditField>
+          )}
+          <EditField label="Vacancy (%)">
+            <input
+              type="number" min="0" max="100" step="0.5" style={inputStyle}
+              value={assumptions.vacancy_pct}
+              onChange={e => updateAssumption('vacancy_pct', Number(e.target.value) || 0)}
+            />
+          </EditField>
+          <EditField label="Property mgmt (%)">
+            <input
+              type="number" min="0" max="30" step="0.5" style={inputStyle}
+              value={assumptions.property_mgmt_pct}
+              onChange={e => updateAssumption('property_mgmt_pct', Number(e.target.value) || 0)}
+            />
+          </EditField>
+        </div>
+
+        {/* Row 4: expenses */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
+          <EditField label="Property tax ($/mo)">
+            <input
+              type="number" min="0" style={inputStyle}
+              value={assumptions.property_tax_monthly}
+              onChange={e => updateAssumption('property_tax_monthly', Number(e.target.value) || 0)}
+            />
+          </EditField>
+          <EditField label="Insurance ($/mo)">
+            <input
+              type="number" min="0" style={inputStyle}
+              value={assumptions.insurance_monthly}
+              onChange={e => updateAssumption('insurance_monthly', Number(e.target.value) || 0)}
+            />
+          </EditField>
+          <EditField label="HOA ($/mo)">
+            <input
+              type="number" min="0" style={inputStyle}
+              value={assumptions.hoa_monthly}
+              onChange={e => updateAssumption('hoa_monthly', Number(e.target.value) || 0)}
+            />
+          </EditField>
+        </div>
+
+        {/* Row 5: maintenance + house hack */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <EditField label="Maintenance (%/yr)">
+            <input
+              type="number" min="0" max="5" step="0.1" style={inputStyle}
+              value={assumptions.maintenance_pct_annual}
+              onChange={e => updateAssumption('maintenance_pct_annual', Number(e.target.value) || 0)}
+            />
+          </EditField>
+          <EditField label="House hack">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 4 }}>
+              <ToggleSwitch
+                checked={assumptions.house_hack}
+                onChange={v => {
+                  updateAssumption('house_hack', v)
+                  if (!v) updateAssumption('house_hack_owner_pct', null)
+                }}
+              />
+              {assumptions.house_hack && (
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  owner %:
+                </span>
+              )}
+              {assumptions.house_hack && (
+                <input
+                  type="number" min="1" max="99" style={{ ...inputStyle, width: 60 }}
+                  value={assumptions.house_hack_owner_pct ?? ''}
+                  placeholder="50"
+                  onChange={e => updateAssumption('house_hack_owner_pct', Number(e.target.value) || null)}
+                />
+              )}
+            </div>
+          </EditField>
+        </div>
+      </div>
+
+      {/* Key metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+        <MetricCard
+          label="Monthly Cashflow"
+          value={`${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}`}
+          sub={`$${results.annual_cashflow.toLocaleString()}/yr`}
+          color={cf >= 0 ? 'var(--green)' : 'var(--red)'}
+        />
+        <MetricCard
+          label="Cash-on-Cash"
+          value={`${coc.toFixed(1)}%`}
+          sub={`Tax-adj: ${results.tax_adjusted_coc.toFixed(1)}%`}
+          color={coc >= 6 ? 'var(--green)' : coc >= 3 ? 'var(--amber)' : 'var(--red)'}
+        />
+        <MetricCard
+          label="Cap Rate"
+          value={`${results.cap_rate.toFixed(1)}%`}
+          sub={`NOI: $${results.noi.toLocaleString()}/yr`}
+          color="var(--text)"
+        />
+        {isMultiUnit && results.price_per_unit ? (
+          <MetricCard
+            label="Price Per Unit"
+            value={`$${results.price_per_unit.toLocaleString()}`}
+            sub={results.expense_ratio != null ? `${results.expense_ratio.toFixed(1)}% expense ratio` : 'Multi-unit'}
+            color="var(--text)"
+          />
+        ) : (
+          <MetricCard
+            label="Break-even"
+            value={`${results.break_even_occupancy.toFixed(0)}%`}
+            sub="Occupancy needed"
+            color={results.break_even_occupancy <= 85 ? 'var(--green)' : 'var(--amber)'}
+          />
+        )}
+      </div>
+
+      {/* Cashflow breakdown + Tax */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
+        <Section title="Cashflow Breakdown">
+          <Row label="Gross rent" value={`$${assumptions.monthly_rent.toLocaleString()}/mo`} />
+          <Row label={`Vacancy (${assumptions.vacancy_pct}%)`} value={`−$${Math.round(assumptions.monthly_rent * assumptions.vacancy_pct / 100).toLocaleString()}/mo`} muted />
+          <Divider />
+          <Row label="Effective gross income" value={`$${Math.round(assumptions.monthly_rent * (1 - assumptions.vacancy_pct / 100)).toLocaleString()}/mo`} bold />
+          <Divider />
+          <Row label="Mortgage (P+I)" value={`−$${Math.round(computeMortgage(assumptions)).toLocaleString()}/mo`} muted />
+          <Row label="Property tax" value={`−$${assumptions.property_tax_monthly.toLocaleString()}/mo`} muted />
+          <Row label="Insurance" value={`−$${assumptions.insurance_monthly.toLocaleString()}/mo`} muted />
+          {assumptions.hoa_monthly > 0 && (
+            <Row label="HOA" value={`−$${assumptions.hoa_monthly.toLocaleString()}/mo`} muted />
+          )}
+          <Row label={`Maintenance (${assumptions.maintenance_pct_annual}%)`} value={`−$${Math.round(assumptions.purchase_price * assumptions.maintenance_pct_annual / 100 / 12).toLocaleString()}/mo`} muted />
+          <Row label={`Mgmt (${assumptions.property_mgmt_pct}%)`} value={`−$${Math.round(assumptions.monthly_rent * assumptions.property_mgmt_pct / 100).toLocaleString()}/mo`} muted />
+          <Divider />
+          <Row
+            label="Net cashflow"
+            value={`${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}/mo`}
+            bold
+            color={cf >= 0 ? 'var(--green)' : 'var(--red)'}
+          />
+        </Section>
+
+        <Section title="Tax Impact (Your Profile)">
+          <div style={{ background: 'var(--text)', color: 'var(--bg)', borderRadius: 4, padding: '14px 18px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Annual Tax Savings</div>
+              <div style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em' }}>
+                {taxSavings >= 0 ? `$${taxSavings.toLocaleString()}` : `−$${Math.abs(taxSavings).toLocaleString()}`}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', fontSize: 11, opacity: 0.55 }}>
+              <div>= ${Math.round(Math.abs(taxSavings) / 12).toLocaleString()}/mo</div>
+              <div>effective benefit</div>
+            </div>
+          </div>
+          <Row label="Annual Depreciation" value={`$${results.annual_depreciation.toLocaleString()}`} />
+          {isMultiUnit && (
+            <Row label="Per-Unit Depreciation" value={`$${Math.round(results.annual_depreciation / unitCount).toLocaleString()}/unit`} />
+          )}
+          <Row label="Mortgage Interest (yr 1)" value={`$${mortgageInterest.toLocaleString()}`} muted />
+          <Row label="Schedule E Deductions" value={`$${(results.schedule_e_deductions_annual ?? 0).toLocaleString()}`} muted />
+          <Row
+            label="Schedule E Net"
+            value={scheduleENet <= 0 ? `−$${Math.abs(scheduleENet).toLocaleString()} paper loss` : `+$${scheduleENet.toLocaleString()} taxable`}
+            muted
+          />
+          <Divider />
+          <Row label="Tax Bracket" value={`${Math.round(bracketUsed * 100)}%`} />
+          <Row label="Passive Loss Status" value={palLabel(results.passive_loss_status)} />
+          <Row label="Tax-Adjusted COC" value={`${results.tax_adjusted_coc.toFixed(1)}%`} bold color={results.tax_adjusted_coc >= 6 ? 'var(--green)' : 'var(--text)'} />
+          <Row label="Break-Even Occupancy" value={`${results.break_even_occupancy.toFixed(0)}%`} />
+          <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            Passive losses carry forward. Estimate only — consult your CPA.
+          </div>
+        </Section>
+      </div>
+
+      {/* Multi-unit breakdown */}
+      {isMultiUnit && assumptions.unit_rents && assumptions.unit_rents.length > 0 && (
+        <Section title="Unit Breakdown" style={{ marginBottom: 16 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1.5px solid var(--border)' }}>
+                <th style={thStyle}>Unit</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Monthly Rent</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {assumptions.unit_rents.map((u, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '10px 0', fontWeight: 600 }}>{u.unit}</td>
+                  <td style={{ padding: '10px 0', textAlign: 'right' }}>${u.monthly_rent.toLocaleString()}/mo</td>
+                  <td style={{ padding: '10px 0', textAlign: 'center' }}>
+                    <StatusBadge status={u.status} />
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td style={{ padding: '10px 0', fontWeight: 700 }}>Total</td>
+                <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 700 }}>
+                  ${assumptions.unit_rents.reduce((s, u) => s + u.monthly_rent, 0).toLocaleString()}/mo
+                </td>
+                <td />
+              </tr>
+            </tbody>
+          </table>
+        </Section>
+      )}
+
+      {/* Stress scenarios */}
+      <Section title="Stress Scenarios">
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: '1.5px solid var(--border)' }}>
+              <th style={thStyle}>Scenario</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Monthly Cashflow</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>COC Return</th>
+              <th style={{ ...thStyle, textAlign: 'center' }}>Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.stress_scenarios.map((s, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: stressRowBg(s.outcome) }}>
+                <td style={{ padding: '12px 0', fontWeight: s.outcome === 'base' ? 700 : 400 }}>{s.label}</td>
+                <td style={{ padding: '12px 0', textAlign: 'right', fontWeight: 700, color: s.cashflow >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {s.cashflow >= 0 ? '+' : ''}${s.cashflow.toLocaleString()}/mo
+                </td>
+                <td style={{ padding: '12px 0', textAlign: 'right', color: s.coc >= 5 ? 'var(--green)' : s.coc >= 0 ? 'var(--amber)' : 'var(--red)' }}>
+                  {s.coc.toFixed(1)}%
+                </td>
+                <td style={{ padding: '12px 0', textAlign: 'center' }}>
+                  <OutcomeBadge outcome={s.outcome} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Section>
+
+      {/* Property details */}
+      <Section title="Property Details" style={{ marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px 24px' }}>
+          <Detail label="List price" value={prop?.list_price ? `$${prop.list_price.toLocaleString()}` : '—'} />
+          <Detail label="Beds / Baths" value={prop?.beds && prop?.baths ? `${prop.beds} bd / ${prop.baths} ba` : '—'} />
+          <Detail label="Sqft" value={prop?.sqft ? `${prop.sqft.toLocaleString()} sqft` : '—'} />
+          <Detail label="Year built" value={prop?.year_built ? String(prop.year_built) : '—'} />
+          <Detail label="Rent estimate" value={prop?.rent_estimate_mid ? `$${prop.rent_estimate_mid.toLocaleString()}/mo` : '—'} />
+          <Detail label="HOA" value={`$${(prop?.hoa_monthly ?? 0).toLocaleString()}/mo`} />
+        </div>
+      </Section>
+
+      {/* Actions */}
+      <div style={{ marginTop: 32, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <Link href="/analyze" style={btnPrimary}>+ Analyze Another</Link>
+        <Link href="/dashboard" style={btnGhost}>← My Analyses</Link>
+      </div>
+    </div>
+  )
+}
+
+// ── Helpers ──
+
+function computeMortgage(a: Assumptions): number {
+  const loanAmount = a.purchase_price * (1 - a.down_payment_pct / 100)
+  const mr = a.interest_rate / 100 / 12
+  const n = a.loan_term_years * 12
+  if (mr === 0) return loanAmount / n
+  return (loanAmount * (mr * Math.pow(1 + mr, n))) / (Math.pow(1 + mr, n) - 1)
+}
+
+function buildVerdictReason(verdict: string, results: Results): string {
+  const coc = results.cash_on_cash_return
+  const cf = results.monthly_cashflow
+  const pal = results.passive_loss_status
+  if (verdict === 'GO') {
+    return `${coc.toFixed(1)}% COC with $${cf.toLocaleString()}/mo cashflow. ${pal === 'full' ? 'Full PAL deduction boosts tax-adjusted return to ' + results.tax_adjusted_coc.toFixed(1) + '%.' : ''}`
+  }
+  if (verdict === 'CAUTION') {
+    return `Marginal cashflow ($${cf.toLocaleString()}/mo). ${coc.toFixed(1)}% COC is below the 6% target. Evaluate closely before committing.`
+  }
+  return `Negative cashflow ($${cf.toLocaleString()}/mo). Does not pencil at current assumptions.`
+}
+
+// ── Sub-components ──
+
+function VerdictBadge({ verdict, reason }: { verdict: string; reason: string | null }) {
+  const colors: Record<string, string> = { GO: 'var(--green)', CAUTION: 'var(--amber)', PASS: 'var(--red)' }
+  return (
+    <div style={{ textAlign: 'right' }}>
+      <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.02em', color: colors[verdict] ?? 'var(--text-muted)', marginBottom: 8 }}>{verdict}</div>
+      {reason && <div style={{ fontSize: 13, color: 'var(--text-muted)', maxWidth: 280 }}>{reason}</div>}
+    </div>
+  )
+}
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      style={{
+        width: 36,
+        height: 20,
+        borderRadius: 10,
+        background: checked ? 'var(--text)' : 'var(--border)',
+        border: 'none',
+        cursor: 'pointer',
+        position: 'relative',
+        transition: 'background 0.2s',
+        flexShrink: 0,
+      }}
+    >
+      <span style={{
+        position: 'absolute',
+        top: 2,
+        left: checked ? 18 : 2,
+        width: 16,
+        height: 16,
+        borderRadius: '50%',
+        background: checked ? 'var(--bg)' : 'var(--text-muted)',
+        transition: 'left 0.2s',
+      }} />
+    </button>
+  )
+}
+
+function EditField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: 5 }}>
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+function OutcomeBadge({ outcome }: { outcome: string }) {
+  const styles: Record<string, { bg: string; color: string; label: string }> = {
+    positive: { bg: 'var(--green-lt)', color: 'var(--green-dk)', label: 'Positive' },
+    marginal: { bg: 'var(--amber-lt)', color: 'var(--amber-dk)', label: 'Marginal' },
+    negative: { bg: 'var(--red-lt)', color: 'var(--red-dk)', label: 'Negative' },
+    base: { bg: 'var(--surface-2)', color: 'var(--text-muted)', label: 'Current' },
+  }
+  const s = styles[outcome] ?? styles.base
+  return (
+    <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 3, background: s.bg, color: s.color }}>
+      {s.label}
+    </span>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span style={{
+      fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 3,
+      background: status === 'occupied' ? 'var(--green-lt)' : 'var(--red-lt)',
+      color: status === 'occupied' ? 'var(--green-dk)' : 'var(--red-dk)',
+    }}>
+      {status === 'occupied' ? 'Occupied' : 'Vacant'}
+    </span>
+  )
+}
+
+function Section({ title, children, style }: { title: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: '20px 24px', ...style }}>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 16 }}>{title}</div>
+      {children}
+    </div>
+  )
+}
+
+function Row({ label, value, muted, bold, color }: { label: string; value: string; muted?: boolean; bold?: boolean; color?: string }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13 }}>
+      <span style={{ color: muted ? 'var(--text-muted)' : 'var(--text)' }}>{label}</span>
+      <span style={{ fontWeight: bold ? 700 : 400, color: color ?? (muted ? 'var(--text-muted)' : 'var(--text)') }}>{value}</span>
+    </div>
+  )
+}
+
+function Divider() {
+  return <div style={{ borderTop: '1px solid var(--border)', margin: '8px 0' }} />
+}
+
+function MetricCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+  return (
+    <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 4, padding: '16px 20px' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.02em', color, marginBottom: 4 }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{sub}</div>
+    </div>
+  )
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 600 }}>{value}</div>
+    </div>
+  )
+}
+
+function palLabel(status: string): string {
+  if (status === 'full') return 'Full deduction'
+  if (status === 'phase_out') return 'Phase-out (AGI $100–$150K)'
+  return 'Suspended (AGI >$150K)'
+}
+
+function stressRowBg(outcome: string): string {
+  if (outcome === 'base') return 'var(--surface-2)'
+  if (outcome === 'negative') return '#FEF2F2'
+  if (outcome === 'marginal') return '#FEFCE8'
+  return 'transparent'
+}
+
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  sfh: 'Single Family',
+  condo: 'Condo',
+  townhouse: 'Townhouse',
+  duplex: 'Duplex (2 units)',
+  triplex: 'Triplex (3 units)',
+  fourplex: 'Fourplex (4 units)',
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 10px',
+  fontSize: 13,
+  border: '1.5px solid var(--border)',
+  borderRadius: 4,
+  background: 'var(--bg)',
+  color: 'var(--text)',
+  outline: 'none',
+  fontFamily: 'Inter, sans-serif',
+  boxSizing: 'border-box',
+  marginBottom: 0,
+}
+
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  cursor: 'pointer',
+}
+
+const thStyle: React.CSSProperties = {
+  textAlign: 'left',
+  padding: '8px 0',
+  fontSize: 11,
+  fontWeight: 700,
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  color: 'var(--text-muted)',
+}
+
+const btnPrimary: React.CSSProperties = {
+  background: 'var(--text)', color: 'var(--bg)', padding: '10px 24px',
+  fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase',
+  textDecoration: 'none', borderRadius: 4, display: 'inline-block',
+}
+
+const btnGhost: React.CSSProperties = {
+  background: 'transparent', color: 'var(--text-muted)', padding: '9px 20px',
+  fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
+  textDecoration: 'none', borderRadius: 4, border: '1.5px solid var(--border)', display: 'inline-block',
+}
