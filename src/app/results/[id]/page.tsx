@@ -20,7 +20,8 @@ export default async function ResultsPage({ params }: Props) {
     .select(`
       id, property_id, scenario_name, verdict, verdict_reason, property_type, assumptions, results,
       properties ( full_address, city, state, beds, baths, sqft, year_built,
-                   list_price, rent_estimate_mid, hoa_monthly, property_tax_annual, unit_count )
+                   list_price, rent_estimate_mid, hoa_monthly, property_tax_annual, unit_count,
+                   lat, lng )
     `)
     .eq('id', id)
     .eq('user_id', user.id)
@@ -81,6 +82,8 @@ interface PropertyRow {
   hoa_monthly: number | null
   property_tax_annual: number | null
   unit_count: number | null
+  lat: number | null
+  lng: number | null
 }
 
 interface TaxProfileRow {

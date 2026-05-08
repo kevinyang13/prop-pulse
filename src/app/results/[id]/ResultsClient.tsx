@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { computeFinancials } from '@/lib/financial-model'
 import type { Assumptions, Results, UnitRent } from '@/types/analysis'
+
+const PropertyMap = lazy(() => import('@/components/map/PropertyMap'))
 
 interface TaxProfile {
   w2_income: number | null
@@ -76,6 +78,8 @@ interface PropertyData {
   hoa_monthly: number | null
   property_tax_annual: number | null
   unit_count: number | null
+  lat: number | null
+  lng: number | null
 }
 
 interface Props {
@@ -656,6 +660,18 @@ export default function ResultsClient({
           </tbody>
         </table>
       </Section>
+
+      {/* Location Map */}
+      {prop?.lat != null && prop?.lng != null && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 12 }}>
+            Location
+          </div>
+          <Suspense fallback={<LoadingSkeleton height={320} />}>
+            <PropertyMap lat={prop.lat} lng={prop.lng} address={prop.full_address} />
+          </Suspense>
+        </div>
+      )}
 
       {/* Neighborhood Signals */}
       <NeighborhoodSection data={neighborhood} loading={loadingNbh} style={{ marginTop: 16 }} />
