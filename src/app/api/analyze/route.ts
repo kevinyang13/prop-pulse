@@ -57,43 +57,53 @@ export async function POST(request: Request) {
 
   // --- Step 1: Geocode ---
   let geocode: { lat: number; lng: number; full_address: string } | null = null
-  try {
-    const addressKey = normalizeAddressKey(address)
-    geocode = await fetchWithCache(`mapbox:${addressKey}`, 99999, async () => {
-      const token = process.env.MAPBOX_SECRET_TOKEN
-      if (!token) throw new Error('MAPBOX_SECRET_TOKEN not set')
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${token}&country=US&types=address&limit=1`
-      const res = await fetch(url)
-      const data = await res.json()
-      const feature = data.features?.[0]
-      if (!feature) return null
-      return {
-        lat: feature.center[1],
-        lng: feature.center[0],
-        full_address: feature.place_name,
-      }
-    })
-  } catch (err) {
-    console.error('Geocoding failed:', err)
+  const mapboxToken = process.env.MAPBOX_SECRET_TOKEN
+
+  if (!mapboxToken || mapboxToken === 'mock') {
+    // Mock geocode — use address as-is, fixed coords (San Diego)
+    geocode = { lat: 32.7157, lng: -117.1611, full_address: address }
+  } else {
+    try {
+      const addressKey = normalizeAddressKey(address)
+      geocode = await fetchWithCache(`mapbox:${addressKey}`, 99999, async () => {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxToken}&country=US&types=address&limit=1`
+        const res = await fetch(url)
+        const data = await res.json()
+        const feature = data.features?.[0]
+        if (!feature) return null
+        return {
+          lat: feature.center[1],
+          lng: feature.center[0],
+          full_address: feature.place_name,
+        }
+      })
+    } catch (err) {
+      console.error('Geocoding failed:', err)
+    }
   }
 
   // --- Step 2: Rentcast property fetch ---
   let rentcastData: RentcastProperty | null = null
-  try {
-    if (geocode) {
-      const addressKey = normalizeAddressKey(address)
-      rentcastData = await fetchWithCache(`rentcast:${addressKey}`, 7, async () => {
-        const apiKey = process.env.RENTCAST_API_KEY
-        if (!apiKey) throw new Error('RENTCAST_API_KEY not set')
-        const url = `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}&limit=1`
-        const res = await fetch(url, { headers: { 'X-Api-Key': apiKey } })
-        if (!res.ok) return null
-        const data = await res.json()
-        return data?.[0] ?? null
-      })
+  const rentcastKey = process.env.RENTCAST_API_KEY
+
+  if (!rentcastKey || rentcastKey === 'mock') {
+    // Mock mode — synthesize realistic data from geocode + address string
+    rentcastData = mockRentcastData(address, geocode)
+  } else {
+    try {
+      if (geocode) {
+        const addressKey = normalizeAddressKey(address)
+        rentcastData = await fetchWithCache(`rentcast:${addressKey}`, 7, async () => {
+          const url = `https://api.rentcast.io/v1/properties?address=${encodeURIComponent(address)}&limit=1`
+          const res = await fetch(url, { headers: { 'X-Api-Key': rentcastKey } })
+          if (!res.ok) return null
+          const data = await res.json()
+          return data?.[0] ?? null
+        })
+      }
+    } catch (err) {
+      console.error('Rentcast fetch failed:', err)
     }
-  } catch (err) {
-    console.error('Rentcast fetch failed:', err)
   }
 
   // Rentcast miss → manual entry
@@ -264,6 +274,37 @@ function buildVerdictReason(verdict: string, results: ReturnType<typeof computeF
     return `Marginal cashflow ($${cf.toLocaleString()}/mo). ${coc.toFixed(1)}% COC is below the 6% target. Evaluate closely before committing.`
   }
   return `Negative cashflow ($${cf.toLocaleString()}/mo). Does not pencil at current assumptions.`
+}
+
+// Mock Rentcast data for local dev (RENTCAST_API_KEY=mock or unset)
+function mockRentcastData(
+  address: string,
+  geocode: { lat: number; lng: number; full_address: string } | null
+): RentcastProperty {
+  // Vary price + rent based on address hash so different addresses give different numbers
+  const hash = address.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+  const priceBase = 350000 + (hash % 400000)   // $350K – $750K
+  const rentBase  = 1800   + (hash % 1800)      // $1,800 – $3,600/mo
+
+  const parts = (geocode?.full_address ?? address).split(',')
+  return {
+    addressLine1:   parts[0]?.trim() ?? address,
+    city:           parts[1]?.trim() ?? 'San Diego',
+    state:          parts[2]?.trim().split(' ')[1] ?? 'CA',
+    zipCode:        parts[2]?.trim().split(' ')[2] ?? '92101',
+    propertyType:   'Single Family',
+    bedrooms:       3,
+    bathrooms:      2,
+    squareFootage:  1400 + (hash % 800),
+    yearBuilt:      1980 + (hash % 40),
+    price:          priceBase,
+    listPrice:      priceBase,
+    estimatedValue: priceBase + 10000,
+    rentEstimate:   rentBase,
+    propertyTaxRate: 0.012,
+    hoaFee:         0,
+    units:          1,
+  }
 }
 
 // Rentcast API response shape (partial)

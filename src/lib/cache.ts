@@ -21,12 +21,15 @@ export async function fetchWithCache<T>(
   const payload = await fetcher()
 
   // 3. Store in cache
+  const fetchedAt = new Date()
+  const expiresAt = new Date(fetchedAt.getTime() + ttlDays * 24 * 60 * 60 * 1000)
   await supabase.from('data_cache').upsert({
     cache_key: cacheKey,
     source: cacheKey.split(':')[0],
     payload,
-    fetched_at: new Date().toISOString(),
+    fetched_at: fetchedAt.toISOString(),
     ttl_days: ttlDays,
+    expires_at: expiresAt.toISOString(),
   })
 
   return payload
