@@ -47,3 +47,21 @@ body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── Mobile responsive ── */
+@media (max-width: 640px) {
+  .nav-links { display: none !important; }
+  .nav-root { padding: 16px 20px !important; }
+
+  .dash-card {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  .dash-card-body { min-width: 0; width: 100%; }
+  .dash-card-metrics { flex-direction: row !important; gap: 20px !important; width: 100%; }
+  .dash-card-actions { width: 100%; display: flex !important; gap: 8px !important; }
+  .dash-card-actions a,
+  .dash-card-actions button { flex: 1; text-align: center; justify-content: center; }
+  .dash-addr { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}

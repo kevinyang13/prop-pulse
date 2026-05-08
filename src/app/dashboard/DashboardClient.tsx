@@ -158,6 +158,7 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
             return (
               <div
                 key={a.id}
+                className="dash-card"
                 onClick={compareMode && !maxReached ? () => toggleSelect(a.id) : undefined}
                 style={{
                   background: 'var(--surface)',
@@ -188,8 +189,8 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                 <VerdictBadge verdict={a.verdict} />
 
                 {/* Property info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>
+                <div className="dash-card-body" style={{ flex: 1, minWidth: 0 }}>
+                  <div className="dash-addr" style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>
                     {a.property?.full_address ?? 'Unknown address'}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>
@@ -205,14 +206,14 @@ export default function DashboardClient({ analyses, analysesUsed, hasIncompleteP
                 </div>
 
                 {/* Metrics */}
-                <div style={{ display: 'flex', gap: 32, flexShrink: 0 }}>
+                <div className="dash-card-metrics" style={{ display: 'flex', gap: 32, flexShrink: 0 }}>
                   <Metric label="Monthly CF" value={`${cf >= 0 ? '+' : ''}$${cf.toLocaleString()}`} positive={cf >= 0} />
                   <Metric label="COC Return" value={`${coc.toFixed(1)}%`} positive={coc >= 5} />
                 </div>
 
                 {/* Actions — hidden in compare mode */}
                 {!compareMode && (
-                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <div className="dash-card-actions" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
                     <Link
                       href={`/results/${a.id}`}
                       onClick={e => e.stopPropagation()}

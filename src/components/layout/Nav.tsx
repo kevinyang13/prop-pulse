@@ -9,7 +9,7 @@ interface NavProps {
 
 export default function Nav({ variant = 'pre-auth' }: NavProps) {
   return (
-    <nav style={{
+    <nav className="nav-root" style={{
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -34,16 +34,18 @@ export default function Nav({ variant = 'pre-auth' }: NavProps) {
 
       {variant === 'post-auth' && (
         <div style={{ display: 'flex', gap: 24, alignItems: 'center', fontSize: 13, color: 'var(--text-muted)' }}>
-          <Link href="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>My Analyses</Link>
-          <Link href="/compare" style={{ textDecoration: 'none', color: 'inherit' }}>Compare</Link>
-          <Link href="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>Settings</Link>
-          <button
-            onClick={signOut}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)' }}
-          >
-            Sign out
-          </button>
-          <Link href="/analyze" style={{
+          <div className="nav-links" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+            <Link href="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>My Analyses</Link>
+            <Link href="/compare" style={{ textDecoration: 'none', color: 'inherit' }}>Compare</Link>
+            <Link href="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>Settings</Link>
+            <button
+              onClick={signOut}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)' }}
+            >
+              Sign out
+            </button>
+          </div>
+          <Link href="/analyze" className="nav-mobile-cta" style={{
             background: 'var(--text)',
             color: 'var(--bg)',
             padding: '8px 20px',
